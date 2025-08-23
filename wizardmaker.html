@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Wizard Maker — Button Fix (v8 HTML/JS)</title>
+  <title>Wizard Maker — Button Fix (v9 HTML/JS)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
@@ -25,8 +25,8 @@
 </head>
 <body>
   <div class="card">
-    <h1>Wizard Maker — Button Fix (v8)</h1>
-    <p>Upload EduPro (multi-page). Double-click buttons/links to edit. Cancel restores fully. Fonts are untouched.</p>
+    <h1>Wizard Maker — Button Fix (v9)</h1>
+    <p>Upload EduPro (multi-page). Double-click or double-tap buttons/links to edit. Cancel fully restores. Fonts untouched.</p>
 
     <div style="display:flex; gap:.5rem; align-items:center;">
       <input type="file" id="zipInput" accept=".zip">
@@ -87,6 +87,7 @@
     let pages = [];
     let pageContents = {};
     let editedContents = {};
+    let otherFiles = {}; // store css/js/images untouched
     let activePage = "";
     let iframeRefs = {};
 
@@ -100,12 +101,19 @@
       const zip = await JSZip.loadAsync(file);
       const newPages = [];
       const newContents = {};
+      const other = {};
 
       await Promise.all(Object.keys(zip.files).map(async (filename) => {
+        const entry = zip.files[filename];
+        if (entry.dir) return; // skip folders
         if (filename.toLowerCase().endsWith(".html")) {
-          const data = await zip.files[filename].async("string");
+          const data = await entry.async("string");
           newPages.push(filename);
           newContents[filename] = data;
+        } else {
+          // keep non-html as Uint8Array
+          const data = await entry.async("uint8array");
+          other[filename] = data;
         }
       }));
 
@@ -120,6 +128,7 @@
       pages = newPages;
       pageContents = newContents;
       editedContents = {...newContents};
+      otherFiles = other;
       activePage = newPages[0] || "";
 
       renderTabs();
@@ -140,7 +149,14 @@
 
     // Inject bridge
     function injectEditingBridge(html, pageName) {
-      const bridge = `<script>(function(){window.addEventListener('dblclick',function(e){var el=e.target;if(!el)return;var id='e'+Math.random().toString(36).slice(2,9);el.setAttribute('data-edit-id',id);parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,hasText:(!!el.innerText),text:el.innerText||''},'*');e.preventDefault();e.stopPropagation();},true);window.addEventListener('message',function(ev){var d=ev.data;if(d.type==='APPLY_TEXT'){var el=document.querySelector('[data-edit-id="'+d.id+'"]');if(el)el.innerText=d.text;}if(d.type==='APPLY_COLOR'){var el=document.querySelector('[data-edit-id="'+d.id+'"]');if(el){if(d.target==='background')el.style.backgroundColor=d.color;else el.style.color=d.color;}}if(d.type==='APPLY_IMAGE'){var el=document.querySelector('[data-edit-id="'+d.id+'"]');if(el&&el.tagName==='IMG'){el.src=d.src;}}},false);})();<\/script>`;
+      const bridge = `<script>(function(){
+        var EDIT_ATTR='data-edit-id';
+        var clickTimers={}; var bypassNext={};
+        function ensureId(el){if(!el.getAttribute(EDIT_ATTR)) el.setAttribute(EDIT_ATTR,'e'+Math.random().toString(36).slice(2,9));return el.getAttribute(EDIT_ATTR);}
+        function buildSnapshot(el){return {text:el.innerText||'',placeholder:('placeholder'in el?el.placeholder||undefined:undefined),src:(el.tagName==='IMG'?(el.getAttribute('src')||el.src||''):undefined),inline:{color:el.style.color,backgroundColor:el.style.backgroundColor}};}
+        document.addEventListener('click',function(e){var el=e.target;if(!el)return;var tn=(el.tagName||'').toUpperCase();if(tn==='A'||tn==='BUTTON'){var id=ensureId(el);if(bypassNext[id]){bypassNext[id]=false;return;}e.preventDefault();e.stopPropagation();if(clickTimers[id]){clearTimeout(clickTimers[id]);clickTimers[id]=null;var snap=buildSnapshot(el);parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,hasText:!!el.innerText,...snap},'*');}else{clickTimers[id]=setTimeout(function(){clickTimers[id]=null;bypassNext[id]=true;try{el.click();}catch(_){}} ,300);}}},true);
+        document.addEventListener('dblclick',function(e){var el=e.target;if(!el)return;e.preventDefault();e.stopPropagation();var id=ensureId(el);var snap=buildSnapshot(el);parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,hasText:!!el.innerText,...snap},'*');},true);
+        window.addEventListener('message',function(ev){var d=ev.data||{};var el=document.querySelector('['+EDIT_ATTR+'="'+d.id+'"]');if(!el)return;if(d.type==='APPLY_TEXT')el.innerText=d.text||'';if(d.type==='APPLY_COLOR'){if(d.target==='background')el.style.backgroundColor=d.color;else el.style.color=d.color;}if(d.type==='APPLY_IMAGE'&&el.tagName==='IMG')el.src=d.src;if(d.type==='RESTORE_ELEMENT'&&d.snapshot){if(d.snapshot.text!==undefined)el.innerText=d.snapshot.text;if(d.snapshot.placeholder!==undefined&&'placeholder'in el)el.placeholder=d.snapshot.placeholder;if(d.snapshot.src!==undefined&&el.tagName==='IMG')el.src=d.snapshot.src;if(d.snapshot.inline){el.style.color=d.snapshot.inline.color||'';el.style.backgroundColor=d.snapshot.inline.backgroundColor||'';}}});})();<\/script>`;
       return html.replace(/<\/body>/i, bridge + "</body>");
     }
 
@@ -161,7 +177,7 @@
         modalTarget = { page: d.page, id: d.id, hasText: !!d.hasText };
         modalText.value = d.text || "";
         modalColor.value = "#000000";
-        originalSnapshot = { text: d.text };
+        originalSnapshot = d; // full snapshot
         modalBackdrop.style.display = "flex";
         document.getElementById("textSection").style.display = d.hasText ? "block" : "none";
       }
@@ -170,21 +186,18 @@
     // Live updates
     modalText.addEventListener("input", () => {
       const {page,id} = modalTarget;
-      const iframe = iframeRefs[page];
-      iframe.contentWindow.postMessage({type:"APPLY_TEXT",id,text:modalText.value},"*");
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_TEXT",id,text:modalText.value},"*");
     });
 
     modalColor.addEventListener("input", () => {
       const {page,id,hasText} = modalTarget;
-      const iframe = iframeRefs[page];
       const target = colorTargetSel.value==="auto" ? (hasText ? "color" : "background") : colorTargetSel.value;
-      iframe.contentWindow.postMessage({type:"APPLY_COLOR",id,color:modalColor.value,target},"*");
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_COLOR",id,color:modalColor.value,target},"*");
     });
 
     imageUrl.addEventListener("input", () => {
       const {page,id} = modalTarget;
-      const iframe = iframeRefs[page];
-      iframe.contentWindow.postMessage({type:"APPLY_IMAGE",id,src:imageUrl.value},"*");
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:imageUrl.value},"*");
     });
 
     imageFile.addEventListener("change", (e) => {
@@ -209,16 +222,27 @@
       modalBackdrop.style.display = "none";
     };
 
+    // Cancel → restore snapshot
     cancelBtn.onclick = () => {
+      const {page,id} = modalTarget;
+      const iframe = iframeRefs[page];
+      if (iframe?.contentWindow && originalSnapshot) {
+        iframe.contentWindow.postMessage({type:"RESTORE_ELEMENT",id,snapshot:originalSnapshot},"*");
+      }
       modalBackdrop.style.display = "none";
     };
 
     // Export
     exportBtn.addEventListener("click", async () => {
       const zip = new JSZip();
+      // Include edited HTML
       pages.forEach((filename) => {
         const html = editedContents[filename] || pageContents[filename] || "";
         zip.file(filename, html);
+      });
+      // Include all other files unchanged
+      Object.entries(otherFiles).forEach(([filename, data]) => {
+        zip.file(filename, data);
       });
       const blob = await zip.generateAsync({type:"blob"});
       saveAs(blob, "custom-site.zip");
