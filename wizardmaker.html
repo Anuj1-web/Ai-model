@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wizard Maker — Button Fix (v8 HTML/JS)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 20px; background: #f9fafb; }
+    h1 { font-size: 1.5rem; margin-bottom: .5rem; }
+    .card { background: #fff; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+    .tabs { display: flex; gap: .5rem; flex-wrap: wrap; margin: 1rem 0; }
+    .tab { padding: .25rem .75rem; border: 1px solid #ccc; border-radius: .5rem; background: #eee; cursor: pointer; }
+    .tab.active { background: #ddd; font-weight: bold; }
+    iframe { width: 100%; height: 600px; border: 1px solid #ccc; border-radius: .5rem; background: #fff; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; }
+    .modal { background: #fff; padding: 1rem; border-radius: 1rem; max-width: 400px; width: 100%; box-shadow: 0 4px 16px rgba(0,0,0,.3); }
+    .mb-2 { margin-bottom: .5rem; }
+    .mb-3 { margin-bottom: .75rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    input, select, button { padding: .5rem; border: 1px solid #ccc; border-radius: .5rem; width: 100%; }
+    button { cursor: pointer; }
+    .actions { display: flex; justify-content: flex-end; gap: .5rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Wizard Maker — Button Fix (v8)</h1>
+    <p>Upload EduPro (multi-page). Double-click buttons/links to edit. Cancel restores fully. Fonts are untouched.</p>
+
+    <div style="display:flex; gap:.5rem; align-items:center;">
+      <input type="file" id="zipInput" accept=".zip">
+      <button id="exportBtn">⬇ Export ZIP</button>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+    <div id="iframeContainer"></div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modalBackdrop" class="modal-backdrop" style="display:none;">
+    <div class="modal">
+      <h2 class="mb-3">Edit Element</h2>
+      <div id="textSection" class="mb-4">
+        <label class="mb-2">Text / Placeholder</label>
+        <input id="modalText">
+      </div>
+      <div class="mb-3">
+        <label class="mb-2">Color Mode</label>
+        <select id="colorTarget">
+          <option value="auto">Auto</option>
+          <option value="text">Text Color</option>
+          <option value="background">Background</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="mb-2">Color Picker</label>
+        <input type="color" id="modalColor" style="width:70px;">
+      </div>
+      <div class="mb-4">
+        <label class="mb-2">Replace Image</label>
+        <input type="url" id="imageUrl" placeholder="Image URL">
+        <input type="file" id="imageFile" accept="image/*">
+      </div>
+      <div class="actions">
+        <button id="cancelBtn">Cancel</button>
+        <button id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const zipInput = document.getElementById("zipInput");
+    const exportBtn = document.getElementById("exportBtn");
+    const tabsEl = document.getElementById("tabs");
+    const iframeContainer = document.getElementById("iframeContainer");
+
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const modalText = document.getElementById("modalText");
+    const modalColor = document.getElementById("modalColor");
+    const colorTargetSel = document.getElementById("colorTarget");
+    const imageUrl = document.getElementById("imageUrl");
+    const imageFile = document.getElementById("imageFile");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const saveBtn = document.getElementById("saveBtn");
+
+    let pages = [];
+    let pageContents = {};
+    let editedContents = {};
+    let activePage = "";
+    let iframeRefs = {};
+
+    let modalTarget = { page: "", id: "", hasText: false };
+    let originalSnapshot = null;
+
+    // --- File handling ---
+    zipInput.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const zip = await JSZip.loadAsync(file);
+      const newPages = [];
+      const newContents = {};
+
+      await Promise.all(Object.keys(zip.files).map(async (filename) => {
+        if (filename.toLowerCase().endsWith(".html")) {
+          const data = await zip.files[filename].async("string");
+          newPages.push(filename);
+          newContents[filename] = data;
+        }
+      }));
+
+      newPages.sort((a,b) => {
+        const ai = /(^|\/)index\.html$/i.test(a);
+        const bi = /(^|\/)index\.html$/i.test(b);
+        if (ai && !bi) return -1;
+        if (!ai && bi) return 1;
+        return a.localeCompare(b);
+      });
+
+      pages = newPages;
+      pageContents = newContents;
+      editedContents = {...newContents};
+      activePage = newPages[0] || "";
+
+      renderTabs();
+      renderIframes();
+    });
+
+    // Tabs
+    function renderTabs() {
+      tabsEl.innerHTML = "";
+      pages.forEach((p) => {
+        const tab = document.createElement("div");
+        tab.className = "tab" + (p === activePage ? " active" : "");
+        tab.textContent = p;
+        tab.onclick = () => { activePage = p; renderTabs(); renderIframes(); };
+        tabsEl.appendChild(tab);
+      });
+    }
+
+    // Inject bridge
+    function injectEditingBridge(html, pageName) {
+      const bridge = `<script>(function(){window.addEventListener('dblclick',function(e){var el=e.target;if(!el)return;var id='e'+Math.random().toString(36).slice(2,9);el.setAttribute('data-edit-id',id);parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,hasText:(!!el.innerText),text:el.innerText||''},'*');e.preventDefault();e.stopPropagation();},true);window.addEventListener('message',function(ev){var d=ev.data;if(d.type==='APPLY_TEXT'){var el=document.querySelector('[data-edit-id="'+d.id+'"]');if(el)el.innerText=d.text;}if(d.type==='APPLY_COLOR'){var el=document.querySelector('[data-edit-id="'+d.id+'"]');if(el){if(d.target==='background')el.style.backgroundColor=d.color;else el.style.color=d.color;}}if(d.type==='APPLY_IMAGE'){var el=document.querySelector('[data-edit-id="'+d.id+'"]');if(el&&el.tagName==='IMG'){el.src=d.src;}}},false);})();<\/script>`;
+      return html.replace(/<\/body>/i, bridge + "</body>");
+    }
+
+    // Render iframe
+    function renderIframes() {
+      iframeContainer.innerHTML = "";
+      if (!activePage) return;
+      const iframe = document.createElement("iframe");
+      iframe.srcdoc = injectEditingBridge(editedContents[activePage] || pageContents[activePage] || "", activePage);
+      iframeContainer.appendChild(iframe);
+      iframeRefs[activePage] = iframe;
+    }
+
+    // --- Listen for messages from iframe ---
+    window.addEventListener("message", (event) => {
+      const d = event.data || {};
+      if (d.type === "OPEN_EDITOR") {
+        modalTarget = { page: d.page, id: d.id, hasText: !!d.hasText };
+        modalText.value = d.text || "";
+        modalColor.value = "#000000";
+        originalSnapshot = { text: d.text };
+        modalBackdrop.style.display = "flex";
+        document.getElementById("textSection").style.display = d.hasText ? "block" : "none";
+      }
+    });
+
+    // Live updates
+    modalText.addEventListener("input", () => {
+      const {page,id} = modalTarget;
+      const iframe = iframeRefs[page];
+      iframe.contentWindow.postMessage({type:"APPLY_TEXT",id,text:modalText.value},"*");
+    });
+
+    modalColor.addEventListener("input", () => {
+      const {page,id,hasText} = modalTarget;
+      const iframe = iframeRefs[page];
+      const target = colorTargetSel.value==="auto" ? (hasText ? "color" : "background") : colorTargetSel.value;
+      iframe.contentWindow.postMessage({type:"APPLY_COLOR",id,color:modalColor.value,target},"*");
+    });
+
+    imageUrl.addEventListener("input", () => {
+      const {page,id} = modalTarget;
+      const iframe = iframeRefs[page];
+      iframe.contentWindow.postMessage({type:"APPLY_IMAGE",id,src:imageUrl.value},"*");
+    });
+
+    imageFile.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const {page,id} = modalTarget;
+        iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:reader.result},"*");
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Save edits
+    saveBtn.onclick = () => {
+      const {page} = modalTarget;
+      const iframe = iframeRefs[page];
+      if (iframe.contentDocument) {
+        const html = "<!DOCTYPE html>" + iframe.contentDocument.documentElement.outerHTML;
+        editedContents[page] = html;
+      }
+      modalBackdrop.style.display = "none";
+    };
+
+    cancelBtn.onclick = () => {
+      modalBackdrop.style.display = "none";
+    };
+
+    // Export
+    exportBtn.addEventListener("click", async () => {
+      const zip = new JSZip();
+      pages.forEach((filename) => {
+        const html = editedContents[filename] || pageContents[filename] || "";
+        zip.file(filename, html);
+      });
+      const blob = await zip.generateAsync({type:"blob"});
+      saveAs(blob, "custom-site.zip");
+    });
+  </script>
+</body>
+</html>
