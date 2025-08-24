@@ -14,7 +14,12 @@
   </style>
 </head>
 <body class="p-6">
-  <h1 class="text-3xl font-bold mb-6">Library</h1>
+  <h1 class="text-3xl font-bold mb-4">Library</h1>
+
+  <!-- Navigation Button -->
+  <div class="mb-6">
+    <a href="home.html" class="btn">Go to Home</a>
+  </div>
 
   <!-- Upload Section -->
   <div class="mb-6">
@@ -24,8 +29,7 @@
     <button id="uploadBtn" class="btn">Upload</button>
   </div>
 
-  <!-- Templates Grid -->
-  <h2 class="text-2xl font-semibold mb-4">Templates</h2>
+  <!-- Library Grid -->
   <div id="libraryGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6"></div>
 
   <!-- Thumbnail Editor Modal -->
@@ -61,29 +65,98 @@
 
       function renderLibrary() {
         libraryGrid.innerHTML = '';
+
+        // Group items by type
+        const categories = {
+          template: [],
+          asset: [],
+          theme: [],
+          subscription: []
+        };
+
         library.forEach((item, index) => {
-          if(item.type === 'template'){
+          if (!categories[item.type]) {
+            categories[item.type] = [];
+          }
+          categories[item.type].push({ ...item, index });
+        });
+
+        // Render each category
+        Object.keys(categories).forEach(type => {
+          if (categories[type].length === 0) return;
+
+          // Category Title
+          const title = document.createElement('h3');
+          title.textContent = type.charAt(0).toUpperCase() + type.slice(1) + "s";
+          title.className = "text-xl font-bold mt-6 mb-4 col-span-full";
+          libraryGrid.appendChild(title);
+
+          // Items Grid
+          categories[type].forEach(obj => {
+            const { index, ...item } = obj;
             const card = document.createElement('div');
             card.className = "border p-4 rounded shadow flex flex-col items-center";
 
+            // Thumbnail
             const img = document.createElement('img');
             img.src = item.thumbnail || 'https://via.placeholder.com/400x200?text=No+Thumbnail';
             img.className = "card-img mb-2";
             card.appendChild(img);
 
+            // Name
             const name = document.createElement('p');
             name.textContent = item.name;
             name.className = "font-semibold mb-2 text-center";
             card.appendChild(name);
 
-            const editBtn = document.createElement('button');
-            editBtn.textContent = 'Edit Thumbnail';
-            editBtn.className = 'btn';
-            editBtn.onclick = () => openThumbnailEditor(index);
-            card.appendChild(editBtn);
+            // Template-specific actions
+            if(item.type === 'template'){
+              const editBtn = document.createElement('button');
+              editBtn.textContent = 'Edit Thumbnail';
+              editBtn.className = 'btn mb-2';
+              editBtn.onclick = () => openThumbnailEditor(index);
+              card.appendChild(editBtn);
+
+              const thumbInput = document.createElement('input');
+              thumbInput.type = 'file';
+              thumbInput.accept = 'image/*';
+              thumbInput.className = 'hidden';
+              thumbInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                  library[index].thumbnail = ev.target.result;
+                  localStorage.setItem('sitegenLibrary', JSON.stringify(library));
+                  renderLibrary();
+                };
+                reader.readAsDataURL(file);
+              };
+
+              const uploadBtn = document.createElement('button');
+              uploadBtn.textContent = 'Upload Thumbnail';
+              uploadBtn.className = 'btn mb-2';
+              uploadBtn.onclick = () => thumbInput.click();
+
+              card.appendChild(thumbInput);
+              card.appendChild(uploadBtn);
+            }
+
+            // Delete button (for all)
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.className = 'btn bg-red-600 hover:bg-red-700';
+            deleteBtn.onclick = () => {
+              if(confirm(`Are you sure you want to delete "${item.name}"?`)){
+                library.splice(index, 1);
+                localStorage.setItem('sitegenLibrary', JSON.stringify(library));
+                renderLibrary();
+              }
+            };
+            card.appendChild(deleteBtn);
 
             libraryGrid.appendChild(card);
-          }
+          });
         });
       }
 
@@ -125,7 +198,11 @@
         files.forEach(file => {
           const reader = new FileReader();
           reader.onload = e => {
-            const type = file.name.endsWith('.zip') ? 'template' : 'asset';
+            let type = 'asset'; // default
+            if(file.name.endsWith('.zip')) type = 'template';
+            else if(file.name.endsWith('.theme')) type = 'theme';
+            else if(file.name.endsWith('.sub')) type = 'subscription';
+
             library.push({
               name: file.name,
               type,
@@ -147,76 +224,5 @@
       renderLibrary();
     });
   </script>
-<!-- Navigation Button -->
-<div class="mb-6">
-  <a href="home.html" class="btn">Go to Home</a>
-</div>
-
-<script>
-  // Add thumbnail upload button to each template card
-  function addThumbnailUploadOption(card, index) {
-    const thumbInput = document.createElement('input');
-    thumbInput.type = 'file';
-    thumbInput.accept = 'image/*';
-    thumbInput.className = 'hidden';
-    thumbInput.onchange = (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        library[index].thumbnail = ev.target.result;
-        localStorage.setItem('sitegenLibrary', JSON.stringify(library));
-        renderLibrary(); // refresh view
-      };
-      reader.readAsDataURL(file);
-    };
-
-    const labelBtn = document.createElement('button');
-    labelBtn.textContent = 'Upload Thumbnail';
-    labelBtn.className = 'btn mt-2';
-    labelBtn.onclick = () => thumbInput.click();
-
-    card.appendChild(thumbInput);
-    card.appendChild(labelBtn);
-  }
-
-  // Update renderLibrary to include thumbnail uploader
-  const originalRender = renderLibrary;
-  renderLibrary = function () {
-    libraryGrid.innerHTML = '';
-    library.forEach((item, index) => {
-      if (item.type === 'template') {
-        const card = document.createElement('div');
-        card.className = "border p-2 rounded shadow";
-
-        const img = document.createElement('img');
-        img.src = item.thumbnail || 'https://via.placeholder.com/400x200?text=No+Thumbnail';
-        img.className = "card-img mb-2";
-        card.appendChild(img);
-
-        const name = document.createElement('p');
-        name.textContent = item.name;
-        name.className = "font-semibold mb-2";
-        card.appendChild(name);
-
-        const editBtn = document.createElement('button');
-        editBtn.textContent = 'Edit Thumbnail';
-        editBtn.className = 'btn';
-        editBtn.onclick = () => openThumbnailEditor(index);
-        card.appendChild(editBtn);
-
-        // Add Upload Thumbnail option
-        addThumbnailUploadOption(card, index);
-
-        libraryGrid.appendChild(card);
-      }
-    });
-  };
-
-  // Ensure persistence
-  localStorage.setItem('sitegenLibrary', JSON.stringify(library));
-  renderLibrary();
-</script>
-
 </body>
 </html>
