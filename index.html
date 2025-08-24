@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Wizard Maker — Button Fix (v11.1 UI)</title>
+  <title>Wizard Maker — Button Fix (v11 UI)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
@@ -46,20 +46,15 @@
       padding: .5rem .9rem;
       border: none;
       border-radius: .5rem;
-      background: #2563eb;
-      color: #fff;
       cursor: pointer;
       font-size: 0.9rem;
     }
     button:hover {
-      background: #1e4fc2;
+      opacity: 0.9;
     }
-    /* Export button override -> black */
     #exportBtn {
-      background: #111;
-    }
-    #exportBtn:hover {
-      background: #333;
+      background: #000;
+      color: #fff;
     }
     .tabs {
       display: flex;
@@ -132,12 +127,19 @@
     #cancelBtn:hover {
       background: #d1d5db;
     }
+    #saveBtn {
+      background: #2563eb;
+      color: #fff;
+    }
+    #saveBtn:hover {
+      background: #1e4fc2;
+    }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Wizard Maker — Button Fix (v11.1)</h1>
-    <p>Upload EduPro (multi-page). Double-click or double-tap buttons/links to edit. Cancel fully restores (bold/italic preserved). Fonts untouched.</p>
+    <h1>Wizard Maker — Button Fix (v11)</h1>
+    <p>Upload EduPro (multi-page). Double-click or double-tap buttons/links to edit. Cancel fully restores. Fonts untouched.</p>
 
     <div class="topbar">
       <input type="file" id="zipInput" accept=".zip">
@@ -205,19 +207,63 @@
     let modalTarget = { page: "", id: "", hasText: false };
     let originalSnapshot = null;
 
+    // --- File handling ---
+    zipInput.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const zip = await JSZip.loadAsync(file);
+      const newPages = [];
+      const newContents = {};
+      const other = {};
+
+      await Promise.all(Object.keys(zip.files).map(async (filename) => {
+        const entry = zip.files[filename];
+        if (entry.dir) return;
+        if (filename.toLowerCase().endsWith(".html")) {
+          const data = await entry.async("string");
+          newPages.push(filename);
+          newContents[filename] = data;
+        } else {
+          const data = await entry.async("uint8array");
+          other[filename] = data;
+        }
+      }));
+
+      newPages.sort((a,b) => {
+        const ai = /(^|\/)index\.html$/i.test(a);
+        const bi = /(^|\/)index\.html$/i.test(b);
+        if (ai && !bi) return -1;
+        if (!ai && bi) return 1;
+        return a.localeCompare(b);
+      });
+
+      pages = newPages;
+      pageContents = newContents;
+      editedContents = {...newContents};
+      otherFiles = other;
+      activePage = newPages[0] || "";
+
+      renderTabs();
+      renderIframes();
+    });
+
+    function renderTabs() {
+      tabsEl.innerHTML = "";
+      pages.forEach((p) => {
+        const tab = document.createElement("div");
+        tab.className = "tab" + (p === activePage ? " active" : "");
+        tab.textContent = p;
+        tab.onclick = () => { activePage = p; renderTabs(); renderIframes(); };
+        tabsEl.appendChild(tab);
+      });
+    }
+
     function injectEditingBridge(html, pageName) {
       const bridge = `<script>(function(){
         var EDIT_ATTR='data-edit-id';
         var clickTimers={};
         function ensureId(el){if(!el.getAttribute(EDIT_ATTR)) el.setAttribute(EDIT_ATTR,'e'+Math.random().toString(36).slice(2,9));return el.getAttribute(EDIT_ATTR);}
-        function buildSnapshot(el){
-          return {
-            html: el.innerHTML || '',
-            placeholder: ('placeholder' in el ? el.placeholder || undefined : undefined),
-            src: (el.tagName==='IMG'?(el.getAttribute('src')||el.src||''):undefined),
-            inline:{color:el.style.color,backgroundColor:el.style.backgroundColor}
-          };
-        }
+        function buildSnapshot(el){return {html:el.innerHTML||'',placeholder:('placeholder'in el?el.placeholder||undefined:undefined),src:(el.tagName==='IMG'?(el.getAttribute('src')||el.src||''):undefined),inline:{color:el.style.color,backgroundColor:el.style.backgroundColor}};}
         document.addEventListener('click',function(e){
           var el=e.target;if(!el)return;
           var tn=(el.tagName||'').toUpperCase();
@@ -227,7 +273,7 @@
             if(clickTimers[id]){
               clearTimeout(clickTimers[id]);clickTimers[id]=null;
               var snap=buildSnapshot(el);
-              parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,hasText:!!el.innerText,...snap},'*');
+              parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,hasText:!!el.innerHTML,...snap},'*');
             }else{
               clickTimers[id]=setTimeout(function(){
                 clickTimers[id]=null;
@@ -242,13 +288,13 @@
           e.preventDefault();e.stopPropagation();
           var id=ensureId(el);
           var snap=buildSnapshot(el);
-          parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,hasText:!!el.innerText,...snap},'*');
+          parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,hasText:!!el.innerHTML,...snap},'*');
         },true);
         window.addEventListener('message',function(ev){
           var d=ev.data||{};
           var el=document.querySelector('['+EDIT_ATTR+'="'+d.id+'"]');
           if(!el)return;
-          if(d.type==='APPLY_TEXT')el.innerText=d.text||'';
+          if(d.type==='APPLY_TEXT')el.innerHTML=d.text||'';
           if(d.type==='APPLY_COLOR'){if(d.target==='background')el.style.backgroundColor=d.color;else el.style.color=d.color;}
           if(d.type==='APPLY_IMAGE'&&el.tagName==='IMG')el.src=d.src;
           if(d.type==='RESTORE_ELEMENT'&&d.snapshot){
@@ -262,8 +308,85 @@
       return html.replace(/<\/body>/i, bridge + "</body>");
     }
 
-    // rest of script (unchanged from v11)...
-    // [zip handling, tabs, modals, save, cancel, export same as before]
+    function renderIframes() {
+      iframeContainer.innerHTML = "";
+      if (!activePage) return;
+      const iframe = document.createElement("iframe");
+      iframe.srcdoc = injectEditingBridge(editedContents[activePage] || pageContents[activePage] || "", activePage);
+      iframeContainer.appendChild(iframe);
+      iframeRefs[activePage] = iframe;
+    }
+
+    window.addEventListener("message", (event) => {
+      const d = event.data || {};
+      if (d.type === "OPEN_EDITOR") {
+        modalTarget = { page: d.page, id: d.id, hasText: !!d.hasText };
+        modalText.value = d.html || "";
+        modalColor.value = "#000000";
+        originalSnapshot = d;
+        modalBackdrop.style.display = "flex";
+        document.getElementById("textSection").style.display = d.hasText ? "block" : "none";
+      }
+    });
+
+    modalText.addEventListener("input", () => {
+      const {page,id} = modalTarget;
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_TEXT",id,text:modalText.value},"*");
+    });
+
+    modalColor.addEventListener("input", () => {
+      const {page,id,hasText} = modalTarget;
+      const target = colorTargetSel.value==="auto" ? (hasText ? "color" : "background") : colorTargetSel.value;
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_COLOR",id,color:modalColor.value,target},"*");
+    });
+
+    imageUrl.addEventListener("input", () => {
+      const {page,id} = modalTarget;
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:imageUrl.value},"*");
+    });
+
+    imageFile.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const {page,id} = modalTarget;
+        iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:reader.result},"*");
+      };
+      reader.readAsDataURL(file);
+    });
+
+    saveBtn.onclick = () => {
+      const {page} = modalTarget;
+      const iframe = iframeRefs[page];
+      if (iframe.contentDocument) {
+        const html = "<!DOCTYPE html>" + iframe.contentDocument.documentElement.outerHTML;
+        editedContents[page] = html;
+      }
+      modalBackdrop.style.display = "none";
+    };
+
+    cancelBtn.onclick = () => {
+      const {page,id} = modalTarget;
+      const iframe = iframeRefs[page];
+      if (iframe?.contentWindow && originalSnapshot) {
+        iframe.contentWindow.postMessage({type:"RESTORE_ELEMENT",id,snapshot:originalSnapshot},"*");
+      }
+      modalBackdrop.style.display = "none";
+    };
+
+    exportBtn.addEventListener("click", async () => {
+      const zip = new JSZip();
+      pages.forEach((filename) => {
+        const html = editedContents[filename] || pageContents[filename] || "";
+        zip.file(filename, html);
+      });
+      Object.entries(otherFiles).forEach(([filename, data]) => {
+        zip.file(filename, data);
+      });
+      const blob = await zip.generateAsync({type:"blob"});
+      saveAs(blob, "custom-site.zip");
+    });
   </script>
 </body>
 </html>
