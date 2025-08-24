@@ -1,166 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sitegen – Library</title>
+  <meta charset="UTF-8">
+  <title>Sitegen Library</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
-<body class="bg-white text-black">
-  <!-- Navbar -->
-  <header class="p-4 border-b flex justify-between items-center">
-    <h1 class="text-2xl font-bold">📚 Sitegen Library</h1>
-    <div class="space-x-3">
-      <a href="index.html" class="px-4 py-2 bg-black text-white rounded">🏠 Home</a>
-      <label class="px-4 py-2 bg-black text-white rounded cursor-pointer">
-        ⬆ Upload Template
-        <input type="file" id="fileInput" accept=".html" hidden />
-      </label>
-    </div>
+<body class="bg-white text-black min-h-screen p-6">
+  <header class="mb-6 flex justify-between items-center">
+    <h1 class="text-3xl font-bold">📚 Sitegen Library</h1>
+    <label class="px-4 py-2 bg-black text-white rounded cursor-pointer">
+      Upload ZIP
+      <input type="file" id="uploadInput" accept=".zip" class="hidden">
+    </label>
   </header>
 
-  <!-- Progress -->
-  <div id="progressContainer" class="hidden w-1/2 mx-auto mt-6">
-    <div class="bg-gray-200 rounded-full h-4">
-      <div id="progressBar" class="bg-black h-4 rounded-full w-0 text-white text-xs text-center">0%</div>
-    </div>
+  <!-- Progress Bar -->
+  <div id="progressContainer" class="w-full bg-gray-200 rounded h-4 hidden mb-6">
+    <div id="progressBar" class="bg-black h-4 w-0 rounded"></div>
   </div>
 
-  <!-- Library grid -->
-  <main class="p-6">
-    <div id="libraryItems" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-  </main>
+  <!-- Sections -->
+  <div id="library">
+    <section id="Templates">
+      <h2 class="text-2xl font-semibold mb-3">📂 Templates</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="TemplatesGrid"></div>
+    </section>
+    <section id="Blocks">
+      <h2 class="text-2xl font-semibold mt-8 mb-3">📂 Blocks</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="BlocksGrid"></div>
+    </section>
+    <section id="Themes">
+      <h2 class="text-2xl font-semibold mt-8 mb-3">📂 Themes</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="ThemesGrid"></div>
+    </section>
+    <section id="Subscriptions">
+      <h2 class="text-2xl font-semibold mt-8 mb-3">📂 Subscription Boxes</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="SubscriptionsGrid"></div>
+    </section>
+    <section id="Misc">
+      <h2 class="text-2xl font-semibold mt-8 mb-3">📂 Misc</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="MiscGrid"></div>
+    </section>
+  </div>
 
-  <script>
-    const fileInput = document.getElementById("fileInput");
-    const progressContainer = document.getElementById("progressContainer");
-    const progressBar = document.getElementById("progressBar");
-    const libraryItems = document.getElementById("libraryItems");
+<script>
+const uploadInput = document.getElementById('uploadInput');
+const progressContainer = document.getElementById('progressContainer');
+const progressBar = document.getElementById('progressBar');
 
-    let library = JSON.parse(localStorage.getItem("sitegenLibrary")) || [];
+uploadInput.addEventListener('change', handleUpload);
 
-    function renderLibrary() {
-      libraryItems.innerHTML = "";
-      library.forEach((item, index) => {
-        const card = document.createElement("div");
-        card.className = "border rounded-lg p-4 shadow";
+async function handleUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
 
-        card.innerHTML = `
-          <div class="relative border rounded overflow-hidden w-full h-48 bg-gray-100 flex items-center justify-center">
-            <img src="${item.thumbnail}" 
-                 class="draggable-img absolute cursor-move transform scale-1" 
-                 data-index="${index}" 
-                 style="top:0; left:0;"/>
-          </div>
-          <h2 class="font-semibold mt-2">${item.name}</h2>
-          <div class="flex space-x-2 mt-2">
-            <button class="zoom-in px-2 py-1 bg-black text-white rounded text-sm" data-index="${index}">＋</button>
-            <button class="zoom-out px-2 py-1 bg-black text-white rounded text-sm" data-index="${index}">－</button>
-            <button class="save-thumb px-2 py-1 bg-black text-white rounded text-sm" data-index="${index}">💾 Save</button>
-          </div>
-        `;
+  progressContainer.classList.remove('hidden');
+  progressBar.style.width = "0%";
 
-        libraryItems.appendChild(card);
-      });
-      enableDragZoom();
-    }
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const data = e.target.result;
+    const zip = await JSZip.loadAsync(data);
+    let category = "Misc";
+    let htmlFile = null;
 
-    function enableDragZoom() {
-      document.querySelectorAll(".draggable-img").forEach(img => {
-        let isDragging = false, startX, startY, initialX, initialY, scale = 1;
-
-        img.addEventListener("mousedown", (e) => {
-          isDragging = true;
-          startX = e.clientX;
-          startY = e.clientY;
-          const rect = img.getBoundingClientRect();
-          initialX = rect.left;
-          initialY = rect.top;
-          img.style.transition = "none";
-        });
-
-        document.addEventListener("mousemove", (e) => {
-          if (!isDragging) return;
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-          img.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
-        });
-
-        document.addEventListener("mouseup", () => {
-          isDragging = false;
-        });
-
-        // Zoom buttons
-        const index = img.dataset.index;
-        document.querySelector(`.zoom-in[data-index="${index}"]`).onclick = () => {
-          scale += 0.1;
-          img.style.transform = `scale(${scale})`;
-        };
-        document.querySelector(`.zoom-out[data-index="${index}"]`).onclick = () => {
-          if (scale > 0.3) scale -= 0.1;
-          img.style.transform = `scale(${scale})`;
-        };
-
-        // Save thumbnail
-        document.querySelector(`.save-thumb[data-index="${index}"]`).onclick = () => {
-          const canvas = document.createElement("canvas");
-          const card = img.parentElement;
-          canvas.width = card.clientWidth;
-          canvas.height = card.clientHeight;
-          const ctx = canvas.getContext("2d");
-
-          const tempImg = new Image();
-          tempImg.src = img.src;
-          tempImg.onload = () => {
-            ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
-            const finalThumb = canvas.toDataURL();
-            library[index].thumbnail = finalThumb;
-            localStorage.setItem("sitegenLibrary", JSON.stringify(library));
-            renderLibrary();
-          };
-        };
-      });
-    }
-
-    fileInput.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      progressContainer.classList.remove("hidden");
-      progressBar.style.width = "0%";
-      progressBar.innerText = "0%";
-
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        progressBar.style.width = "50%";
-        progressBar.innerText = "50%";
-
-        const htmlContent = ev.target.result;
-        const iframe = document.createElement("iframe");
-        iframe.style.position = "absolute";
-        iframe.style.left = "-9999px";
-        document.body.appendChild(iframe);
-        iframe.contentDocument.open();
-        iframe.contentDocument.write(htmlContent);
-        iframe.contentDocument.close();
-
-        setTimeout(async () => {
-          const canvas = await html2canvas(iframe.contentDocument.body);
-          const thumbnail = canvas.toDataURL();
-          library.push({ name: file.name, html: htmlContent, thumbnail });
-          localStorage.setItem("sitegenLibrary", JSON.stringify(library));
-          document.body.removeChild(iframe);
-          progressBar.style.width = "100%";
-          progressBar.innerText = "100%";
-          setTimeout(() => progressContainer.classList.add("hidden"), 800);
-          renderLibrary();
-        }, 800);
-      };
-      reader.readAsText(file);
+    // Detect category and find index.html
+    zip.forEach((relativePath, zipEntry) => {
+      if (relativePath.includes("templates/")) category = "Templates";
+      else if (relativePath.includes("blocks/")) category = "Blocks";
+      else if (relativePath.includes("themes/")) category = "Themes";
+      else if (relativePath.includes("subscriptions/")) category = "Subscriptions";
+      if (relativePath.endsWith("index.html")) htmlFile = zipEntry;
     });
 
-    renderLibrary();
-  </script>
+    let thumbnail = null;
+    if (htmlFile) {
+      const htmlContent = await htmlFile.async("text");
+      thumbnail = await generateScreenshot(htmlContent);
+    } else {
+      thumbnail = "https://via.placeholder.com/400x300?text=No+Preview";
+    }
+
+    addToLibrary(file.name.replace(".zip",""), category, thumbnail);
+    progressBar.style.width = "100%";
+    setTimeout(()=> progressContainer.classList.add('hidden'), 800);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+async function generateScreenshot(htmlContent) {
+  return new Promise(resolve => {
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "absolute";
+    iframe.style.left = "-9999px";
+    document.body.appendChild(iframe);
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(htmlContent);
+    iframe.contentDocument.close();
+
+    iframe.onload = () => {
+      html2canvas(iframe.contentDocument.body).then(canvas => {
+        const dataURL = canvas.toDataURL("image/png");
+        document.body.removeChild(iframe);
+        resolve(dataURL);
+      });
+    };
+  });
+}
+
+function addToLibrary(name, category, thumbnail) {
+  const grid = document.getElementById(category + "Grid") || document.getElementById("MiscGrid");
+  
+  const card = document.createElement("div");
+  card.className = "border rounded-lg p-3 bg-white shadow";
+
+  card.innerHTML = `
+    <div class="relative overflow-hidden border h-48 flex items-center justify-center bg-gray-100">
+      <img src="${thumbnail}" class="draggable max-w-none select-none cursor-move" style="transform: translate(0px,0px) scale(1);" />
+    </div>
+    <div class="flex justify-between mt-2">
+      <span class="font-medium">${name}</span>
+      <button class="text-red-600 text-sm">Delete</button>
+    </div>
+    <div class="flex gap-2 mt-2">
+      <button class="zoomIn bg-black text-white px-2 py-1 text-xs rounded">+</button>
+      <button class="zoomOut bg-black text-white px-2 py-1 text-xs rounded">-</button>
+      <button class="saveThumb bg-black text-white px-2 py-1 text-xs rounded">Save</button>
+    </div>
+  `;
+
+  // Dragging + zoom logic
+  const img = card.querySelector("img");
+  let pos = {x:0, y:0}, dragging = false;
+
+  img.addEventListener("mousedown", e => {
+    dragging = true;
+    pos = { x: e.clientX - img.offsetLeft, y: e.clientY - img.offsetTop };
+  });
+  document.addEventListener("mouseup", ()=> dragging=false);
+  document.addEventListener("mousemove", e => {
+    if (dragging) {
+      img.style.transform = `translate(${e.clientX-pos.x}px,${e.clientY-pos.y}px) scale(${currentScale(img)})`;
+    }
+  });
+
+  card.querySelector(".zoomIn").onclick = () => zoom(img, 0.1);
+  card.querySelector(".zoomOut").onclick = () => zoom(img, -0.1);
+  card.querySelector(".saveThumb").onclick = () => alert("Thumbnail saved for " + name);
+  card.querySelector("button.text-red-600").onclick = () => card.remove();
+
+  grid.appendChild(card);
+}
+
+function currentScale(img){
+  const match = img.style.transform.match(/scale\(([^)]+)\)/);
+  return match ? parseFloat(match[1]) : 1;
+}
+function zoom(img, delta){
+  let scale = currentScale(img)+delta;
+  if (scale<0.2) scale=0.2;
+  if (scale>3) scale=3;
+  const match = img.style.transform.match(/translate\(([^)]+)\)/);
+  let translate = match ? match[1] : "0px,0px";
+  img.style.transform = `translate(${translate}) scale(${scale})`;
+}
+</script>
 </body>
 </html>
