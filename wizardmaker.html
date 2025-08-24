@@ -394,29 +394,26 @@
     });
   </script>
 <script>
-  // --- Auto-load template if ?template=... is in URL ---
-  function autoLoadTemplate() {
+  async function autoLoadTemplate() {
     const urlParams = new URLSearchParams(window.location.search);
-    const templateData = urlParams.get("template"); // base64 zip from library
-    if (!templateData) return;
+    const templateFile = urlParams.get("template"); // just "edupro.zip"
+    if (!templateFile) return;
 
     try {
-      // Decode base64 zip string back into a Blob
-      const binary = atob(templateData.split(',')[1]);
-      const array = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        array[i] = binary.charCodeAt(i);
-      }
-      const blob = new Blob([array], { type: "application/zip" });
-      const file = new File([blob], "template.zip", { type: "application/zip" });
+      // Fetch the zip file from /library folder
+      const response = await fetch("library/" + templateFile);
+      if (!response.ok) throw new Error("File not found: " + templateFile);
 
-      // Feed the file into zipInput
+      const blob = await response.blob();
+      const file = new File([blob], templateFile, { type: "application/zip" });
+
+      // Feed into input
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(file);
       const zipInput = document.getElementById("zipInput");
       zipInput.files = dataTransfer.files;
 
-      // Trigger the change event to load into editor
+      // Trigger change event
       zipInput.dispatchEvent(new Event("change", { bubbles: true }));
     } catch (err) {
       console.error("Template auto-load failed:", err);
