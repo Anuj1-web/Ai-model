@@ -4,59 +4,63 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home - Templates</title>
-  <link rel="icon" type="image/png" href="favicon.png">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="icon" type="image/png" href="https://www.favicon.cc/logo3d/147380.png">
   <style>
     body { background: #fff; color: #000; }
-    .card { cursor: pointer; transition: transform 0.2s; }
+    .card { cursor: pointer; transition: transform 0.2s ease; }
     .card:hover { transform: scale(1.02); }
-    .card-img { width: 100%; height: 200px; object-fit: cover; border-radius: 0.5rem 0.5rem 0 0; }
   </style>
 </head>
 <body class="p-6">
 
-  <h1 class="text-3xl font-bold mb-6">Template Library</h1>
+  <h1 class="text-3xl font-bold mb-6">Available Templates</h1>
 
-  <!-- Grid for Templates -->
-  <div id="templateGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  <!-- Templates Grid -->
+  <div id="libraryGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
 
   <script>
-    // Load library from localStorage
-    const library = JSON.parse(localStorage.getItem('sitegenLibrary') || '[]');
-    const templateGrid = document.getElementById('templateGrid');
+    // Load templates from localStorage (set in library.html)
+    let library = JSON.parse(localStorage.getItem("sitegenLibrary") || "[]");
+    const libraryGrid = document.getElementById("libraryGrid");
 
+    // Save chosen template and open wizard
+    function openInWizard(zipBlob) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        localStorage.setItem("wizardTemplate", reader.result); // base64 string
+        window.location.href = "wizardmaker.html"; // no long query params
+      };
+      reader.readAsDataURL(zipBlob);
+    }
+
+    // Render template cards
     function renderTemplates() {
-      templateGrid.innerHTML = '';
-      library.forEach((item, index) => {
-        if (item.type === 'template') {
-          const card = document.createElement('div');
-          card.className = "border rounded shadow overflow-hidden card";
-          
-          // Make it clickable -> open in wizardmaker
-          card.onclick = () => {
-            // Encode the content (zip as base64) so wizardmaker can read
-            const templateData = encodeURIComponent(item.content);
-            window.location.href = `wizardmaker.html?template=${templateData}`;
-          };
+      libraryGrid.innerHTML = "";
+      library.forEach((item) => {
+        if (item.type === "template") {
+          const card = document.createElement("div");
+          card.className = "card border rounded shadow overflow-hidden";
 
-          // Thumbnail
-          const img = document.createElement('img');
-          img.src = item.thumbnail || 'https://via.placeholder.com/400x200?text=No+Thumbnail';
-          img.className = "card-img";
+          const img = document.createElement("img");
+          img.src = item.thumbnail || "https://via.placeholder.com/400x200?text=No+Thumbnail";
+          img.className = "w-full h-48 object-cover";
           card.appendChild(img);
 
-          // Name
-          const name = document.createElement('div');
-          name.textContent = item.name;
-          name.className = "p-2 font-semibold text-center";
-          card.appendChild(name);
+          // Open in wizard on click
+          card.onclick = async () => {
+            const response = await fetch(item.content); // item.content is base64 zip
+            const blob = await response.blob();
+            openInWizard(blob);
+          };
 
-          templateGrid.appendChild(card);
+          libraryGrid.appendChild(card);
         }
       });
     }
 
     renderTemplates();
   </script>
+
 </body>
 </html>
