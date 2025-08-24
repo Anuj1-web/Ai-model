@@ -498,116 +498,123 @@
   }
   autoLoadTemplate();
 </script>
+<!-- ================== LIBRARY SIDEBAR & DRAG-DROP ================== -->
+<style>
+  #librarySidebar {
+    position: fixed;
+    top: 80px;
+    right: 10px;
+    width: 220px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+  }
+  #librarySidebar h3 { margin: 0 0 0.5rem 0; font-size: 1rem; text-align: center; }
+  .library-item {
+    padding: 0.4rem;
+    margin: 0.25rem 0;
+    background: #f3f4f6;
+    border-radius: 0.25rem;
+    cursor: grab;
+    text-align: center;
+    font-size: 0.85rem;
+  }
+  .library-item.dragging { opacity: 0.6; }
+  #librarySidebar button { width: 100%; margin-top: 0.5rem; padding: 0.4rem; font-size: 0.85rem; }
+</style>
+
+<div id="librarySidebar">
+  <h3>Library</h3>
+  <div id="libraryContainer"></div>
+  <button id="addBoxBtn">+ Add Box/Card</button>
+  <button id="addHeaderBtn">+ Add Header</button>
+  <button id="addFooterBtn">+ Add Footer</button>
+  <button id="addPageBtn">+ Add Page</button>
+</div>
+
 <script>
-(function(){
-  const pageNavContainer = document.createElement('div');
-  pageNavContainer.id='pageNavContainer';
-  pageNavContainer.style.position='fixed';
-  pageNavContainer.style.bottom='1rem';
-  pageNavContainer.style.left='50%';
-  pageNavContainer.style.transform='translateX(-50%)';
-  pageNavContainer.style.background='#fff';
-  pageNavContainer.style.border='1px solid #ccc';
-  pageNavContainer.style.padding='.5rem 1rem';
-  pageNavContainer.style.borderRadius='.5rem';
-  pageNavContainer.style.boxShadow='0 2px 10px rgba(0,0,0,.1)';
-  pageNavContainer.style.zIndex='90';
-  document.body.appendChild(pageNavContainer);
+  // -------- Library Items --------
+  let libraryItems = [
+    { id: 'box1', type: 'box', name: 'Box Card 1', content: '<div class="boxcard">Double-click to edit</div>' },
+    { id: 'header1', type: 'header', name: 'Header 1', content: '<header>Header Text</header>' },
+    { id: 'footer1', type: 'footer', name: 'Footer 1', content: '<footer>Footer Text</footer>' },
+    { id: 'page1', type: 'page', name: 'New Page', content: '<!DOCTYPE html><html><body><h1>New Page</h1></body></html>' }
+  ];
 
-  function renderPageNav() {
-    pageNavContainer.innerHTML = '';
-    pages.forEach(p=>{
-      const btn = document.createElement('button');
-      btn.textContent=p;
-      btn.style.margin='0 .3rem';
-      btn.style.padding='.3rem .6rem';
-      btn.onclick = ()=>{
-        activePage=p;
-        renderTabs();
-        renderIframes();
-        attachIframeDrag();
-      };
-      pageNavContainer.appendChild(btn);
-    });
-  }
-  window.renderPageNav = renderPageNav;
-  renderPageNav();
-
-  // Override insertLibraryPage to auto add nav button
-  const oldInsertLibraryPage = window.insertLibraryPage;
-  window.insertLibraryPage = function(html,pageName){
-    oldInsertLibraryPage(html,pageName);
-    renderPageNav();
-  };
-
-  // --- Sidebar direct image upload ---
-  const uploadInput = document.createElement('input');
-  uploadInput.type='file';
-  uploadInput.accept='image/*';
-  uploadInput.style.display='none';
-  document.body.appendChild(uploadInput);
-
-  libraryItems.addEventListener('dblclick',(e)=>{
-    const target = e.target;
-    if(!target || !target.textContent) return;
-    const compName = target.textContent.toLowerCase();
-    if(compName.includes('image')){
-      uploadInput.click();
-      uploadInput.onchange = (ev)=>{
-        const file = ev.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = ()=>{
-          const html = `<img src="${reader.result}" alt="Uploaded Image"/>`;
-          const wrapper = document.createElement('div');
-          wrapper.innerHTML = html;
-          const node = wrapper.firstElementChild;
-          node.setAttribute('data-edit-id','c'+Math.random().toString(36).slice(2,9));
-          iframeRefs[activePage].contentDocument.body.appendChild(node);
-          node.addEventListener('dblclick',()=>{
-            parent.postMessage({type:'OPEN_EDITOR',page:activePage,id:node.getAttribute('data-edit-id'),
-              hasText:false,hasPlaceholder:false,src:node.src
-            },'*');
-          });
-          node.setAttribute('data-can-delete','true');
-          savePageContent(activePage,iframeRefs[activePage].contentDocument);
-        };
-        reader.readAsDataURL(file);
-      };
-    }
-  });
-
-  // --- Category filtering for pages ---
-  function addPageCategory(name, html, category){
-    componentsLibrary.pages.push({name:name,html:html,category:category||'uncategorized'});
-    if(currentCategory==='pages') renderLibrary('pages');
-  }
-  window.addPageCategory = addPageCategory;
-
-  // Update renderLibrary for page categories
-  const oldRenderLibrary = renderLibrary;
-  renderLibrary = function(cat){
-    libraryItems.innerHTML='';
-    let items = componentsLibrary[cat]||[];
-    if(cat==='pages'){
-      items = items.filter(c=>c.category===currentCategory||currentCategory==='pages');
-    }
-    items.forEach((comp)=>{
+  function renderLibrary() {
+    const container = document.getElementById('libraryContainer');
+    container.innerHTML = '';
+    libraryItems.forEach(item => {
       const div = document.createElement('div');
-      div.textContent = comp.name;
-      div.style.border='1px solid #ccc';
-      div.style.padding='.4rem';
-      div.style.margin='.3rem 0';
-      div.style.cursor='grab';
-      div.draggable=true;
-      div.addEventListener('dragstart',(ev)=>{
-        ev.dataTransfer.setData('text/plain',comp.html);
+      div.className = 'library-item';
+      div.draggable = true;
+      div.dataset.id = item.id;
+      div.dataset.type = item.type;
+      div.innerText = item.name;
+      div.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', item.id);
+        div.classList.add('dragging');
       });
-      libraryItems.appendChild(div);
+      div.addEventListener('dragend', e => {
+        div.classList.remove('dragging');
+      });
+      container.appendChild(div);
     });
+  }
+  renderLibrary();
+
+  // -------- Drag-Drop Insertion --------
+  function enableDrop() {
+    const iframe = iframeRefs[activePage];
+    if (!iframe) return;
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.body.addEventListener('dragover', e => e.preventDefault());
+    doc.body.addEventListener('drop', e => {
+      e.preventDefault();
+      const id = e.dataTransfer.getData('text/plain');
+      const item = libraryItems.find(i => i.id === id);
+      if (item) {
+        const temp = document.createElement('div');
+        temp.innerHTML = item.content;
+        doc.body.appendChild(temp.firstChild);
+        // Save immediately to editedContents
+        editedContents[activePage] = "<!DOCTYPE html>" + doc.documentElement.outerHTML;
+      }
+    });
+  }
+
+  // Call after every iframe render
+  const originalRenderIframes = renderIframes;
+  renderIframes = function() {
+    originalRenderIframes();
+    enableDrop();
   };
-})();
+
+  // -------- Add New Items --------
+  function addLibraryItem(type) {
+    const name = prompt(`Enter name for new ${type}:`);
+    if (!name) return;
+    let content = '';
+    if (type==='box') content = '<div class="boxcard">Double-click to edit</div>';
+    if (type==='header') content = '<header>Header Text</header>';
+    if (type==='footer') content = '<footer>Footer Text</footer>';
+    if (type==='page') content = `<!DOCTYPE html><html><body><h1>${name}</h1></body></html>`;
+    const id = type+'_'+Math.random().toString(36).slice(2,8);
+    libraryItems.push({id,type,name,content});
+    renderLibrary();
+  }
+
+  document.getElementById('addBoxBtn').onclick = ()=> addLibraryItem('box');
+  document.getElementById('addHeaderBtn').onclick = ()=> addLibraryItem('header');
+  document.getElementById('addFooterBtn').onclick = ()=> addLibraryItem('footer');
+  document.getElementById('addPageBtn').onclick = ()=> addLibraryItem('page');
 </script>
+
 
 </body>
 </html>
