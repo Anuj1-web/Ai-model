@@ -3,127 +3,149 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sitegen Library</title>
-  <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css" rel="stylesheet"/>
+  <title>Library Page Fixed</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet"/>
   <style>
-    body { font-family: Arial, sans-serif; background: #fff; color: #000; margin: 0; padding: 20px; }
-    h1 { font-size: 24px; margin-bottom: 20px; }
-    .upload-section { margin-bottom: 20px; }
-    input, button { padding: 8px 12px; margin: 5px 0; border: 1px solid #000; background: #fff; color: #000; cursor: pointer; }
-    input[type=file] { border: none; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-    .card { border: 1px solid #000; padding: 10px; border-radius: 8px; text-align: center; }
-    .card img { width: 100%; height: 200px; object-fit: cover; border-radius: 6px; }
-    .progress { width: 100%; background: #eee; height: 8px; border-radius: 4px; overflow: hidden; margin: 10px 0; }
-    .progress-bar { height: 100%; background: #000; width: 0; }
-    /* Modal */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
-    .modal-content { background: #fff; padding: 20px; border-radius: 8px; max-width: 800px; width: 100%; }
-    .modal img { max-width: 100%; display: block; margin: auto; }
+    body { background: #fff; color: #000; }
+    .btn { background: black; color: white; padding: 0.5rem 1rem; border-radius: 0.25rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .btn:hover { opacity: 0.8; }
+    .card-img { width: 100%; height: 150px; object-fit: cover; border-radius: 0.5rem; }
   </style>
 </head>
-<body>
+<body class="p-6">
+  <h1 class="text-3xl font-bold mb-6">Library</h1>
 
-  <h1>📂 Sitegen Library</h1>
-
-  <div class="upload-section">
-    <label>Upload Template (ZIP): </label>
-    <input type="file" id="templateUpload" accept=".zip">
-    <br>
-    <label>Upload Other (Block/Theme/Subscription): </label>
-    <input type="file" id="otherUpload" multiple>
+  <!-- Upload Section -->
+  <div class="mb-6">
+    <label class="block mb-2 font-semibold">Upload Template / Block / Theme / Subscription</label>
+    <input type="file" id="fileInput" class="mb-4 border p-2" multiple>
+    <progress id="uploadProgress" value="0" max="100" class="w-full mb-4"></progress>
+    <button id="uploadBtn" class="btn">Upload</button>
   </div>
 
-  <h2>Templates</h2>
-  <div class="grid" id="templateGrid"></div>
+  <!-- Templates Grid -->
+  <h2 class="text-2xl font-semibold mb-4">Templates</h2>
+  <div id="libraryGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6"></div>
 
-  <!-- Modal for Thumbnail Editor -->
-  <div class="modal" id="thumbnailModal">
-    <div class="modal-content">
-      <h3>Edit Thumbnail</h3>
-      <div>
-        <img id="cropImage" alt="To Crop">
+  <!-- Thumbnail Editor Modal -->
+  <div id="thumbModal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center">
+    <div class="bg-white p-4 rounded shadow-lg w-3/4 h-3/4">
+      <h2 class="text-xl font-bold mb-4">Edit Thumbnail</h2>
+      <div class="h-4/5">
+        <img id="cropperImage" style="max-width:100%; max-height:100%; display:block; margin:auto;"/>
       </div>
-      <button id="saveThumb">Save Thumbnail</button>
-      <button id="closeModal">Cancel</button>
+      <div class="mt-4 flex justify-end gap-4">
+        <button id="saveThumb" class="btn">Save Thumbnail</button>
+        <button id="cancelThumb" class="btn bg-gray-500 text-white">Cancel</button>
+      </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
+  <script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
   <script>
-    let library = JSON.parse(localStorage.getItem("library")) || { templates: [], others: [] };
-    const templateGrid = document.getElementById("templateGrid");
-    const templateUpload = document.getElementById("templateUpload");
-    const otherUpload = document.getElementById("otherUpload");
+    window.addEventListener('DOMContentLoaded', () => {
+      const fileInput = document.getElementById('fileInput');
+      const uploadBtn = document.getElementById('uploadBtn');
+      const uploadProgress = document.getElementById('uploadProgress');
+      const libraryGrid = document.getElementById('libraryGrid');
 
-    const modal = document.getElementById("thumbnailModal");
-    const cropImage = document.getElementById("cropImage");
-    let cropper, currentTemplateIndex;
+      const thumbModal = document.getElementById('thumbModal');
+      const cropperImage = document.getElementById('cropperImage');
+      const saveThumb = document.getElementById('saveThumb');
+      const cancelThumb = document.getElementById('cancelThumb');
 
-    function saveLibrary() {
-      localStorage.setItem("library", JSON.stringify(library));
-    }
+      let library = JSON.parse(localStorage.getItem('sitegenLibrary') || '[]');
+      let currentEditingId = null;
+      let cropper;
 
-    function renderTemplates() {
-      templateGrid.innerHTML = "";
-      library.templates.forEach((tpl, i) => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <img src="${tpl.thumbnail || ''}" alt="Thumbnail">
-          <p>${tpl.name}</p>
-          <button onclick="openThumbnailEditor(${i})">Edit Thumbnail</button>
-        `;
-        templateGrid.appendChild(card);
-      });
-    }
+      function renderLibrary() {
+        libraryGrid.innerHTML = '';
+        library.forEach((item, index) => {
+          if(item.type === 'template'){
+            const card = document.createElement('div');
+            card.className = "border p-4 rounded shadow flex flex-col items-center";
 
-    templateUpload.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const newTpl = { name: file.name, data: reader.result, thumbnail: "" };
-        library.templates.push(newTpl);
-        saveLibrary();
-        renderTemplates();
+            const img = document.createElement('img');
+            img.src = item.thumbnail || 'https://via.placeholder.com/400x200?text=No+Thumbnail';
+            img.className = "card-img mb-2";
+            card.appendChild(img);
+
+            const name = document.createElement('p');
+            name.textContent = item.name;
+            name.className = "font-semibold mb-2 text-center";
+            card.appendChild(name);
+
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edit Thumbnail';
+            editBtn.className = 'btn';
+            editBtn.onclick = () => openThumbnailEditor(index);
+            card.appendChild(editBtn);
+
+            libraryGrid.appendChild(card);
+          }
+        });
+      }
+
+      function openThumbnailEditor(index){
+        currentEditingId = index;
+        const item = library[index];
+        cropperImage.src = item.thumbnail || 'https://via.placeholder.com/800x400?text=Upload+Thumbnail';
+        thumbModal.classList.remove('hidden');
+
+        if(cropper) cropper.destroy();
+        cropper = new Cropper(cropperImage, {
+          aspectRatio: 16 / 9,
+          viewMode: 1,
+          dragMode: 'move',
+          autoCropArea: 1,
+        });
+      }
+
+      saveThumb.onclick = () => {
+        if(cropper && currentEditingId !== null){
+          const canvas = cropper.getCroppedCanvas({ width: 400, height: 200 });
+          library[currentEditingId].thumbnail = canvas.toDataURL();
+          localStorage.setItem('sitegenLibrary', JSON.stringify(library));
+          renderLibrary();
+        }
+        thumbModal.classList.add('hidden');
       };
-      reader.readAsDataURL(file);
+
+      cancelThumb.onclick = () => {
+        thumbModal.classList.add('hidden');
+        if(cropper) cropper.destroy();
+      };
+
+      uploadBtn.onclick = () => {
+        const files = Array.from(fileInput.files);
+        if(!files.length) return;
+
+        let uploaded = 0;
+        files.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = e => {
+            const type = file.name.endsWith('.zip') ? 'template' : 'asset';
+            library.push({
+              name: file.name,
+              type,
+              content: e.target.result,
+              thumbnail: null
+            });
+            uploaded++;
+            uploadProgress.value = (uploaded / files.length) * 100;
+
+            if(uploaded === files.length){
+              localStorage.setItem('sitegenLibrary', JSON.stringify(library));
+              renderLibrary();
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+      };
+
+      renderLibrary();
     });
-
-    otherUpload.addEventListener("change", (e) => {
-      [...e.target.files].forEach(file => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          library.others.push({ name: file.name, data: reader.result });
-          saveLibrary();
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-
-    window.openThumbnailEditor = function(index) {
-      currentTemplateIndex = index;
-      modal.style.display = "flex";
-      cropImage.src = library.templates[index].thumbnail || "";
-      cropper = new Cropper(cropImage, { aspectRatio: 3/2, viewMode: 1 });
-    };
-
-    document.getElementById("saveThumb").onclick = function() {
-      const canvas = cropper.getCroppedCanvas({ width: 600, height: 400 });
-      library.templates[currentTemplateIndex].thumbnail = canvas.toDataURL();
-      saveLibrary();
-      renderTemplates();
-      modal.style.display = "none";
-      cropper.destroy();
-    };
-
-    document.getElementById("closeModal").onclick = function() {
-      modal.style.display = "none";
-      cropper.destroy();
-    };
-
-    renderTemplates();
   </script>
 </body>
 </html>
