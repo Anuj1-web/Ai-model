@@ -224,5 +224,43 @@
       renderLibrary();
     });
   </script>
+<script>
+  // === Enhanced upload handler with block/theme/subscription support ===
+  uploadBtn.onclick = () => {
+    const files = Array.from(fileInput.files);
+    if (!files.length) return;
+
+    let uploaded = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        // categorize files properly
+        let type = 'asset'; // default
+        if (file.name.endsWith('.zip')) type = 'template';
+        else if (file.name.endsWith('.block')) type = 'block';
+        else if (file.name.endsWith('.theme')) type = 'theme';
+        else if (file.name.endsWith('.sub')) type = 'subscription';
+
+        // push into library
+        library.push({
+          name: file.name,
+          type,
+          content: e.target.result,
+          thumbnail: null
+        });
+
+        uploaded++;
+        uploadProgress.value = (uploaded / files.length) * 100;
+
+        if (uploaded === files.length) {
+          localStorage.setItem('sitegenLibrary', JSON.stringify(library));
+          renderLibrary();
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+</script>
+
 </body>
 </html>
