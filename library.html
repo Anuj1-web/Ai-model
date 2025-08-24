@@ -2,171 +2,110 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sitegen — Library</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #fff;
-      color: #000;
-      margin: 0;
-      padding: 20px;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    h1 { font-size: 20px; }
-    button {
-      background: #000;
-      color: #fff;
-      border: none;
-      padding: 5px 12px;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    button:hover { opacity: 0.8; }
-    .upload-section, .library {
-      margin-bottom: 20px;
-    }
-    .library-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 15px;
-    }
-    .library-item {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: center;
-      border-radius: 6px;
-      background: #fafafa;
-    }
-    .library-item img {
-      width: 100%;
-      height: 120px;
-      object-fit: cover;
-      margin-bottom: 8px;
-      border-radius: 4px;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Sitegen — Library</h1>
-    <button onclick="window.location.href='index.html'">Home</button>
-  </header>
-
-  <section class="upload-section">
-    <h2>Upload New Item</h2>
-    <label>Category:
-      <select id="category">
-        <option value="templates">Template</option>
-        <option value="blocks">Block</option>
-        <option value="themes">Theme</option>
-        <option value="subscriptions">Subscription</option>
-      </select>
-    </label><br><br>
-    <input type="file" id="fileInput" accept=".html,.zip"><br><br>
-    <button onclick="uploadItem()">Upload</button>
-  </section>
-
-  <section class="library">
-    <h2>Library Items</h2>
-    <div class="library-grid" id="libraryGrid"></div>
-  </section>
-
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body class="bg-white text-black">
+  <div class="max-w-5xl mx-auto p-6">
+    <header class="flex justify-between items-center border-b pb-4 mb-6">
+      <h1 class="text-2xl font-bold">Sitegen — Library</h1>
+      <a href="index.html" class="bg-black text-white px-4 py-2 rounded">Home</a>
+    </header>
+
+    <section class="mb-6">
+      <h2 class="text-lg font-semibold mb-2">Upload New Item</h2>
+      <div class="flex items-center gap-3">
+        <select id="category" class="border px-2 py-1 rounded">
+          <option>Template</option>
+          <option>Block</option>
+          <option>Theme</option>
+          <option>Subscription Box</option>
+        </select>
+        <input type="file" id="fileInput" class="border px-2 py-1 rounded">
+        <button onclick="uploadItem()" class="bg-black text-white px-4 py-1 rounded">Upload</button>
+      </div>
+    </section>
+
+    <h2 class="text-lg font-semibold mb-3">Library Items</h2>
+    <div id="libraryItems" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+  </div>
+
   <script>
-    const fallbackImage =
-      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAQAAACENnwnAAAAMUlEQVR42mP8z8AARLHwHzAyMiBAVWAAqXFAF5xAA1QgB8gGgYE2IMoCqYGkEXMQUk4yMIhAzgAAB3TBKPG/Xd8AAAAASUVORK5CYII=";
-
-    function getLibrary() {
-      return JSON.parse(localStorage.getItem("sitegen_library") || 
-        '{"templates":[],"blocks":[],"themes":[],"subscriptions":[]}');
-    }
-
-    function saveLibrary(data) {
-      localStorage.setItem("sitegen_library", JSON.stringify(data));
-    }
-
-    function renderLibrary() {
-      const data = getLibrary();
-      const grid = document.getElementById("libraryGrid");
-      grid.innerHTML = "";
-
-      Object.keys(data).forEach(category => {
-        data[category].forEach((item, i) => {
-          const div = document.createElement("div");
-          div.className = "library-item";
-
-          const img = document.createElement("img");
-          img.src = item.thumbnail || fallbackImage;
-
-          const name = document.createElement("p");
-          name.textContent = item.name;
-
-          const cat = document.createElement("small");
-          cat.textContent = category.charAt(0).toUpperCase() + category.slice(1);
-
-          const btn = document.createElement("button");
-          btn.textContent = "Remove";
-          btn.onclick = () => {
-            data[category].splice(i, 1);
-            saveLibrary(data);
-            renderLibrary();
-          };
-
-          div.appendChild(img);
-          div.appendChild(name);
-          div.appendChild(cat);
-          div.appendChild(document.createElement("br"));
-          div.appendChild(btn);
-
-          grid.appendChild(div);
-        });
-      });
-    }
-
     function uploadItem() {
-      const fileInput = document.getElementById("fileInput");
       const category = document.getElementById("category").value;
+      const fileInput = document.getElementById("fileInput");
+      if (!fileInput.files.length) return alert("Please select a file.");
+
       const file = fileInput.files[0];
-      if (!file) return;
-
       const reader = new FileReader();
-      reader.onload = async (e) => {
-        const data = getLibrary();
 
-        // Generate screenshot thumbnail from uploaded HTML (if possible)
-        let thumbnail = fallbackImage;
-        try {
-          const iframe = document.createElement("iframe");
-          iframe.style.display = "none";
-          document.body.appendChild(iframe);
-          iframe.contentDocument.write(e.target.result);
-          await new Promise(res => setTimeout(res, 300));
-          const canvas = await html2canvas(iframe.contentDocument.body);
-          thumbnail = canvas.toDataURL();
-          document.body.removeChild(iframe);
-        } catch (err) {
-          console.warn("Screenshot failed, using fallback", err);
-        }
+      reader.onload = function(e) {
+        const content = e.target.result;
+        const name = file.name.replace(/\.[^/.]+$/, "");
 
-        data[category].push({
-          name: file.name.replace(/\.[^/.]+$/, ""),
-          content: e.target.result,
-          thumbnail
+        // Temporary preview container for screenshot
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = content;
+        document.body.appendChild(tempDiv);
+
+        html2canvas(tempDiv).then(canvas => {
+          const preview = canvas.toDataURL("image/png");
+          tempDiv.remove();
+
+          const newItem = { name, category, content, preview };
+          const library = JSON.parse(localStorage.getItem("sitegenLibrary")) || [];
+          library.push(newItem);
+          localStorage.setItem("sitegenLibrary", JSON.stringify(library));
+          loadLibrary();
         });
-
-        saveLibrary(data);
-        renderLibrary();
       };
       reader.readAsText(file);
     }
 
-    renderLibrary();
+    function removeItem(index) {
+      const library = JSON.parse(localStorage.getItem("sitegenLibrary")) || [];
+      library.splice(index, 1);
+      localStorage.setItem("sitegenLibrary", JSON.stringify(library));
+      loadLibrary();
+    }
+
+    function loadLibrary() {
+      const library = JSON.parse(localStorage.getItem("sitegenLibrary")) || [];
+      const container = document.getElementById("libraryItems");
+      container.innerHTML = "";
+
+      library.forEach((item, idx) => {
+        const card = document.createElement("div");
+        card.className = "border rounded-lg shadow p-3 flex flex-col";
+
+        const img = document.createElement("img");
+        img.src = item.preview || "";
+        img.alt = item.name;
+        img.className = "w-full h-32 object-cover rounded mb-2 bg-gray-100";
+
+        const title = document.createElement("h3");
+        title.className = "font-semibold text-center mb-2";
+        title.textContent = item.name;
+
+        const cat = document.createElement("p");
+        cat.className = "text-sm text-gray-600 text-center mb-2";
+        cat.textContent = item.category;
+
+        const btn = document.createElement("button");
+        btn.className = "bg-black text-white px-3 py-1 rounded mt-auto";
+        btn.textContent = "Remove";
+        btn.onclick = () => removeItem(idx);
+
+        card.appendChild(img);
+        card.appendChild(title);
+        card.appendChild(cat);
+        card.appendChild(btn);
+        container.appendChild(card);
+      });
+    }
+
+    window.onload = loadLibrary;
   </script>
 </body>
 </html>
