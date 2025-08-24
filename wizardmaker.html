@@ -2,67 +2,56 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Wizard Maker — Button Fix (v9 HTML/JS)</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <title>Wizard Maker</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
-    body { font-family: sans-serif; margin: 20px; background: #f9fafb; }
-    h1 { font-size: 1.5rem; margin-bottom: .5rem; }
-    .card { background: #fff; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
-    .tabs { display: flex; gap: .5rem; flex-wrap: wrap; margin: 1rem 0; }
-    .tab { padding: .25rem .75rem; border: 1px solid #ccc; border-radius: .5rem; background: #eee; cursor: pointer; }
-    .tab.active { background: #ddd; font-weight: bold; }
-    iframe { width: 100%; height: 600px; border: 1px solid #ccc; border-radius: .5rem; background: #fff; }
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; }
-    .modal { background: #fff; padding: 1rem; border-radius: 1rem; max-width: 400px; width: 100%; box-shadow: 0 4px 16px rgba(0,0,0,.3); }
-    .mb-2 { margin-bottom: .5rem; }
-    .mb-3 { margin-bottom: .75rem; }
-    .mb-4 { margin-bottom: 1rem; }
-    input, select, button { padding: .5rem; border: 1px solid #ccc; border-radius: .5rem; width: 100%; }
-    button { cursor: pointer; }
-    .actions { display: flex; justify-content: flex-end; gap: .5rem; }
+    body { font-family: sans-serif; margin: 0; padding: 0; }
+    header { background: #222; color: #fff; padding: 10px; }
+    #tabs { display: flex; border-bottom: 1px solid #ccc; }
+    #tabs button { padding: 8px 12px; border: none; cursor: pointer; background: #eee; }
+    #tabs button.active { background: #ddd; font-weight: bold; }
+    #iframe-container { height: 80vh; }
+    iframe { width: 100%; height: 100%; border: none; }
+    .modal-backdrop { position: fixed; inset:0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; }
+    .modal { background: white; padding: 20px; border-radius: 8px; width: 400px; }
+    .modal section { margin-bottom: 12px; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Wizard Maker — Button Fix (v9)</h1>
-    <p>Upload EduPro (multi-page). Double-click or double-tap buttons/links to edit. Cancel fully restores. Fonts untouched.</p>
+  <header>
+    <input type="file" id="zipInput" accept=".zip" />
+    <button id="exportBtn">Export Edited ZIP</button>
+  </header>
 
-    <div style="display:flex; gap:.5rem; align-items:center;">
-      <input type="file" id="zipInput" accept=".zip">
-      <button id="exportBtn">⬇ Export ZIP</button>
-    </div>
+  <div id="tabs"></div>
+  <div id="iframe-container"></div>
 
-    <div class="tabs" id="tabs"></div>
-    <div id="iframeContainer"></div>
-  </div>
-
-  <!-- Modal -->
-  <div id="modalBackdrop" class="modal-backdrop" style="display:none;">
+  <!-- Editor Modal -->
+  <div id="modalBackdrop" class="modal-backdrop">
     <div class="modal">
-      <h2 class="mb-3">Edit Element</h2>
-      <div id="textSection" class="mb-4">
-        <label class="mb-2">Text / Placeholder</label>
-        <input id="modalText">
-      </div>
-      <div class="mb-3">
-        <label class="mb-2">Color Mode</label>
+      <h3>Edit Element</h3>
+      <section id="textSection">
+        <label>Text / Placeholder</label>
+        <textarea id="modalText" style="width:100%;height:60px;"></textarea>
+        <button id="applyTextBtn">Apply Text</button>
+      </section>
+      <section>
+        <label>Color</label>
+        <input type="color" id="modalColor" />
         <select id="colorTarget">
-          <option value="auto">Auto</option>
-          <option value="text">Text Color</option>
+          <option value="text">Text</option>
           <option value="background">Background</option>
         </select>
-      </div>
-      <div class="mb-4">
-        <label class="mb-2">Color Picker</label>
-        <input type="color" id="modalColor" style="width:70px;">
-      </div>
-      <div class="mb-4">
-        <label class="mb-2">Replace Image</label>
-        <input type="url" id="imageUrl" placeholder="Image URL">
-        <input type="file" id="imageFile" accept="image/*">
-      </div>
-      <div class="actions">
+        <button id="applyColorBtn">Apply Color</button>
+      </section>
+      <section>
+        <label>Replace Image</label>
+        <input type="file" id="modalImageFile" accept="image/*" />
+        <input type="text" id="modalImageUrl" placeholder="Or paste image URL" style="width:100%;" />
+        <button id="applyImageBtn">Apply Image</button>
+      </section>
+      <div style="text-align:right;">
         <button id="cancelBtn">Cancel</button>
         <button id="saveBtn">Save</button>
       </div>
@@ -72,181 +61,187 @@
   <script>
     const zipInput = document.getElementById("zipInput");
     const exportBtn = document.getElementById("exportBtn");
-    const tabsEl = document.getElementById("tabs");
-    const iframeContainer = document.getElementById("iframeContainer");
+    const tabs = document.getElementById("tabs");
+    const iframeContainer = document.getElementById("iframe-container");
 
     const modalBackdrop = document.getElementById("modalBackdrop");
     const modalText = document.getElementById("modalText");
     const modalColor = document.getElementById("modalColor");
-    const colorTargetSel = document.getElementById("colorTarget");
-    const imageUrl = document.getElementById("imageUrl");
-    const imageFile = document.getElementById("imageFile");
+    const colorTarget = document.getElementById("colorTarget");
+    const modalImageFile = document.getElementById("modalImageFile");
+    const modalImageUrl = document.getElementById("modalImageUrl");
     const cancelBtn = document.getElementById("cancelBtn");
     const saveBtn = document.getElementById("saveBtn");
+    const applyTextBtn = document.getElementById("applyTextBtn");
+    const applyColorBtn = document.getElementById("applyColorBtn");
+    const applyImageBtn = document.getElementById("applyImageBtn");
 
-    let pages = [];
-    let pageContents = {};
-    let editedContents = {};
-    let otherFiles = {}; // store css/js/images untouched
-    let activePage = "";
+    let zipFileStructure = {}; 
+    let editedHTML = {};       
     let iframeRefs = {};
+    let modalTarget = null;
+    let originalSnapshotHTML = null;
 
-    let modalTarget = { page: "", id: "", hasText: false };
-    let originalSnapshot = null;
-
-    // --- File handling ---
+    // Load ZIP
     zipInput.addEventListener("change", async (e) => {
-      const file = e.target.files?.[0];
+      const file = e.target.files[0];
       if (!file) return;
-      const zip = await JSZip.loadAsync(file);
-      const newPages = [];
-      const newContents = {};
-      const other = {};
+      const jszip = new JSZip();
+      const zip = await jszip.loadAsync(file);
+
+      tabs.innerHTML = "";
+      iframeContainer.innerHTML = "";
+      zipFileStructure = {};
 
       await Promise.all(Object.keys(zip.files).map(async (filename) => {
-        const entry = zip.files[filename];
-        if (entry.dir) return; // skip folders
-        if (filename.toLowerCase().endsWith(".html")) {
-          const data = await entry.async("string");
-          newPages.push(filename);
-          newContents[filename] = data;
-        } else {
-          // keep non-html as Uint8Array
-          const data = await entry.async("uint8array");
-          other[filename] = data;
+        if (!zip.files[filename].dir) {
+          zipFileStructure[filename] = await zip.files[filename].async("uint8array");
         }
       }));
 
-      newPages.sort((a,b) => {
-        const ai = /(^|\/)index\.html$/i.test(a);
-        const bi = /(^|\/)index\.html$/i.test(b);
-        if (ai && !bi) return -1;
-        if (!ai && bi) return 1;
-        return a.localeCompare(b);
+      Object.keys(zipFileStructure).forEach((filename, idx) => {
+        if (filename.endsWith(".html")) {
+          const btn = document.createElement("button");
+          btn.textContent = filename;
+          btn.onclick = () => openTab(filename);
+          tabs.appendChild(btn);
+          if (idx === 0) openTab(filename);
+        }
       });
-
-      pages = newPages;
-      pageContents = newContents;
-      editedContents = {...newContents};
-      otherFiles = other;
-      activePage = newPages[0] || "";
-
-      renderTabs();
-      renderIframes();
     });
 
-    // Tabs
-    function renderTabs() {
-      tabsEl.innerHTML = "";
-      pages.forEach((p) => {
-        const tab = document.createElement("div");
-        tab.className = "tab" + (p === activePage ? " active" : "");
-        tab.textContent = p;
-        tab.onclick = () => { activePage = p; renderTabs(); renderIframes(); };
-        tabsEl.appendChild(tab);
+    function openTab(pageName) {
+      [...tabs.children].forEach(b => b.classList.remove("active"));
+      const btn = [...tabs.children].find(b => b.textContent === pageName);
+      if (btn) btn.classList.add("active");
+
+      const html = editedHTML[pageName] 
+        ? editedHTML[pageName] 
+        : new TextDecoder().decode(zipFileStructure[pageName]);
+      iframeContainer.innerHTML = `<iframe srcdoc="${html}"></iframe>`;
+      const iframe = iframeContainer.querySelector("iframe");
+      iframeRefs[pageName] = iframe;
+
+      iframe.addEventListener("load", () => {
+        let doc = iframe.contentDocument;
+        let htmlWithBridge = injectEditingBridge(doc.documentElement.outerHTML, pageName);
+        iframe.srcdoc = htmlWithBridge;
       });
     }
 
-    // Inject bridge
     function injectEditingBridge(html, pageName) {
       const bridge = `<script>(function(){
         var EDIT_ATTR='data-edit-id';
-        var clickTimers={}; var bypassNext={};
-        function ensureId(el){if(!el.getAttribute(EDIT_ATTR)) el.setAttribute(EDIT_ATTR,'e'+Math.random().toString(36).slice(2,9));return el.getAttribute(EDIT_ATTR);}
-        function buildSnapshot(el){return {text:el.innerText||'',placeholder:('placeholder'in el?el.placeholder||undefined:undefined),src:(el.tagName==='IMG'?(el.getAttribute('src')||el.src||''):undefined),inline:{color:el.style.color,backgroundColor:el.style.backgroundColor}};}
-        document.addEventListener('click',function(e){var el=e.target;if(!el)return;var tn=(el.tagName||'').toUpperCase();if(tn==='A'||tn==='BUTTON'){var id=ensureId(el);if(bypassNext[id]){bypassNext[id]=false;return;}e.preventDefault();e.stopPropagation();if(clickTimers[id]){clearTimeout(clickTimers[id]);clickTimers[id]=null;var snap=buildSnapshot(el);parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,hasText:!!el.innerText,...snap},'*');}else{clickTimers[id]=setTimeout(function(){clickTimers[id]=null;bypassNext[id]=true;try{el.click();}catch(_){}} ,300);}}},true);
-        document.addEventListener('dblclick',function(e){var el=e.target;if(!el)return;e.preventDefault();e.stopPropagation();var id=ensureId(el);var snap=buildSnapshot(el);parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,hasText:!!el.innerText,...snap},'*');},true);
-        window.addEventListener('message',function(ev){var d=ev.data||{};var el=document.querySelector('['+EDIT_ATTR+'="'+d.id+'"]');if(!el)return;if(d.type==='APPLY_TEXT')el.innerText=d.text||'';if(d.type==='APPLY_COLOR'){if(d.target==='background')el.style.backgroundColor=d.color;else el.style.color=d.color;}if(d.type==='APPLY_IMAGE'&&el.tagName==='IMG')el.src=d.src;if(d.type==='RESTORE_ELEMENT'&&d.snapshot){if(d.snapshot.text!==undefined)el.innerText=d.snapshot.text;if(d.snapshot.placeholder!==undefined&&'placeholder'in el)el.placeholder=d.snapshot.placeholder;if(d.snapshot.src!==undefined&&el.tagName==='IMG')el.src=d.snapshot.src;if(d.snapshot.inline){el.style.color=d.snapshot.inline.color||'';el.style.backgroundColor=d.snapshot.inline.backgroundColor||'';}}});})();<\/script>`;
+        var clickTimer=null;
+        var delay=250;
+
+        function ensureId(el){
+          if(!el.getAttribute(EDIT_ATTR)) 
+            el.setAttribute(EDIT_ATTR,'e'+Math.random().toString(36).slice(2,9));
+          return el.getAttribute(EDIT_ATTR);
+        }
+
+        function buildSnapshot(el){
+          return {
+            text: el.innerText||'',
+            placeholder: ('placeholder' in el ? el.placeholder : undefined),
+            src: (el.tagName==='IMG'?el.src:undefined),
+            inline:{color:el.style.color,backgroundColor:el.style.backgroundColor}
+          };
+        }
+
+        document.addEventListener('click', function(e){
+          if(clickTimer){ 
+            clearTimeout(clickTimer);
+            clickTimer=null;
+            e.preventDefault(); e.stopPropagation();
+            var el=e.target; if(!el) return;
+            var id=ensureId(el);
+            var snap=buildSnapshot(el);
+            parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,hasText:!!el.innerText,...snap},'*');
+          } else {
+            clickTimer=setTimeout(()=>{clickTimer=null;},delay);
+          }
+        }, true);
+
+        window.addEventListener('message', function(ev){
+          var d=ev.data||{};
+          var el=document.querySelector('['+EDIT_ATTR+'="'+d.id+'"]');
+          if(!el) return;
+          if(d.type==='APPLY_TEXT') el.innerText=d.text||'';
+          if(d.type==='APPLY_COLOR'){
+            if(d.target==='background') el.style.backgroundColor=d.color;
+            else el.style.color=d.color;
+          }
+          if(d.type==='APPLY_IMAGE'&&el.tagName==='IMG') el.src=d.src;
+        });
+      })();<\/script>`;
       return html.replace(/<\/body>/i, bridge + "</body>");
     }
 
-    // Render iframe
-    function renderIframes() {
-      iframeContainer.innerHTML = "";
-      if (!activePage) return;
-      const iframe = document.createElement("iframe");
-      iframe.srcdoc = injectEditingBridge(editedContents[activePage] || pageContents[activePage] || "", activePage);
-      iframeContainer.appendChild(iframe);
-      iframeRefs[activePage] = iframe;
-    }
-
-    // --- Listen for messages from iframe ---
+    // Modal logic
     window.addEventListener("message", (event) => {
       const d = event.data || {};
       if (d.type === "OPEN_EDITOR") {
         modalTarget = { page: d.page, id: d.id, hasText: !!d.hasText };
         modalText.value = d.text || "";
         modalColor.value = "#000000";
-        originalSnapshot = d; // full snapshot
+        originalSnapshotHTML = iframeRefs[d.page].contentDocument.documentElement.outerHTML;
         modalBackdrop.style.display = "flex";
         document.getElementById("textSection").style.display = d.hasText ? "block" : "none";
       }
     });
 
-    // Live updates
-    modalText.addEventListener("input", () => {
+    applyTextBtn.onclick = () => {
       const {page,id} = modalTarget;
       iframeRefs[page].contentWindow.postMessage({type:"APPLY_TEXT",id,text:modalText.value},"*");
-    });
-
-    modalColor.addEventListener("input", () => {
-      const {page,id,hasText} = modalTarget;
-      const target = colorTargetSel.value==="auto" ? (hasText ? "color" : "background") : colorTargetSel.value;
-      iframeRefs[page].contentWindow.postMessage({type:"APPLY_COLOR",id,color:modalColor.value,target},"*");
-    });
-
-    imageUrl.addEventListener("input", () => {
+    };
+    applyColorBtn.onclick = () => {
       const {page,id} = modalTarget;
-      iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:imageUrl.value},"*");
-    });
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_COLOR",id,color:modalColor.value,target:colorTarget.value},"*");
+    };
+    applyImageBtn.onclick = () => {
+      const {page,id} = modalTarget;
+      if (modalImageFile.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:e.target.result},"*");
+        };
+        reader.readAsDataURL(modalImageFile.files[0]);
+      } else if (modalImageUrl.value) {
+        iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:modalImageUrl.value},"*");
+      }
+    };
 
-    imageFile.addEventListener("change", (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const {page,id} = modalTarget;
-        iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:reader.result},"*");
-      };
-      reader.readAsDataURL(file);
-    });
+    cancelBtn.onclick = () => {
+      if(modalTarget){
+        const iframe = iframeRefs[modalTarget.page];
+        if(iframe && originalSnapshotHTML){
+          iframe.srcdoc = originalSnapshotHTML; 
+        }
+      }
+      modalBackdrop.style.display = "none";
+    };
 
-    // Save edits
     saveBtn.onclick = () => {
       const {page} = modalTarget;
-      const iframe = iframeRefs[page];
-      if (iframe.contentDocument) {
-        const html = "<!DOCTYPE html>" + iframe.contentDocument.documentElement.outerHTML;
-        editedContents[page] = html;
-      }
+      const html = iframeRefs[page].contentDocument.documentElement.outerHTML;
+      editedHTML[page] = html;
       modalBackdrop.style.display = "none";
     };
 
-    // Cancel → restore snapshot
-    cancelBtn.onclick = () => {
-      const {page,id} = modalTarget;
-      const iframe = iframeRefs[page];
-      if (iframe?.contentWindow && originalSnapshot) {
-        iframe.contentWindow.postMessage({type:"RESTORE_ELEMENT",id,snapshot:originalSnapshot},"*");
-      }
-      modalBackdrop.style.display = "none";
-    };
-
-    // Export
-    exportBtn.addEventListener("click", async () => {
+    // Export ZIP with structure preserved
+    exportBtn.onclick = () => {
       const zip = new JSZip();
-      // Include edited HTML
-      pages.forEach((filename) => {
-        const html = editedContents[filename] || pageContents[filename] || "";
-        zip.file(filename, html);
+      Object.keys(zipFileStructure).forEach(filename => {
+        if (filename.endsWith(".html") && editedHTML[filename]) {
+          zip.file(filename, editedHTML[filename]);
+        } else {
+          zip.file(filename, zipFileStructure[filename]);
+        }
       });
-      // Include all other files unchanged
-      Object.entries(otherFiles).forEach(([filename, data]) => {
-        zip.file(filename, data);
-      });
-      const blob = await zip.generateAsync({type:"blob"});
-      saveAs(blob, "custom-site.zip");
-    });
+      zip.generateAsync({type:"blob"}).then(blob => saveAs(blob,"edited.zip"));
+    };
   </script>
 </body>
 </html>
