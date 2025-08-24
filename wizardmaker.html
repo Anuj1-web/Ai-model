@@ -125,6 +125,79 @@
     #cancelBtn:hover {
       background: #d1d5db;
     }
+ /* Wizard Maker Library Sidebar */
+#librarySidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  width: 280px;
+  background: #f9fafb;
+  border-left: 1px solid #ccc;
+  padding: 1rem;
+  overflow-y: auto;
+  box-shadow: -4px 0 12px rgba(0,0,0,0.05);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+
+#librarySidebar h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+  font-weight: bold;
+}
+
+.library-category {
+  margin-bottom: 1rem;
+}
+
+.library-item {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 0.4rem;
+  margin-bottom: 0.35rem;
+  cursor: grab;
+  background: #fff;
+}
+
+.library-item:hover {
+  background: #e5e7eb;
+}
+
+.library-item.dragging {
+  opacity: 0.6;
+}
+
+#pageNavContainer {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(255,255,255,0.95);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
+  z-index: 90;
+}
+
+#pageNavContainer button {
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.4rem;
+  border: 1px solid #ccc;
+  background: #f3f4f6;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+#pageNavContainer button.active {
+  font-weight: bold;
+  background: #e5e7eb;
+}
   </style>
 </head>
 <body>
