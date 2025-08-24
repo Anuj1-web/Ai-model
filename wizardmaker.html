@@ -394,32 +394,35 @@
     });
   </script>
 <script>
-  async function autoLoadTemplate() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const templateFile = urlParams.get("template"); // just "edupro.zip"
-    if (!templateFile) return;
+  function autoLoadTemplate() {
+    const templateData = localStorage.getItem("wizardTemplate");
+    if (!templateData) return;
 
     try {
-      // Fetch the zip file from /library folder
-      const response = await fetch("library/" + templateFile);
-      if (!response.ok) throw new Error("File not found: " + templateFile);
+      // Decode base64 zip string back into a Blob
+      const binary = atob(templateData.split(',')[1]);
+      const array = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        array[i] = binary.charCodeAt(i);
+      }
+      const blob = new Blob([array], { type: "application/zip" });
+      const file = new File([blob], "template.zip", { type: "application/zip" });
 
-      const blob = await response.blob();
-      const file = new File([blob], templateFile, { type: "application/zip" });
-
-      // Feed into input
+      // Feed the file into zipInput
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(file);
       const zipInput = document.getElementById("zipInput");
       zipInput.files = dataTransfer.files;
 
-      // Trigger change event
+      // Trigger the change event to load into editor
       zipInput.dispatchEvent(new Event("change", { bubbles: true }));
+
+      // Clear storage so it doesn’t auto-load next time accidentally
+      localStorage.removeItem("wizardTemplate");
     } catch (err) {
       console.error("Template auto-load failed:", err);
     }
   }
-
   autoLoadTemplate();
 </script>
 
