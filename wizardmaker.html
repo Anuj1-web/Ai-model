@@ -498,121 +498,189 @@
   }
   autoLoadTemplate();
 </script>
-<!-- ================== LIBRARY SIDEBAR & DRAG-DROP ================== -->
-<style>
-  #librarySidebar {
-    position: fixed;
-    top: 80px;
-    right: 10px;
-    width: 220px;
-    max-height: 80vh;
-    overflow-y: auto;
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 0.5rem;
-    padding: 0.5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 1000;
-  }
-  #librarySidebar h3 { margin: 0 0 0.5rem 0; font-size: 1rem; text-align: center; }
-  .library-item {
-    padding: 0.4rem;
-    margin: 0.25rem 0;
-    background: #f3f4f6;
-    border-radius: 0.25rem;
-    cursor: grab;
-    text-align: center;
-    font-size: 0.85rem;
-  }
-  .library-item.dragging { opacity: 0.6; }
-  #librarySidebar button { width: 100%; margin-top: 0.5rem; padding: 0.4rem; font-size: 0.85rem; }
-</style>
+<!-- ================== FINAL POLISHED ASSET LIBRARY SIDEBAR ================== -->
+<!-- Black + button -->
+<button id="openLibraryBtn" style="
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #111;
+  color: #fff;
+  font-size: 2rem;
+  border: none;
+  cursor: pointer;
+  z-index: 2000;
+">+</button>
 
-<div id="librarySidebar">
-  <h3>Library</h3>
-  <div id="libraryContainer"></div>
-  <button id="addBoxBtn">+ Add Box/Card</button>
-  <button id="addHeaderBtn">+ Add Header</button>
-  <button id="addFooterBtn">+ Add Footer</button>
-  <button id="addPageBtn">+ Add Page</button>
+<!-- Sidebar container -->
+<div id="librarySidebar" style="display:none;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+    <h3 style="margin:0;color:#fff;">Library Assets</h3>
+    <button id="closeLibraryBtn" style="background:none;color:#fff;font-size:1.2rem;border:none;cursor:pointer;">✖</button>
+  </div>
+  <input type="text" id="librarySearch" placeholder="Search..." style="width:100%;padding:0.3rem;margin-bottom:0.5rem;border-radius:0.25rem;border:none;background:#333;color:#fff;">
+  <div id="libraryContainer" style="overflow-y:auto; flex:1;"></div>
+  <hr style="border-color:#444;margin:0.5rem 0;">
+  <button id="addPageBtnSidebar" style="padding:0.4rem;background:#222;color:#fff;border:none;border-radius:0.25rem;cursor:pointer;">+ Add New Page</button>
 </div>
 
+<style>
+#librarySidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 100vh;
+  background: #111;
+  padding: 1rem;
+  box-shadow: -4px 0 12px rgba(0,0,0,0.5);
+  z-index: 1500;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+.library-category {
+  font-weight: bold;
+  margin-top: 1rem;
+  color: #fff;
+}
+.library-subcategory {
+  font-style: italic;
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+  color: #ccc;
+}
+.library-item {
+  padding: 0.5rem;
+  margin-bottom: 0.3rem;
+  border-radius: 0.3rem;
+  background: #222;
+  cursor: grab;
+  color: #fff;
+}
+.library-item:hover {
+  background: #333;
+}
+.library-item.dragging { opacity: 0.5; }
+</style>
+
 <script>
-  // -------- Library Items --------
-  let libraryItems = [
-    { id: 'box1', type: 'box', name: 'Box Card 1', content: '<div class="boxcard">Double-click to edit</div>' },
-    { id: 'header1', type: 'header', name: 'Header 1', content: '<header>Header Text</header>' },
-    { id: 'footer1', type: 'footer', name: 'Footer 1', content: '<footer>Footer Text</footer>' },
-    { id: 'page1', type: 'page', name: 'New Page', content: '<!DOCTYPE html><html><body><h1>New Page</h1></body></html>' }
+  // -------- Library Assets Example --------
+  let libraryAssets = [
+    { id:'box1', type:'box', category:'Box Cards', subcategory:'Default', name:'Box Card 1', content:'<div class="boxcard">Editable Box</div>' },
+    { id:'image1', type:'image', category:'Images', subcategory:'Hero', name:'Hero Image', content:'<img src="hero.jpg">' },
+    { id:'header1', type:'header', category:'Headers', subcategory:'Default', name:'Main Header', content:'<header>Main Header</header>' },
+    { id:'footer1', type:'footer', category:'Footers', subcategory:'Default', name:'Footer 1', content:'<footer>Footer Text</footer>' },
+    { id:'portal1', type:'subscription', category:'Portals', subcategory:'Premium', name:'Subscribe Block', content:'<div class="subscription-portal">Subscribe Now</div>' }
   ];
 
-  function renderLibrary() {
+  // -------- Render Library with categories/subcategories --------
+  function renderLibraryAssets(filter='') {
     const container = document.getElementById('libraryContainer');
     container.innerHTML = '';
-    libraryItems.forEach(item => {
-      const div = document.createElement('div');
-      div.className = 'library-item';
-      div.draggable = true;
-      div.dataset.id = item.id;
-      div.dataset.type = item.type;
-      div.innerText = item.name;
-      div.addEventListener('dragstart', e => {
-        e.dataTransfer.setData('text/plain', item.id);
-        div.classList.add('dragging');
+    const categories = [...new Set(libraryAssets.map(a=>a.category))];
+    categories.forEach(cat => {
+      const catDiv = document.createElement('div');
+      catDiv.className = 'library-category';
+      catDiv.textContent = cat;
+      container.appendChild(catDiv);
+
+      const subcats = [...new Set(libraryAssets.filter(a=>a.category===cat).map(a=>a.subcategory))];
+      subcats.forEach(sub => {
+        const subDiv = document.createElement('div');
+        subDiv.className = 'library-subcategory';
+        subDiv.textContent = sub;
+        container.appendChild(subDiv);
+
+        libraryAssets.filter(a => a.category===cat && a.subcategory===sub && a.name.toLowerCase().includes(filter.toLowerCase()))
+        .forEach(item => {
+          const div = document.createElement('div');
+          div.className='library-item';
+          div.draggable = true;
+          div.innerText = item.name;
+          div.dataset.id = item.id;
+
+          // Drag & drop
+          div.addEventListener('dragstart', e=>{
+            e.dataTransfer.setData('text/html', item.content);
+            div.classList.add('dragging');
+          });
+          div.addEventListener('dragend', e=>{
+            div.classList.remove('dragging');
+          });
+
+          // Click-to-add
+          div.addEventListener('click', e=>{
+            const iframe = iframeRefs[activePage];
+            if(!iframe) return;
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            const temp = document.createElement('div');
+            temp.innerHTML = item.content;
+            doc.body.appendChild(temp.firstChild);
+            editedContents[activePage] = "<!DOCTYPE html>"+doc.documentElement.outerHTML;
+          });
+
+          container.appendChild(div);
+        });
       });
-      div.addEventListener('dragend', e => {
-        div.classList.remove('dragging');
-      });
-      container.appendChild(div);
     });
   }
-  renderLibrary();
+  renderLibraryAssets();
 
-  // -------- Drag-Drop Insertion --------
+  // Search/filter
+  document.getElementById('librarySearch').addEventListener('input', e=>{
+    renderLibraryAssets(e.target.value);
+  });
+
+  // Open/close sidebar
+  document.getElementById('openLibraryBtn').onclick = ()=>{
+    document.getElementById('librarySidebar').style.display='flex';
+  };
+  document.getElementById('closeLibraryBtn').onclick = ()=>{
+    document.getElementById('librarySidebar').style.display='none';
+  };
+
+  // Drag & drop into live iframe + live update
   function enableDrop() {
     const iframe = iframeRefs[activePage];
     if (!iframe) return;
     const doc = iframe.contentDocument || iframe.contentWindow.document;
-    doc.body.addEventListener('dragover', e => e.preventDefault());
-    doc.body.addEventListener('drop', e => {
+    doc.body.addEventListener('dragover', e=>e.preventDefault());
+    doc.body.addEventListener('drop', e=>{
       e.preventDefault();
-      const id = e.dataTransfer.getData('text/plain');
-      const item = libraryItems.find(i => i.id === id);
-      if (item) {
+      const html = e.dataTransfer.getData('text/html');
+      if(html){
         const temp = document.createElement('div');
-        temp.innerHTML = item.content;
+        temp.innerHTML = html;
         doc.body.appendChild(temp.firstChild);
-        // Save immediately to editedContents
-        editedContents[activePage] = "<!DOCTYPE html>" + doc.documentElement.outerHTML;
+        editedContents[activePage] = "<!DOCTYPE html>"+doc.documentElement.outerHTML;
       }
     });
   }
 
-  // Call after every iframe render
+  // Call enableDrop after every iframe render
   const originalRenderIframes = renderIframes;
   renderIframes = function() {
     originalRenderIframes();
     enableDrop();
   };
 
-  // -------- Add New Items --------
-  function addLibraryItem(type) {
-    const name = prompt(`Enter name for new ${type}:`);
-    if (!name) return;
-    let content = '';
-    if (type==='box') content = '<div class="boxcard">Double-click to edit</div>';
-    if (type==='header') content = '<header>Header Text</header>';
-    if (type==='footer') content = '<footer>Footer Text</footer>';
-    if (type==='page') content = `<!DOCTYPE html><html><body><h1>${name}</h1></body></html>`;
-    const id = type+'_'+Math.random().toString(36).slice(2,8);
-    libraryItems.push({id,type,name,content});
-    renderLibrary();
-  }
-
-  document.getElementById('addBoxBtn').onclick = ()=> addLibraryItem('box');
-  document.getElementById('addHeaderBtn').onclick = ()=> addLibraryItem('header');
-  document.getElementById('addFooterBtn').onclick = ()=> addLibraryItem('footer');
-  document.getElementById('addPageBtn').onclick = ()=> addLibraryItem('page');
+  // Add new page with automatic tab/navigation
+  document.getElementById('addPageBtnSidebar').onclick = ()=>{
+    const name = prompt('Enter new page name:');
+    if(!name) return;
+    const filename = name.replace(/\s+/g,'_').toLowerCase() + '.html';
+    const html = `<!DOCTYPE html><html><head><title>${name}</title></head><body><h1>${name}</h1></body></html>`;
+    pages.push(filename);
+    pageContents[filename] = html;
+    editedContents[filename] = html;
+    activePage = filename;
+    renderTabs();
+    renderIframes();
+  };
 </script>
 
 
