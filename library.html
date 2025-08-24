@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sitegen — Library</title>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 0; background: #fff; color: #000; }
+    header { padding: 1rem 2rem; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
+    h1 { margin: 0; font-size: 1.5rem; }
+    button { background: #000; color: #fff; border: none; border-radius: .5rem; padding: .5rem 1rem; cursor: pointer; }
+    button:hover { opacity: 0.8; }
+    main { padding: 2rem; }
+    section { margin-bottom: 2rem; }
+    label { display: block; margin-bottom: .5rem; font-weight: bold; }
+    select, input[type="file"] { margin-bottom: 1rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
+    .card { border: 1px solid #ddd; border-radius: 1rem; overflow: hidden; background: #fff; display: flex; flex-direction: column; }
+    .card img { width: 100%; height: 160px; object-fit: cover; background: #f0f0f0; }
+    .card .info { padding: 1rem; flex: 1; display: flex; flex-direction: column; }
+    .card h3 { margin: 0 0 .5rem 0; font-size: 1.1rem; }
+    .card p { margin: 0; flex: 1; font-size: .9rem; color: #555; }
+    .card button { margin-top: .5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Sitegen — Library</h1>
+    <a href="index.html"><button>Home</button></a>
+  </header>
+
+  <main>
+    <section>
+      <h2>Upload New Item</h2>
+      <label for="category">Category:</label>
+      <select id="category">
+        <option value="templates">Template</option>
+        <option value="blocks">Block</option>
+        <option value="themes">Theme</option>
+        <option value="subscriptions">Subscription Box</option>
+      </select>
+      <br>
+      <input type="file" id="fileInput" accept=".zip,.html">
+      <button onclick="handleUpload()">Upload</button>
+    </section>
+
+    <section>
+      <h2>Library Items</h2>
+      <div id="libraryContainer" class="grid"></div>
+    </section>
+  </main>
+
+  <iframe id="previewFrame" style="display:none;"></iframe>
+
+  <script>
+    function getLibrary() {
+      return JSON.parse(localStorage.getItem("sitegen_library") || '{"templates":[],"blocks":[],"themes":[],"subscriptions":[]}');
+    }
+
+    function saveLibrary(data) {
+      localStorage.setItem("sitegen_library", JSON.stringify(data));
+    }
+
+    async function handleUpload() {
+      const fileInput = document.getElementById("fileInput");
+      const category = document.getElementById("category").value;
+      if (!fileInput.files.length) return alert("Please select a file");
+
+      const file = fileInput.files[0];
+      let htmlContent = "";
+      let name = file.name;
+
+      if (file.name.endsWith(".zip")) {
+        const zip = await JSZip.loadAsync(file);
+        const indexFile = zip.file("index.html");
+        if (!indexFile) return alert("No index.html found inside zip");
+        htmlContent = await indexFile.async("string");
+        name = file.name.replace(".zip","");
+      } else if (file.name.endsWith(".html")) {
+        htmlContent = await file.text();
+        name = file.name.replace(".html","");
+      } else {
+        return alert("Unsupported file type");
+      }
+
+      // Render hidden iframe for screenshot
+      const frame = document.getElementById("previewFrame");
+      frame.srcdoc = htmlContent;
+
+      frame.onload = async () => {
+        try {
+          const canvas = await html2canvas(frame.contentDocument.body, {useCORS:true});
+          const thumbnail = canvas.toDataURL("image/png");
+
+          const library = getLibrary();
+          library[category].push({
+            name,
+            description: category.charAt(0).toUpperCase() + category.slice(1),
+            html: htmlContent,
+            thumbnail
+          });
+          saveLibrary(library);
+          loadLibrary();
+          fileInput.value = "";
+        } catch (e) {
+          alert("Error generating thumbnail: " + e.message);
+        }
+      };
+    }
+
+    function removeItem(category, index) {
+      const library = getLibrary();
+      library[category].splice(index,1);
+      saveLibrary(library);
+      loadLibrary();
+    }
+
+    function loadLibrary() {
+      const container = document.getElementById("libraryContainer");
+      container.innerHTML = "";
+      const library = getLibrary();
+
+      Object.keys(library).forEach(cat => {
+        library[cat].forEach((item,i) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          const img = document.createElement("img");
+          img.src = item.thumbnail || "https://via.placeholder.com/300x160";
+          card.appendChild(img);
+
+          const info = document.createElement("div");
+          info.className = "info";
+          info.innerHTML = `<h3>${item.name}</h3><p>${item.description}</p>`;
+
+          const btn = document.createElement("button");
+          btn.textContent = "Remove";
+          btn.onclick = () => removeItem(cat,i);
+
+          info.appendChild(btn);
+          card.appendChild(info);
+          container.appendChild(card);
+        });
+      });
+    }
+
+    loadLibrary();
+  </script>
+</body>
+</html>
