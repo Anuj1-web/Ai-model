@@ -425,6 +425,116 @@
   }
   autoLoadTemplate();
 </script>
+<script>
+(function(){
+  const pageNavContainer = document.createElement('div');
+  pageNavContainer.id='pageNavContainer';
+  pageNavContainer.style.position='fixed';
+  pageNavContainer.style.bottom='1rem';
+  pageNavContainer.style.left='50%';
+  pageNavContainer.style.transform='translateX(-50%)';
+  pageNavContainer.style.background='#fff';
+  pageNavContainer.style.border='1px solid #ccc';
+  pageNavContainer.style.padding='.5rem 1rem';
+  pageNavContainer.style.borderRadius='.5rem';
+  pageNavContainer.style.boxShadow='0 2px 10px rgba(0,0,0,.1)';
+  pageNavContainer.style.zIndex='90';
+  document.body.appendChild(pageNavContainer);
+
+  function renderPageNav() {
+    pageNavContainer.innerHTML = '';
+    pages.forEach(p=>{
+      const btn = document.createElement('button');
+      btn.textContent=p;
+      btn.style.margin='0 .3rem';
+      btn.style.padding='.3rem .6rem';
+      btn.onclick = ()=>{
+        activePage=p;
+        renderTabs();
+        renderIframes();
+        attachIframeDrag();
+      };
+      pageNavContainer.appendChild(btn);
+    });
+  }
+  window.renderPageNav = renderPageNav;
+  renderPageNav();
+
+  // Override insertLibraryPage to auto add nav button
+  const oldInsertLibraryPage = window.insertLibraryPage;
+  window.insertLibraryPage = function(html,pageName){
+    oldInsertLibraryPage(html,pageName);
+    renderPageNav();
+  };
+
+  // --- Sidebar direct image upload ---
+  const uploadInput = document.createElement('input');
+  uploadInput.type='file';
+  uploadInput.accept='image/*';
+  uploadInput.style.display='none';
+  document.body.appendChild(uploadInput);
+
+  libraryItems.addEventListener('dblclick',(e)=>{
+    const target = e.target;
+    if(!target || !target.textContent) return;
+    const compName = target.textContent.toLowerCase();
+    if(compName.includes('image')){
+      uploadInput.click();
+      uploadInput.onchange = (ev)=>{
+        const file = ev.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = ()=>{
+          const html = `<img src="${reader.result}" alt="Uploaded Image"/>`;
+          const wrapper = document.createElement('div');
+          wrapper.innerHTML = html;
+          const node = wrapper.firstElementChild;
+          node.setAttribute('data-edit-id','c'+Math.random().toString(36).slice(2,9));
+          iframeRefs[activePage].contentDocument.body.appendChild(node);
+          node.addEventListener('dblclick',()=>{
+            parent.postMessage({type:'OPEN_EDITOR',page:activePage,id:node.getAttribute('data-edit-id'),
+              hasText:false,hasPlaceholder:false,src:node.src
+            },'*');
+          });
+          node.setAttribute('data-can-delete','true');
+          savePageContent(activePage,iframeRefs[activePage].contentDocument);
+        };
+        reader.readAsDataURL(file);
+      };
+    }
+  });
+
+  // --- Category filtering for pages ---
+  function addPageCategory(name, html, category){
+    componentsLibrary.pages.push({name:name,html:html,category:category||'uncategorized'});
+    if(currentCategory==='pages') renderLibrary('pages');
+  }
+  window.addPageCategory = addPageCategory;
+
+  // Update renderLibrary for page categories
+  const oldRenderLibrary = renderLibrary;
+  renderLibrary = function(cat){
+    libraryItems.innerHTML='';
+    let items = componentsLibrary[cat]||[];
+    if(cat==='pages'){
+      items = items.filter(c=>c.category===currentCategory||currentCategory==='pages');
+    }
+    items.forEach((comp)=>{
+      const div = document.createElement('div');
+      div.textContent = comp.name;
+      div.style.border='1px solid #ccc';
+      div.style.padding='.4rem';
+      div.style.margin='.3rem 0';
+      div.style.cursor='grab';
+      div.draggable=true;
+      div.addEventListener('dragstart',(ev)=>{
+        ev.dataTransfer.setData('text/plain',comp.html);
+      });
+      libraryItems.appendChild(div);
+    });
+  };
+})();
+</script>
 
 </body>
 </html>
