@@ -425,6 +425,44 @@
   }
   autoLoadTemplate();
 </script>
+<script>
+async function makeReactViteEditable() {
+  if (!pages.length) return;
+
+  for (const page of pages) {
+    let html = pageContents[page];
+
+    // 1. Replace script src with Blob URLs
+    html = html.replace(/<script\s+src="([^"]+)"/g, (m, src) => {
+      const fileData = otherFiles[src];
+      if (!fileData) return m;
+      const blob = new Blob([fileData], {type:"application/javascript"});
+      const url = URL.createObjectURL(blob);
+      return `<script src="${url}" type="module"`;
+    });
+
+    // 2. Replace CSS link href with Blob URLs
+    html = html.replace(/<link\s+rel="stylesheet"\s+href="([^"]+)"/g, (m, href) => {
+      const fileData = otherFiles[href];
+      if (!fileData) return m;
+      const blob = new Blob([fileData], {type:"text/css"});
+      const url = URL.createObjectURL(blob);
+      return `<link rel="stylesheet" href="${url}"`;
+    });
+
+    // 3. Inject editing bridge at end of body
+    html = html.replace(/<\/body>/i, injectEditingBridge("", page) + "</body>");
+
+    // 4. Save modified HTML
+    editedContents[page] = html;
+  }
+
+  renderIframes();
+}
+
+// Call it automatically after ZIP is loaded
+makeReactViteEditable();
+</script>
 
 </body>
 </html>
