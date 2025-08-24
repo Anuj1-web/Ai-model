@@ -497,9 +497,10 @@
     }
   }
   autoLoadTemplate();
-</script>
-<!-- ================== FINAL POLISHED ASSET LIBRARY SIDEBAR ================== -->
-<!-- Black + button -->
+<!-- ================== FINAL WIZARD MAKER LIBRARY ================== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<!-- Floating black + button -->
 <button id="openLibraryBtn" style="
   position: fixed;
   bottom: 20px;
@@ -515,16 +516,34 @@
   z-index: 2000;
 ">+</button>
 
-<!-- Sidebar container -->
+<!-- Sidebar -->
 <div id="librarySidebar" style="display:none;">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
     <h3 style="margin:0;color:#fff;">Library Assets</h3>
     <button id="closeLibraryBtn" style="background:none;color:#fff;font-size:1.2rem;border:none;cursor:pointer;">✖</button>
   </div>
-  <input type="text" id="librarySearch" placeholder="Search..." style="width:100%;padding:0.3rem;margin-bottom:0.5rem;border-radius:0.25rem;border:none;background:#333;color:#fff;">
+
+  <!-- Upload assets.zip -->
+  <input type="file" id="assetZipUpload" accept=".zip" style="display:none;">
+  <button onclick="document.getElementById('assetZipUpload').click()" 
+          style="width:100%;margin-bottom:0.5rem;padding:0.4rem;background:#222;color:#fff;border:none;border-radius:0.25rem;cursor:pointer;">
+    📦 Upload Assets.zip
+  </button>
+
+  <!-- Search -->
+  <input type="text" id="librarySearch" placeholder="Search..." 
+         style="width:100%;padding:0.3rem;margin-bottom:0.5rem;border-radius:0.25rem;border:none;background:#333;color:#fff;">
+
+  <!-- Assets container -->
   <div id="libraryContainer" style="overflow-y:auto; flex:1;"></div>
+
   <hr style="border-color:#444;margin:0.5rem 0;">
-  <button id="addPageBtnSidebar" style="padding:0.4rem;background:#222;color:#fff;border:none;border-radius:0.25rem;cursor:pointer;">+ Add New Page</button>
+
+  <!-- Add blank page -->
+  <button id="addPageBtnSidebar" 
+          style="padding:0.4rem;background:#222;color:#fff;border:none;border-radius:0.25rem;cursor:pointer;">
+    + Add New Blank Page
+  </button>
 </div>
 
 <style>
@@ -532,7 +551,7 @@
   position: fixed;
   top: 0;
   right: 0;
-  width: 300px;
+  width: 320px;
   height: 100vh;
   background: #111;
   padding: 1rem;
@@ -555,132 +574,189 @@
 }
 .library-item {
   padding: 0.5rem;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.6rem;
   border-radius: 0.3rem;
   background: #222;
-  cursor: grab;
+  cursor: pointer;
   color: #fff;
+  text-align: center;
 }
-.library-item:hover {
-  background: #333;
-}
-.library-item.dragging { opacity: 0.5; }
+.library-item:hover { background: #333; }
+.library-thumb { max-height: 80px; overflow:hidden; margin-bottom:0.3rem; }
+.library-thumb img { max-width: 100%; border-radius:4px; }
+.library-title { font-size:0.8rem; color:#ddd; }
 </style>
 
 <script>
-  // -------- Library Assets Example --------
-  let libraryAssets = [
-    { id:'box1', type:'box', category:'Box Cards', subcategory:'Default', name:'Box Card 1', content:'<div class="boxcard">Editable Box</div>' },
-    { id:'image1', type:'image', category:'Images', subcategory:'Hero', name:'Hero Image', content:'<img src="hero.jpg">' },
-    { id:'header1', type:'header', category:'Headers', subcategory:'Default', name:'Main Header', content:'<header>Main Header</header>' },
-    { id:'footer1', type:'footer', category:'Footers', subcategory:'Default', name:'Footer 1', content:'<footer>Footer Text</footer>' },
-    { id:'portal1', type:'subscription', category:'Portals', subcategory:'Premium', name:'Subscribe Block', content:'<div class="subscription-portal">Subscribe Now</div>' }
-  ];
+let libraryAssets = [];
 
-  // -------- Render Library with categories/subcategories --------
-  function renderLibraryAssets(filter='') {
-    const container = document.getElementById('libraryContainer');
-    container.innerHTML = '';
-    const categories = [...new Set(libraryAssets.map(a=>a.category))];
-    categories.forEach(cat => {
-      const catDiv = document.createElement('div');
-      catDiv.className = 'library-category';
-      catDiv.textContent = cat;
-      container.appendChild(catDiv);
+// Upload and parse assets.zip
+document.getElementById("assetZipUpload").addEventListener("change", async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const zip = await JSZip.loadAsync(file);
+  libraryAssets = [];
 
-      const subcats = [...new Set(libraryAssets.filter(a=>a.category===cat).map(a=>a.subcategory))];
-      subcats.forEach(sub => {
-        const subDiv = document.createElement('div');
-        subDiv.className = 'library-subcategory';
-        subDiv.textContent = sub;
-        container.appendChild(subDiv);
+  for(const [filename, entry] of Object.entries(zip.files)){
+    if(entry.dir) continue;
+    const ext = filename.split('.').pop().toLowerCase();
+    const name = filename.split('/').pop().replace(/\.[^/.]+$/, "");
+    const folder = filename.includes("/") ? filename.split("/")[0] : "Default";
 
-        libraryAssets.filter(a => a.category===cat && a.subcategory===sub && a.name.toLowerCase().includes(filter.toLowerCase()))
-        .forEach(item => {
-          const div = document.createElement('div');
-          div.className='library-item';
-          div.draggable = true;
-          div.innerText = item.name;
-          div.dataset.id = item.id;
+    // Full Pages
+    if(filename.startsWith("pages/") && ext === "html"){
+      const content = await entry.async("string");
+      let thumbUrl=null;
+      const thumbFile=filename.replace(".html","-thumb.png");
+      if(zip.files[thumbFile]){
+        const blob=await zip.files[thumbFile].async("blob");
+        thumbUrl=URL.createObjectURL(blob);
+      }
+      libraryAssets.push({id:name,type:"page",category:"Pages",subcategory:folder,name,content,thumb:thumbUrl});
+    }
+    // HTML blocks (boxcards, subscriptions, headers, footers, themes)
+    else if(["html","htm"].includes(ext)){
+      const content = await entry.async("string");
+      libraryAssets.push({id:name,type:"block",category:folder,subcategory:"Default",name,content});
+    }
+    // Images
+    else if(["png","jpg","jpeg","gif","svg","webp"].includes(ext)){
+      const blob=await entry.async("blob");
+      const url=URL.createObjectURL(blob);
+      libraryAssets.push({
+        id:name,type:"image",category:"Images",subcategory:folder,name,
+        content:`<img src="${url}" alt="${name}" class="max-w-full">`,thumb:url
+      });
+    }
+  }
+  renderLibraryAssets();
+});
 
-          // Drag & drop
+// Render assets
+function renderLibraryAssets(filter=""){
+  const container=document.getElementById('libraryContainer');
+  container.innerHTML='';
+  const categories=[...new Set(libraryAssets.map(a=>a.category))];
+  categories.forEach(cat=>{
+    const catDiv=document.createElement('div');
+    catDiv.className='library-category';
+    catDiv.textContent=cat;
+    container.appendChild(catDiv);
+
+    const subcats=[...new Set(libraryAssets.filter(a=>a.category===cat).map(a=>a.subcategory))];
+    subcats.forEach(sub=>{
+      const subDiv=document.createElement('div');
+      subDiv.className='library-subcategory';
+      subDiv.textContent=sub;
+      container.appendChild(subDiv);
+
+      libraryAssets.filter(a=>
+        a.category===cat && a.subcategory===sub && a.name.toLowerCase().includes(filter.toLowerCase())
+      ).forEach(item=>{
+        const div=document.createElement('div');
+        div.className='library-item';
+
+        // thumbnail/preview
+        const thumb=document.createElement('div');
+        thumb.className='library-thumb';
+        if(item.thumb){
+          const img=document.createElement('img');
+          img.src=item.thumb;
+          thumb.appendChild(img);
+        } else {
+          const preview=document.createElement('div');
+          preview.innerHTML=item.content;
+          preview.style.transform="scale(0.4)";
+          preview.style.transformOrigin="top left";
+          preview.style.height="80px";
+          preview.style.overflow="hidden";
+          thumb.appendChild(preview);
+        }
+
+        const title=document.createElement('div');
+        title.className='library-title';
+        title.innerText=item.name.replace(/[_-]/g," ");
+
+        div.appendChild(thumb);
+        div.appendChild(title);
+
+        // Behavior
+        if(item.type==="page"){
+          div.addEventListener("click",()=>{
+            const filename=item.name.toLowerCase().replace(/\s+/g,'_')+".html";
+            pages.push(filename);
+            pageContents[filename]=item.content;
+            editedContents[filename]=item.content;
+            activePage=filename;
+            renderTabs();
+            renderIframes();
+          });
+        } else {
+          div.draggable=true;
           div.addEventListener('dragstart', e=>{
             e.dataTransfer.setData('text/html', item.content);
             div.classList.add('dragging');
           });
-          div.addEventListener('dragend', e=>{
-            div.classList.remove('dragging');
-          });
-
-          // Click-to-add
-          div.addEventListener('click', e=>{
-            const iframe = iframeRefs[activePage];
+          div.addEventListener('dragend', ()=>div.classList.remove('dragging'));
+          div.addEventListener('click', ()=>{
+            const iframe=iframeRefs[activePage];
             if(!iframe) return;
-            const doc = iframe.contentDocument || iframe.contentWindow.document;
-            const temp = document.createElement('div');
-            temp.innerHTML = item.content;
+            const doc=iframe.contentDocument||iframe.contentWindow.document;
+            const temp=document.createElement('div');
+            temp.innerHTML=item.content;
             doc.body.appendChild(temp.firstChild);
-            editedContents[activePage] = "<!DOCTYPE html>"+doc.documentElement.outerHTML;
+            editedContents[activePage]="<!DOCTYPE html>"+doc.documentElement.outerHTML;
           });
+        }
 
-          container.appendChild(div);
-        });
+        container.appendChild(div);
       });
     });
-  }
-  renderLibraryAssets();
-
-  // Search/filter
-  document.getElementById('librarySearch').addEventListener('input', e=>{
-    renderLibraryAssets(e.target.value);
   });
+}
 
-  // Open/close sidebar
-  document.getElementById('openLibraryBtn').onclick = ()=>{
-    document.getElementById('librarySidebar').style.display='flex';
-  };
-  document.getElementById('closeLibraryBtn').onclick = ()=>{
-    document.getElementById('librarySidebar').style.display='none';
-  };
+// Search
+document.getElementById("librarySearch").addEventListener("input",e=>{
+  renderLibraryAssets(e.target.value);
+});
 
-  // Drag & drop into live iframe + live update
-  function enableDrop() {
-    const iframe = iframeRefs[activePage];
-    if (!iframe) return;
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    doc.body.addEventListener('dragover', e=>e.preventDefault());
-    doc.body.addEventListener('drop', e=>{
-      e.preventDefault();
-      const html = e.dataTransfer.getData('text/html');
-      if(html){
-        const temp = document.createElement('div');
-        temp.innerHTML = html;
-        doc.body.appendChild(temp.firstChild);
-        editedContents[activePage] = "<!DOCTYPE html>"+doc.documentElement.outerHTML;
-      }
-    });
-  }
+// Open/close
+document.getElementById('openLibraryBtn').onclick=()=>{document.getElementById('librarySidebar').style.display='flex';};
+document.getElementById('closeLibraryBtn').onclick=()=>{document.getElementById('librarySidebar').style.display='none';};
 
-  // Call enableDrop after every iframe render
-  const originalRenderIframes = renderIframes;
-  renderIframes = function() {
-    originalRenderIframes();
-    enableDrop();
-  };
+// Drag/drop into iframe
+function enableDrop(){
+  const iframe=iframeRefs[activePage];
+  if(!iframe) return;
+  const doc=iframe.contentDocument||iframe.contentWindow.document;
+  doc.body.addEventListener("dragover", e=>e.preventDefault());
+  doc.body.addEventListener("drop", e=>{
+    e.preventDefault();
+    const html=e.dataTransfer.getData("text/html");
+    if(html){
+      const temp=document.createElement("div");
+      temp.innerHTML=html;
+      doc.body.appendChild(temp.firstChild);
+      editedContents[activePage]="<!DOCTYPE html>"+doc.documentElement.outerHTML;
+    }
+  });
+}
+const originalRenderIframes=renderIframes;
+renderIframes=function(){ originalRenderIframes(); enableDrop(); };
 
-  // Add new page with automatic tab/navigation
-  document.getElementById('addPageBtnSidebar').onclick = ()=>{
-    const name = prompt('Enter new page name:');
-    if(!name) return;
-    const filename = name.replace(/\s+/g,'_').toLowerCase() + '.html';
-    const html = `<!DOCTYPE html><html><head><title>${name}</title></head><body><h1>${name}</h1></body></html>`;
-    pages.push(filename);
-    pageContents[filename] = html;
-    editedContents[filename] = html;
-    activePage = filename;
-    renderTabs();
-    renderIframes();
-  };
+// Blank page button
+document.getElementById('addPageBtnSidebar').onclick=()=>{
+  const name=prompt('Enter new page name:');
+  if(!name) return;
+  const filename=name.replace(/\s+/g,'_').toLowerCase()+'.html';
+  const html=`<!DOCTYPE html><html><head><title>${name}</title></head><body><h1>${name}</h1></body></html>`;
+  pages.push(filename);
+  pageContents[filename]=html;
+  editedContents[filename]=html;
+  activePage=filename;
+  renderTabs();
+  renderIframes();
+};
 </script>
 
 
