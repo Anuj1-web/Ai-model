@@ -2,34 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Sitegen — Library</title>
+  <title>Sitegen - Library</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
-<body class="bg-white text-black">
-  <div class="max-w-5xl mx-auto p-6">
-    <header class="flex justify-between items-center border-b pb-4 mb-6">
-      <h1 class="text-2xl font-bold">Sitegen — Library</h1>
-      <a href="index.html" class="bg-black text-white px-4 py-2 rounded">Home</a>
-    </header>
+<body class="bg-white text-black font-sans">
+  <header class="flex justify-between items-center p-4 border-b">
+    <h1 class="text-2xl font-bold">Sitegen</h1>
+    <nav class="space-x-4">
+      <a href="index.html" class="px-4 py-2 bg-black text-white rounded">Home</a>
+    </nav>
+  </header>
 
-    <section class="mb-6">
-      <h2 class="text-lg font-semibold mb-2">Upload New Item</h2>
-      <div class="flex items-center gap-3">
-        <select id="category" class="border px-2 py-1 rounded">
-          <option>Template</option>
-          <option>Block</option>
-          <option>Theme</option>
-          <option>Subscription Box</option>
-        </select>
-        <input type="file" id="fileInput" class="border px-2 py-1 rounded">
-        <button onclick="uploadItem()" class="bg-black text-white px-4 py-1 rounded">Upload</button>
-      </div>
-    </section>
+  <main class="p-6">
+    <h2 class="text-xl font-semibold mb-4">Library</h2>
 
-    <h2 class="text-lg font-semibold mb-3">Library Items</h2>
+    <div class="mb-6">
+      <input type="file" id="fileInput" class="mb-2">
+      <select id="category" class="border px-3 py-2 mr-2">
+        <option value="template">Template</option>
+        <option value="block">Block</option>
+        <option value="theme">Theme</option>
+        <option value="subscription">Subscription Box</option>
+      </select>
+      <button onclick="uploadItem()" class="px-4 py-2 bg-black text-white rounded">Upload</button>
+    </div>
+
     <div id="libraryItems" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-  </div>
+  </main>
 
   <script>
     function uploadItem() {
@@ -44,30 +44,30 @@
         const content = e.target.result;
         const name = file.name.replace(/\.[^/.]+$/, "");
 
-        // Temporary preview container for screenshot
-        const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = content;
-        document.body.appendChild(tempDiv);
+        // Temporary iframe for styled rendering
+        const iframe = document.createElement("iframe");
+        iframe.style.position = "absolute";
+        iframe.style.left = "-9999px";
+        document.body.appendChild(iframe);
 
-        html2canvas(tempDiv).then(canvas => {
-          const preview = canvas.toDataURL("image/png");
-          tempDiv.remove();
+        iframe.contentDocument.open();
+        iframe.contentDocument.write(content);
+        iframe.contentDocument.close();
 
-          const newItem = { name, category, content, preview };
-          const library = JSON.parse(localStorage.getItem("sitegenLibrary")) || [];
-          library.push(newItem);
-          localStorage.setItem("sitegenLibrary", JSON.stringify(library));
-          loadLibrary();
-        });
+        setTimeout(() => {
+          html2canvas(iframe.contentDocument.body).then(canvas => {
+            const preview = canvas.toDataURL("image/png");
+            iframe.remove();
+
+            const newItem = { name, category, content, preview };
+            const library = JSON.parse(localStorage.getItem("sitegenLibrary")) || [];
+            library.push(newItem);
+            localStorage.setItem("sitegenLibrary", JSON.stringify(library));
+            loadLibrary();
+          });
+        }, 500);
       };
       reader.readAsText(file);
-    }
-
-    function removeItem(index) {
-      const library = JSON.parse(localStorage.getItem("sitegenLibrary")) || [];
-      library.splice(index, 1);
-      localStorage.setItem("sitegenLibrary", JSON.stringify(library));
-      loadLibrary();
     }
 
     function loadLibrary() {
@@ -77,23 +77,23 @@
 
       library.forEach((item, idx) => {
         const card = document.createElement("div");
-        card.className = "border rounded-lg shadow p-3 flex flex-col";
+        card.className = "border rounded-lg shadow p-4 flex flex-col";
 
         const img = document.createElement("img");
         img.src = item.preview || "";
         img.alt = item.name;
-        img.className = "w-full h-32 object-cover rounded mb-2 bg-gray-100";
+        img.className = "w-full h-60 object-cover rounded mb-3 bg-gray-100";
 
         const title = document.createElement("h3");
-        title.className = "font-semibold text-center mb-2";
+        title.className = "font-semibold text-lg mb-2";
         title.textContent = item.name;
 
         const cat = document.createElement("p");
-        cat.className = "text-sm text-gray-600 text-center mb-2";
+        cat.className = "text-sm text-gray-600 mb-3";
         cat.textContent = item.category;
 
         const btn = document.createElement("button");
-        btn.className = "bg-black text-white px-3 py-1 rounded mt-auto";
+        btn.className = "bg-black text-white px-4 py-2 rounded";
         btn.textContent = "Remove";
         btn.onclick = () => removeItem(idx);
 
@@ -105,7 +105,14 @@
       });
     }
 
-    window.onload = loadLibrary;
+    function removeItem(idx) {
+      const library = JSON.parse(localStorage.getItem("sitegenLibrary")) || [];
+      library.splice(idx, 1);
+      localStorage.setItem("sitegenLibrary", JSON.stringify(library));
+      loadLibrary();
+    }
+
+    loadLibrary();
   </script>
 </body>
 </html>
