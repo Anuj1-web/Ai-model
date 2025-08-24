@@ -393,5 +393,34 @@
       saveAs(blob, "custom-site.zip");
     });
   </script>
+<script>
+  // --- Auto-load template if ?template=... is in URL ---
+  async function autoLoadTemplate() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const templateUrl = urlParams.get("template"); // template zip link
+    if (!templateUrl) return;
+
+    try {
+      const response = await fetch(templateUrl);
+      if (!response.ok) throw new Error("Failed to fetch template zip");
+      const blob = await response.blob();
+      const file = new File([blob], "template.zip", { type: "application/zip" });
+
+      // Reuse the same zipInput handler
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      const zipInput = document.getElementById("zipInput");
+      zipInput.files = dataTransfer.files;
+
+      // Trigger the change event to load into editor
+      zipInput.dispatchEvent(new Event("change", { bubbles: true }));
+    } catch (err) {
+      console.error("Template auto-load failed:", err);
+    }
+  }
+
+  autoLoadTemplate();
+</script>
+
 </body>
 </html>
