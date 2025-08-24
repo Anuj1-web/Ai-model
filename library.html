@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sitegen Library</title>
+  <link rel="stylesheet" href="https://unpkg.com/cropperjs/dist/cropper.min.css" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -11,263 +13,248 @@
       margin: 0;
       padding: 20px;
     }
-    h1 {
-      font-size: 28px;
-      margin-bottom: 20px;
-    }
-    .tabs {
+    header {
       display: flex;
-      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 20px;
     }
-    .tabs button {
-      padding: 8px 16px;
-      border: 1px solid #000;
-      background: #fff;
+    h1 {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .upload-btn {
+      background: black;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
       cursor: pointer;
     }
-    .tabs button.active {
-      background: #000;
-      color: #fff;
-    }
-    .upload-box {
-      border: 1px solid #000;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    .progress {
-      width: 100%;
-      height: 8px;
-      background: #ddd;
-      margin-top: 10px;
-    }
-    .progress-bar {
-      height: 100%;
-      width: 0%;
-      background: #000;
-      transition: width 0.3s ease;
-    }
-    .grid {
+    .library-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 20px;
     }
     .card {
-      border: 1px solid #000;
-      padding: 10px;
-      text-align: center;
-      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
     .card img {
-      max-width: 100%;
-      height: 150px;
+      width: 100%;
+      height: 160px;
       object-fit: cover;
-      border: 1px solid #ccc;
+      display: block;
+    }
+    .card-body {
+      padding: 12px;
+    }
+    .card-title {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+    .card-actions button {
+      margin-right: 6px;
+      background: black;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
       cursor: pointer;
     }
     /* Modal */
     .modal {
       display: none;
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7);
+      inset: 0;
+      background: rgba(0,0,0,0.6);
       justify-content: center;
       align-items: center;
       z-index: 1000;
     }
     .modal-content {
-      background: #fff;
+      background: white;
       padding: 20px;
-      border: 1px solid #000;
-      text-align: center;
-      max-width: 90%;
+      border-radius: 10px;
+      max-width: 600px;
+      width: 100%;
     }
-    .modal img {
+    #cropper-container {
+      max-height: 400px;
+      overflow: hidden;
+    }
+    #cropper-container img {
       max-width: 100%;
-      max-height: 70vh;
     }
-    .modal button {
-      margin: 10px;
-      padding: 8px 16px;
-      border: 1px solid #000;
-      background: #fff;
-      cursor: pointer;
+    .progress-container {
+      margin: 10px 0;
+      background: #eee;
+      border-radius: 6px;
+      overflow: hidden;
+      height: 8px;
     }
-    .modal button.save {
-      background: #000;
-      color: #fff;
+    .progress-bar {
+      height: 100%;
+      background: black;
+      width: 0%;
+      transition: width 0.3s ease;
     }
   </style>
-  <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css" rel="stylesheet">
 </head>
 <body>
+  <header>
+    <h1>📂 Sitegen Library</h1>
+    <input type="file" id="uploadFile" hidden />
+    <button class="upload-btn" onclick="document.getElementById('uploadFile').click()">Upload</button>
+  </header>
 
-  <h1>Sitegen Library</h1>
+  <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
 
-  <div class="tabs">
-    <button class="active" data-tab="templates">Templates</button>
-    <button data-tab="blocks">Blocks</button>
-    <button data-tab="themes">Themes</button>
-    <button data-tab="subscriptions">Subscriptions</button>
-  </div>
-
-  <div class="upload-box">
-    <label>Upload to: 
-      <select id="uploadType">
-        <option value="template">Template (ZIP)</option>
-        <option value="block">Block</option>
-        <option value="theme">Theme</option>
-        <option value="subscription">Subscription Box</option>
-      </select>
-    </label>
-    <input type="file" id="fileInput">
-    <div class="progress"><div class="progress-bar" id="progress"></div></div>
-  </div>
-
-  <div id="libraryContent" class="grid"></div>
+  <div class="library-grid" id="libraryGrid"></div>
 
   <!-- Thumbnail Editor Modal -->
-  <div class="modal" id="editorModal">
+  <div class="modal" id="thumbnailModal">
     <div class="modal-content">
-      <h3>Edit Thumbnail</h3>
-      <img id="editorImage">
-      <div>
-        <button id="saveThumb" class="save">Save</button>
-        <button id="cancelThumb">Cancel</button>
+      <h2>Edit Thumbnail</h2>
+      <div id="cropper-container"><img id="cropperImage" src="" /></div>
+      <div style="margin-top:10px;">
+        <button onclick="saveCroppedThumbnail()">Save Thumbnail</button>
+        <button onclick="closeModal()">Cancel</button>
       </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
-
+  <script src="https://unpkg.com/jszip"></script>
+  <script src="https://unpkg.com/cropperjs"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script>
-    let library = JSON.parse(localStorage.getItem("sitegenLibrary")) || {
-      templates: [],
-      blocks: [],
-      themes: [],
-      subscriptions: []
-    };
-    let currentTab = "templates";
-    let currentEditIndex = null;
-    let cropper = null;
+    let library = JSON.parse(localStorage.getItem("library")) || [];
+    let currentEditId = null;
+    let cropper;
+
+    const libraryGrid = document.getElementById("libraryGrid");
+    const progressBar = document.getElementById("progressBar");
 
     function renderLibrary() {
-      const content = document.getElementById("libraryContent");
-      content.innerHTML = "";
-      library[currentTab].forEach((item, i) => {
+      libraryGrid.innerHTML = "";
+      library.forEach((item, index) => {
         const card = document.createElement("div");
         card.className = "card";
-        if (item.thumbnail) {
-          card.innerHTML = `
-            <img src="${item.thumbnail}" alt="Thumbnail" data-index="${i}">
-            <p>${item.name}</p>
-          `;
-        } else {
-          card.innerHTML = `<p>${item.name}</p>`;
-        }
-        content.appendChild(card);
-      });
-
-      // Add click to open editor
-      document.querySelectorAll(".card img").forEach(img => {
-        img.addEventListener("click", () => {
-          currentEditIndex = img.dataset.index;
-          openEditor(library[currentTab][currentEditIndex].thumbnail);
-        });
+        card.innerHTML = `
+          <img src="${item.thumbnail || 'https://via.placeholder.com/280x160?text=No+Thumbnail'}" />
+          <div class="card-body">
+            <div class="card-title">${item.name}</div>
+            <div class="card-actions">
+              <button onclick="openThumbnailEditor(${index})">Edit Thumbnail</button>
+              <button onclick="deleteItem(${index})">Delete</button>
+            </div>
+          </div>`;
+        libraryGrid.appendChild(card);
       });
     }
 
-    // Open thumbnail editor
-    function openEditor(src) {
-      const modal = document.getElementById("editorModal");
-      const editorImage = document.getElementById("editorImage");
-      modal.style.display = "flex";
-      editorImage.src = src;
-      if (cropper) cropper.destroy();
-      cropper = new Cropper(editorImage, {
-        aspectRatio: 16/9,
-        viewMode: 1
-      });
+    function saveLibrary() {
+      localStorage.setItem("library", JSON.stringify(library));
     }
 
-    document.getElementById("cancelThumb").addEventListener("click", () => {
-      document.getElementById("editorModal").style.display = "none";
-      if (cropper) cropper.destroy();
-    });
-
-    document.getElementById("saveThumb").addEventListener("click", () => {
-      if (cropper && currentEditIndex !== null) {
-        const canvas = cropper.getCroppedCanvas({
-          width: 400,
-          height: 225
-        });
-        const dataUrl = canvas.toDataURL("image/png");
-        library[currentTab][currentEditIndex].thumbnail = dataUrl;
-        localStorage.setItem("sitegenLibrary", JSON.stringify(library));
-        renderLibrary();
-        document.getElementById("editorModal").style.display = "none";
-        cropper.destroy();
-      }
-    });
-
-    // Tabs switching
-    document.querySelectorAll(".tabs button").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        currentTab = btn.dataset.tab;
-        renderLibrary();
-      });
-    });
-
-    // File upload
-    document.getElementById("fileInput").addEventListener("change", async (e) => {
+    document.getElementById("uploadFile").addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      const type = document.getElementById("uploadType").value;
-      const progress = document.getElementById("progress");
-      progress.style.width = "0%";
+      const type = file.name.endsWith(".zip") ? "template" : "other";
 
-      if (!library[type + "s"]) library[type + "s"] = [];
+      // Progress bar simulation
+      progressBar.style.width = "0%";
+      let progress = 0;
+      const interval = setInterval(() => {
+        if (progress >= 100) {
+          clearInterval(interval);
+        } else {
+          progress += 10;
+          progressBar.style.width = progress + "%";
+        }
+      }, 200);
 
       if (type === "template") {
         const zip = await JSZip.loadAsync(file);
-        progress.style.width = "40%";
-        let indexFile = zip.file("index.html");
+        const indexHtml = await zip.file("index.html").async("string");
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        document.body.appendChild(iframe);
+        iframe.contentDocument.open();
+        iframe.contentDocument.write(indexHtml);
+        iframe.contentDocument.close();
 
-        if (indexFile) {
-          const htmlContent = await indexFile.async("string");
-          const iframe = document.createElement("iframe");
-          iframe.style.position = "absolute";
-          iframe.style.left = "-9999px";
-          document.body.appendChild(iframe);
-          iframe.contentDocument.open();
-          iframe.contentDocument.write(htmlContent);
-          iframe.contentDocument.close();
-
-          iframe.onload = async () => {
-            const canvas = await html2canvas(iframe.contentDocument.body);
-            const thumbnail = canvas.toDataURL("image/png");
-            library.templates.push({ name: file.name.replace(".zip", ""), thumbnail });
-            localStorage.setItem("sitegenLibrary", JSON.stringify(library));
-            renderLibrary();
-            iframe.remove();
-            progress.style.width = "100%";
-            setTimeout(() => progress.style.width = "0%", 1500);
-          };
-        }
+        iframe.onload = async () => {
+          const canvas = await html2canvas(iframe.contentDocument.body);
+          const thumbnail = canvas.toDataURL("image/png");
+          const item = { id: Date.now(), name: file.name, type, thumbnail };
+          library.push(item);
+          saveLibrary();
+          renderLibrary();
+          iframe.remove();
+        };
       } else {
-        library[type + "s"].push({ name: file.name });
-        localStorage.setItem("sitegenLibrary", JSON.stringify(library));
+        const item = { id: Date.now(), name: file.name, type, thumbnail: null };
+        library.push(item);
+        saveLibrary();
         renderLibrary();
-        progress.style.width = "100%";
-        setTimeout(() => progress.style.width = "0%", 1500);
       }
     });
 
+    function openThumbnailEditor(index) {
+      currentEditId = index;
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          document.getElementById("thumbnailModal").style.display = "flex";
+          const img = document.getElementById("cropperImage");
+          img.src = reader.result;
+          if (cropper) cropper.destroy();
+          img.onload = () => {
+            cropper = new Cropper(img, {
+              aspectRatio: 280/160,
+              viewMode: 1,
+              dragMode: 'move',
+              responsive: true,
+              autoCropArea: 1
+            });
+          };
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    }
+
+    function saveCroppedThumbnail() {
+      if (!cropper || currentEditId === null) return;
+      const canvas = cropper.getCroppedCanvas({ width: 280, height: 160 });
+      library[currentEditId].thumbnail = canvas.toDataURL("image/png");
+      saveLibrary();
+      renderLibrary();
+      closeModal();
+    }
+
+    function closeModal() {
+      document.getElementById("thumbnailModal").style.display = "none";
+      if (cropper) cropper.destroy();
+    }
+
+    function deleteItem(index) {
+      library.splice(index, 1);
+      saveLibrary();
+      renderLibrary();
+    }
+
+    // Initial render
     renderLibrary();
   </script>
 </body>
