@@ -1,382 +1,288 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Wizard Maker — Button Fix</title>
-  <!-- Libraries -->
+  <meta charset="UTF-8">
+  <title>Wizard Maker — Button Fix (v10 HTML/JS)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
-    :root { color-scheme: light dark; }
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#f6f7f9; }
-    header { background:#111827; color:#fff; padding:10px 12px; display:flex; gap:8px; align-items:center; }
-    header input[type="file"] { background:#fff; color:#111; padding:6px 8px; border-radius:8px; }
-    header button { background:#16a34a; border:none; color:#fff; padding:8px 12px; border-radius:8px; cursor:pointer; }
-    header button:hover { filter:brightness(1.05); }
-    #tabs { display:flex; flex-wrap:wrap; gap:6px; padding:10px 12px; background:#e5e7eb; border-bottom:1px solid #d1d5db; }
-    #tabs button { border:1px solid #cbd5e1; background:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; }
-    #tabs button.active { background:#facc15; border-color:#eab308; font-weight:600; }
-    #iframe-container { height: calc(100vh - 120px); padding:12px; }
-    iframe { width:100%; height:100%; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
-
-    /* Modal */
-    .modal-backdrop { position:fixed; inset:0; display:none; align-items:center; justify-content:center;
-      background:rgba(0,0,0,.45); z-index:9999; }
-    .modal { background:#fff; color:#111; width:420px; max-width:94vw; border-radius:14px; padding:16px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
-    .modal h3 { margin:0 0 10px; font-size:18px; }
-    .modal section { margin:12px 0; }
-    .modal label { font-size:13px; display:block; margin-bottom:6px; color:#374151; }
-    .modal textarea, .modal input[type="text"], .modal input[type="url"], .modal select, .modal input[type="color"] {
-      width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid #d1d5db; border-radius:10px; background:#fff;
-    }
-    .row { display:flex; gap:8px; }
-    .row > * { flex:1; }
-    .actions { display:flex; justify-content:flex-end; gap:8px; margin-top:10px; }
-    .btn { padding:8px 12px; border-radius:10px; border:1px solid #d1d5db; cursor:pointer; background:#fff; }
-    .btn.primary { background:#2563eb; color:#fff; border-color:#1d4ed8; }
-    .btn.danger { background:#ef4444; color:#fff; border-color:#dc2626; }
+    body { font-family: sans-serif; margin: 20px; background: #f9fafb; }
+    h1 { font-size: 1.5rem; margin-bottom: .5rem; }
+    .card { background: #fff; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+    .tabs { display: flex; gap: .5rem; flex-wrap: wrap; margin: 1rem 0; }
+    .tab { padding: .25rem .75rem; border: 1px solid #ccc; border-radius: .5rem; background: #eee; cursor: pointer; }
+    .tab.active { background: #ddd; font-weight: bold; }
+    iframe { width: 100%; height: 600px; border: 1px solid #ccc; border-radius: .5rem; background: #fff; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; }
+    .modal { background: #fff; padding: 1rem; border-radius: 1rem; max-width: 400px; width: 100%; box-shadow: 0 4px 16px rgba(0,0,0,.3); }
+    .mb-2 { margin-bottom: .5rem; }
+    .mb-3 { margin-bottom: .75rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    input, select, button { padding: .5rem; border: 1px solid #ccc; border-radius: .5rem; width: 100%; }
+    button { cursor: pointer; }
+    .actions { display: flex; justify-content: flex-end; gap: .5rem; }
   </style>
 </head>
 <body>
-  <header>
-    <input type="file" id="zipInput" accept=".zip" />
-    <button id="exportBtn" title="Export edited site as ZIP">Export Edited ZIP</button>
-  </header>
+  <div class="card">
+    <h1>Wizard Maker — Button Fix (v10)</h1>
+    <p>Upload EduPro (multi-page). Double-click or double-tap buttons/links to edit. Cancel fully restores. Fonts untouched.</p>
 
-  <div id="tabs"></div>
-  <div id="iframe-container"></div>
+    <div style="display:flex; gap:.5rem; align-items:center;">
+      <input type="file" id="zipInput" accept=".zip">
+      <button id="exportBtn">⬇ Export ZIP</button>
+    </div>
 
-  <!-- Editor Modal -->
-  <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <div class="tabs" id="tabs"></div>
+    <div id="iframeContainer"></div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modalBackdrop" class="modal-backdrop" style="display:none;">
     <div class="modal">
-      <h3 id="editTitle">Edit Element</h3>
-
-      <section id="textSection">
-        <label>Text / Placeholder</label>
-        <textarea id="modalText" rows="3" placeholder="Enter text or placeholder"></textarea>
-      </section>
-
-      <section>
-        <label>Color</label>
-        <div class="row">
-          <input type="color" id="modalColor" />
-          <select id="colorTarget">
-            <option value="auto">Auto (Text if has text, otherwise Background)</option>
-            <option value="text">Text</option>
-            <option value="background">Background</option>
-          </select>
-        </div>
-      </section>
-
-      <section>
-        <label>Replace Image</label>
-        <input type="file" id="modalImageFile" accept="image/*" />
-        <input type="url" id="modalImageUrl" placeholder="Or paste image URL" />
-      </section>
-
+      <h2 class="mb-3">Edit Element</h2>
+      <div id="textSection" class="mb-4">
+        <label class="mb-2">Text / Placeholder</label>
+        <input id="modalText">
+      </div>
+      <div class="mb-3">
+        <label class="mb-2">Color Mode</label>
+        <select id="colorTarget">
+          <option value="auto">Auto</option>
+          <option value="text">Text Color</option>
+          <option value="background">Background</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="mb-2">Color Picker</label>
+        <input type="color" id="modalColor" style="width:70px;">
+      </div>
+      <div class="mb-4">
+        <label class="mb-2">Replace Image</label>
+        <input type="url" id="imageUrl" placeholder="Image URL">
+        <input type="file" id="imageFile" accept="image/*">
+      </div>
       <div class="actions">
-        <button class="btn" id="cancelBtn">Cancel</button>
-        <button class="btn primary" id="saveBtn">Save</button>
+        <button id="cancelBtn">Cancel</button>
+        <button id="saveBtn">Save</button>
       </div>
     </div>
   </div>
 
   <script>
-    // ---------- DOM refs ----------
     const zipInput = document.getElementById("zipInput");
     const exportBtn = document.getElementById("exportBtn");
-    const tabs = document.getElementById("tabs");
-    const iframeContainer = document.getElementById("iframe-container");
+    const tabsEl = document.getElementById("tabs");
+    const iframeContainer = document.getElementById("iframeContainer");
 
     const modalBackdrop = document.getElementById("modalBackdrop");
     const modalText = document.getElementById("modalText");
     const modalColor = document.getElementById("modalColor");
     const colorTargetSel = document.getElementById("colorTarget");
-    const modalImageFile = document.getElementById("modalImageFile");
-    const modalImageUrl  = document.getElementById("modalImageUrl");
+    const imageUrl = document.getElementById("imageUrl");
+    const imageFile = document.getElementById("imageFile");
     const cancelBtn = document.getElementById("cancelBtn");
     const saveBtn = document.getElementById("saveBtn");
 
-    // ---------- State ----------
-    let filesMap = {};          // { path -> Uint8Array }  (all original files)
-    let htmlTextMap = {};       // { path -> string }      (decoded originals for html)
-    let editedHTML = {};        // { path -> string }      (only for html we saved)
-    let pages = [];             // html file list (sorted)
+    let pages = [];
+    let pageContents = {};
+    let editedContents = {};
+    let otherFiles = {}; // store css/js/images untouched
     let activePage = "";
-    let iframeRefs = {};        // { page -> iframe }
+    let iframeRefs = {};
 
-    // Modal state for current element edit
     let modalTarget = { page: "", id: "", hasText: false };
-    let originalSnapshot = null; // per-element snapshot (text/placeholder/src + inline colors)
+    let originalSnapshot = null;
 
-    // ---------- Helpers ----------
-    function decodeUTF8(u8) { return new TextDecoder().decode(u8); }
+    // --- File handling ---
+    zipInput.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const zip = await JSZip.loadAsync(file);
+      const newPages = [];
+      const newContents = {};
+      const other = {};
 
-    function sortPages(list) {
-      return list.sort((a,b) => {
+      await Promise.all(Object.keys(zip.files).map(async (filename) => {
+        const entry = zip.files[filename];
+        if (entry.dir) return; // skip folders
+        if (filename.toLowerCase().endsWith(".html")) {
+          const data = await entry.async("string");
+          newPages.push(filename);
+          newContents[filename] = data;
+        } else {
+          // keep non-html as Uint8Array
+          const data = await entry.async("uint8array");
+          other[filename] = data;
+        }
+      }));
+
+      newPages.sort((a,b) => {
         const ai = /(^|\/)index\.html$/i.test(a);
         const bi = /(^|\/)index\.html$/i.test(b);
         if (ai && !bi) return -1;
         if (!ai && bi) return 1;
         return a.localeCompare(b);
       });
-    }
 
-    function injectEditingBridge(html, pageName) {
-      // This bridge matches your React logic: 300ms suppression for A/BUTTON, dblclick edits any element,
-      // APPLY_TEXT respects placeholder edits, RESTORE_ELEMENT restores snapshot, fonts untouched.
-      const bridge = `
-<script>(function(){
-  var EDIT_ATTR='data-edit-id';
-  var clickTimers={};    // id -> timeout
-  var bypassNext={};     // id -> boolean
+      pages = newPages;
+      pageContents = newContents;
+      editedContents = {...newContents};
+      otherFiles = other;
+      activePage = newPages[0] || "";
 
-  function isSkippableTag(el){
-    var tn=(el&&el.tagName||'').toLowerCase();
-    return ['script','style','meta','link','noscript','iframe'].indexOf(tn)>-1;
-  }
-  function hasEditableText(el){
-    if(!el || isSkippableTag(el)) return false;
-    var txt=(el.innerText||'').trim();
-    var ph=('placeholder' in el ? (el.placeholder||'').trim() : '');
-    return txt.length>0 || ph.length>0;
-  }
-  function ensureId(el){
-    if(!el.getAttribute(EDIT_ATTR))
-      el.setAttribute(EDIT_ATTR,'e'+Math.random().toString(36).slice(2,9));
-    return el.getAttribute(EDIT_ATTR);
-  }
-  function findEditable(start){
-    var cur=start, hops=0;
-    while(cur && hops<6){ if(cur.nodeType===1 && !isSkippableTag(cur)) return cur; cur=cur.parentElement; hops++; }
-    return null;
-  }
-  function buildSnapshot(el){
-    var tn=(el.tagName||'').toUpperCase();
-    return {
-      text: (el.innerText||''),
-      placeholder: ('placeholder' in el ? (el.placeholder||'') : undefined),
-      src: (tn==='IMG' ? (el.getAttribute('src')||el.src||'') : undefined),
-      inline: { color:(el.style?el.style.color:undefined), backgroundColor:(el.style?el.style.backgroundColor:undefined) }
-    };
-  }
-
-  // --- Suppress single-click on links/buttons with 300ms delay; dblclick opens editor ---
-  document.addEventListener('click', function(e){
-    var el=findEditable(e.target); if(!el) return;
-    var tn=(el.tagName||'').toUpperCase();
-    if(tn==='A' || tn==='BUTTON'){
-      var id=ensureId(el);
-      if(bypassNext[id]){ bypassNext[id]=false; return; } // allow the synthetic click through
-      e.preventDefault(); e.stopPropagation();
-
-      if(clickTimers[id]){
-        // second click within window → edit instead of navigate
-        clearTimeout(clickTimers[id]); clickTimers[id]=null;
-        var snap=buildSnapshot(el);
-        try{ parent.postMessage({ type:'OPEN_EDITOR', page:'${pageName}', id:id, hasText:hasEditableText(el), ...snap }, '*'); }catch(_){}
-      } else {
-        // start delay; if no 2nd click, allow navigation
-        clickTimers[id]=setTimeout(function(){
-          clickTimers[id]=null; bypassNext[id]=true; try{ el.click(); }catch(_){}
-        }, 300);
-      }
-    }
-  }, true);
-
-  // --- Dblclick anywhere to edit that element ---
-  document.addEventListener('dblclick', function(e){
-    var el=findEditable(e.target); if(!el) return;
-    e.preventDefault(); e.stopPropagation();
-    var id=ensureId(el); var snap=buildSnapshot(el);
-    try{ parent.postMessage({ type:'OPEN_EDITOR', page:'${pageName}', id:id, hasText:hasEditableText(el), ...snap }, '*'); }catch(_){}
-  }, true);
-
-  // --- Apply updates / restore ---
-  window.addEventListener('message', function(ev){
-    var d=ev.data||{}; if(!d.id) return;
-    var sel='['+EDIT_ATTR+'="'+d.id+'"]'; var el=document.querySelector(sel); if(!el) return;
-
-    if(d.type==='APPLY_TEXT'){
-      if(d.isPlaceholder && ('placeholder' in el)) el.setAttribute('placeholder', d.text||'');
-      else el.innerText = (d.text||'');
-    }
-    if(d.type==='APPLY_COLOR'){
-      if(d.target==='background') el.style.backgroundColor=d.color;
-      else el.style.color=d.color;
-    }
-    if(d.type==='APPLY_IMAGE' && el.tagName && el.tagName.toUpperCase()==='IMG'){
-      el.src=d.src;
-    }
-    if(d.type==='RESTORE_ELEMENT' && d.snapshot){
-      if(d.snapshot.text!==undefined) el.innerText=d.snapshot.text;
-      if(d.snapshot.placeholder!==undefined && ('placeholder' in el)) el.setAttribute('placeholder', d.snapshot.placeholder);
-      if(d.snapshot.src!==undefined && el.tagName && el.tagName.toUpperCase()==='IMG') el.src=d.snapshot.src;
-      if(el.style){
-        el.style.color = (d.snapshot.inline && d.snapshot.inline.color) || '';
-        el.style.backgroundColor = (d.snapshot.inline && d.snapshot.inline.backgroundColor) || '';
-      }
-    }
-  });
-})();<\/script>`;
-      return /<\/body>/i.test(html) ? html.replace(/<\/body>/i, bridge + "</body>") : (html + bridge);
-    }
-
-    // ---------- ZIP load ----------
-    zipInput.addEventListener("change", async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      const zip = await JSZip.loadAsync(file);
-      filesMap = {};
-      htmlTextMap = {};
-      editedHTML = {};
-
-      const paths = Object.keys(zip.files);
-      await Promise.all(paths.map(async (p) => {
-        const entry = zip.files[p];
-        if (entry.dir) return;
-        if (p.toLowerCase().endsWith(".html")) {
-          const text = await entry.async("string");
-          htmlTextMap[p] = text;
-          filesMap[p] = new TextEncoder().encode(text); // also keep a bytes copy
-        } else {
-          const bytes = await entry.async("uint8array");
-          filesMap[p] = bytes;
-        }
-      }));
-
-      pages = sortPages(Object.keys(htmlTextMap));
-      if (pages.length === 0) {
-        tabs.innerHTML = ""; iframeContainer.innerHTML = "<p style='padding:12px'>No HTML files found in ZIP.</p>";
-        return;
-      }
-
-      // Render tabs
-      tabs.innerHTML = "";
-      pages.forEach((p, i) => {
-        const b = document.createElement("button");
-        b.textContent = p;
-        b.className = i === 0 ? "active" : "";
-        b.addEventListener("click", () => openTab(p));
-        tabs.appendChild(b);
-      });
-
-      openTab(pages[0]);
+      renderTabs();
+      renderIframes();
     });
 
-    // ---------- Tab / Iframe ----------
-    function openTab(pageName) {
-      activePage = pageName;
-      // set active tab style
-      [...tabs.children].forEach(btn => btn.classList.toggle("active", btn.textContent === pageName));
-
-      const raw = editedHTML[pageName] ?? htmlTextMap[pageName] ?? decodeUTF8(filesMap[pageName] || new Uint8Array());
-      iframeContainer.innerHTML = `<iframe title="preview"></iframe>`;
-      const iframe = iframeContainer.querySelector("iframe");
-      iframeRefs[pageName] = iframe;
-      // First load original html; then replace with injected version to ensure clean DOM copy
-      iframe.srcdoc = raw;
-      iframe.addEventListener("load", () => {
-        const doc = iframe.contentDocument;
-        const htmlWithBridge = injectEditingBridge(doc.documentElement.outerHTML, pageName);
-        iframe.srcdoc = htmlWithBridge;
-      }, { once: true });
+    // Tabs
+    function renderTabs() {
+      tabsEl.innerHTML = "";
+      pages.forEach((p) => {
+        const tab = document.createElement("div");
+        tab.className = "tab" + (p === activePage ? " active" : "");
+        tab.textContent = p;
+        tab.onclick = () => { activePage = p; renderTabs(); renderIframes(); };
+        tabsEl.appendChild(tab);
+      });
     }
 
-    // ---------- Inter-window messaging (open editor) ----------
+    // Inject bridge
+    function injectEditingBridge(html, pageName) {
+      const bridge = `<script>(function(){
+        var EDIT_ATTR='data-edit-id';
+        var clickTimers={};
+        function ensureId(el){if(!el.getAttribute(EDIT_ATTR)) el.setAttribute(EDIT_ATTR,'e'+Math.random().toString(36).slice(2,9));return el.getAttribute(EDIT_ATTR);}
+        function buildSnapshot(el){return {text:el.innerText||'',placeholder:('placeholder'in el?el.placeholder||undefined:undefined),src:(el.tagName==='IMG'?(el.getAttribute('src')||el.src||''):undefined),inline:{color:el.style.color,backgroundColor:el.style.backgroundColor}};}
+        document.addEventListener('click',function(e){
+          var el=e.target;if(!el)return;
+          var tn=(el.tagName||'').toUpperCase();
+          if(tn==='A'||tn==='BUTTON'){
+            var id=ensureId(el);
+            e.preventDefault();e.stopPropagation();
+            if(clickTimers[id]){
+              clearTimeout(clickTimers[id]);clickTimers[id]=null;
+              var snap=buildSnapshot(el);
+              parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,hasText:!!el.innerText,...snap},'*');
+            }else{
+              clickTimers[id]=setTimeout(function(){
+                clickTimers[id]=null;
+                var href=(el.tagName==='A'&&el.href)?el.href:null;
+                if(href) window.location.href=href; else el.click();
+              },300);
+            }
+          }
+        },true);
+        document.addEventListener('dblclick',function(e){
+          var el=e.target;if(!el)return;
+          e.preventDefault();e.stopPropagation();
+          var id=ensureId(el);
+          var snap=buildSnapshot(el);
+          parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,hasText:!!el.innerText,...snap},'*');
+        },true);
+        window.addEventListener('message',function(ev){
+          var d=ev.data||{};
+          var el=document.querySelector('['+EDIT_ATTR+'="'+d.id+'"]');
+          if(!el)return;
+          if(d.type==='APPLY_TEXT')el.innerText=d.text||'';
+          if(d.type==='APPLY_COLOR'){if(d.target==='background')el.style.backgroundColor=d.color;else el.style.color=d.color;}
+          if(d.type==='APPLY_IMAGE'&&el.tagName==='IMG')el.src=d.src;
+          if(d.type==='RESTORE_ELEMENT'&&d.snapshot){
+            if(d.snapshot.text!==undefined)el.innerText=d.snapshot.text;
+            if(d.snapshot.placeholder!==undefined&&'placeholder'in el)el.placeholder=d.snapshot.placeholder;
+            if(d.snapshot.src!==undefined&&el.tagName==='IMG')el.src=d.snapshot.src;
+            if(d.snapshot.inline){el.style.color=d.snapshot.inline.color||'';el.style.backgroundColor=d.snapshot.inline.backgroundColor||'';}
+          }
+        });
+      })();<\/script>`;
+      return html.replace(/<\/body>/i, bridge + "</body>");
+    }
+
+    // Render iframe
+    function renderIframes() {
+      iframeContainer.innerHTML = "";
+      if (!activePage) return;
+      const iframe = document.createElement("iframe");
+      iframe.srcdoc = injectEditingBridge(editedContents[activePage] || pageContents[activePage] || "", activePage);
+      iframeContainer.appendChild(iframe);
+      iframeRefs[activePage] = iframe;
+    }
+
+    // --- Listen for messages from iframe ---
     window.addEventListener("message", (event) => {
-      const d = event?.data || {};
+      const d = event.data || {};
       if (d.type === "OPEN_EDITOR") {
         modalTarget = { page: d.page, id: d.id, hasText: !!d.hasText };
-        modalText.value = d.hasText ? (d.text || "") : (d.placeholder || "");
-        modalColor.value = d.inline?.color || "#000000";
-        originalSnapshot = {
-          text: d.text,
-          placeholder: d.placeholder,
-          src: d.src,
-          inline: { color: d.inline?.color || "", backgroundColor: d.inline?.backgroundColor || "" }
-        };
-        // Show/hide text section based on hasText (placeholder otherwise still editable)
-        document.getElementById("textSection").style.display = (d.hasText || ('placeholder' in d)) ? "block" : "block";
+        modalText.value = d.text || "";
+        modalColor.value = "#000000";
+        originalSnapshot = d; // full snapshot
         modalBackdrop.style.display = "flex";
+        document.getElementById("textSection").style.display = d.hasText ? "block" : "none";
       }
     });
 
-    // Live edits
+    // Live updates
     modalText.addEventListener("input", () => {
-      if (!modalTarget.page) return;
-      const { page, id, hasText } = modalTarget;
-      const isPlaceholder = !hasText; // mimic original logic
-      iframeRefs[page]?.contentWindow?.postMessage({ type:"APPLY_TEXT", id, text: modalText.value, isPlaceholder }, "*");
+      const {page,id} = modalTarget;
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_TEXT",id,text:modalText.value},"*");
     });
 
     modalColor.addEventListener("input", () => {
-      if (!modalTarget.page) return;
-      const { page, id, hasText } = modalTarget;
-      const target = colorTargetSel.value === "auto" ? (hasText ? "color" : "background") : colorTargetSel.value;
-      iframeRefs[page]?.contentWindow?.postMessage({ type:"APPLY_COLOR", id, color: modalColor.value, target }, "*");
+      const {page,id,hasText} = modalTarget;
+      const target = colorTargetSel.value==="auto" ? (hasText ? "color" : "background") : colorTargetSel.value;
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_COLOR",id,color:modalColor.value,target},"*");
     });
 
-    modalImageFile.addEventListener("change", (e) => {
-      const f = e.target.files?.[0];
-      if (!f || !modalTarget.page) return;
+    imageUrl.addEventListener("input", () => {
+      const {page,id} = modalTarget;
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:imageUrl.value},"*");
+    });
+
+    imageFile.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
-        const { page, id } = modalTarget;
-        iframeRefs[page]?.contentWindow?.postMessage({ type:"APPLY_IMAGE", id, src: reader.result }, "*");
+        const {page,id} = modalTarget;
+        iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:reader.result},"*");
       };
-      reader.readAsDataURL(f);
+      reader.readAsDataURL(file);
     });
 
-    modalImageUrl.addEventListener("input", () => {
-      if (!modalTarget.page) return;
-      const { page, id } = modalTarget;
-      if (!modalImageUrl.value) return;
-      iframeRefs[page]?.contentWindow?.postMessage({ type:"APPLY_IMAGE", id, src: modalImageUrl.value }, "*");
-    });
-
-    // Cancel → restore element snapshot (NO SAVE)
-    cancelBtn.addEventListener("click", () => {
-      const { page, id } = modalTarget || {};
-      if (page && id && originalSnapshot) {
-        iframeRefs[page]?.contentWindow?.postMessage({ type:"RESTORE_ELEMENT", id, snapshot: originalSnapshot }, "*");
-      }
-      modalBackdrop.style.display = "none";
-      modalTarget = { page:"", id:"", hasText:false };
-      originalSnapshot = null;
-    });
-
-    // Save → serialize iframe DOM into editedHTML for that page
-    saveBtn.addEventListener("click", () => {
-      const { page } = modalTarget || {};
+    // Save edits
+    saveBtn.onclick = () => {
+      const {page} = modalTarget;
       const iframe = iframeRefs[page];
-      if (page && iframe?.contentDocument) {
+      if (iframe.contentDocument) {
         const html = "<!DOCTYPE html>" + iframe.contentDocument.documentElement.outerHTML;
-        editedHTML[page] = html;
+        editedContents[page] = html;
       }
       modalBackdrop.style.display = "none";
-      modalTarget = { page:"", id:"", hasText:false };
-      originalSnapshot = null;
-    });
+    };
 
-    // ---------- Export ZIP (preserve structure) ----------
-    exportBtn.addEventListener("click", async () => {
-      if (!Object.keys(filesMap).length) return;
-      const out = new JSZip();
-      const fileNames = Object.keys(filesMap);
-
-      for (const name of fileNames) {
-        if (name.toLowerCase().endsWith(".html") && editedHTML[name]) {
-          // replace with edited HTML text
-          out.file(name, editedHTML[name]); // string
-        } else {
-          // pass-through original bytes
-          out.file(name, filesMap[name]);   // Uint8Array
-        }
+    // Cancel → restore snapshot
+    cancelBtn.onclick = () => {
+      const {page,id} = modalTarget;
+      const iframe = iframeRefs[page];
+      if (iframe?.contentWindow && originalSnapshot) {
+        iframe.contentWindow.postMessage({type:"RESTORE_ELEMENT",id,snapshot:originalSnapshot},"*");
       }
+      modalBackdrop.style.display = "none";
+    };
 
-      const blob = await out.generateAsync({ type:"blob" });
+    // Export
+    exportBtn.addEventListener("click", async () => {
+      const zip = new JSZip();
+      // Include edited HTML
+      pages.forEach((filename) => {
+        const html = editedContents[filename] || pageContents[filename] || "";
+        zip.file(filename, html);
+      });
+      // Include all other files unchanged
+      Object.entries(otherFiles).forEach(([filename, data]) => {
+        zip.file(filename, data);
+      });
+      const blob = await zip.generateAsync({type:"blob"});
       saveAs(blob, "custom-site.zip");
     });
   </script>
