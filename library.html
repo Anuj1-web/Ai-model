@@ -6,7 +6,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
-<body class="bg-white text-black">
+<body class="bg-white text-black min-h-screen flex flex-col">
+  <!-- Header -->
   <header class="p-4 border-b flex justify-between items-center">
     <h1 class="text-2xl font-bold">Sitegen Library</h1>
     <nav>
@@ -14,48 +15,54 @@
     </nav>
   </header>
 
-  <main class="p-6 max-w-6xl mx-auto">
-    <h2 class="text-xl font-semibold mb-4">Upload New Item</h2>
-    <div class="mb-6 flex gap-2">
-      <select id="category" class="border px-2 py-2 rounded">
-        <option value="Template">Template</option>
-        <option value="Block">Block</option>
-        <option value="Theme">Theme</option>
-        <option value="Subscription Box">Subscription Box</option>
-      </select>
-      <input type="file" id="fileInput" class="border px-2 py-2 rounded">
-      <button onclick="uploadItem()" class="bg-black text-white px-4 py-2 rounded">Upload</button>
-    </div>
-    <div id="progressBox" class="hidden mb-4">
-      <p id="progressText">Uploading 0%</p>
-      <div class="w-full bg-gray-200 rounded h-2 mt-2">
-        <div id="progressBar" class="bg-black h-2 rounded" style="width:0%"></div>
+  <!-- Main -->
+  <main class="flex-1 p-6 max-w-6xl mx-auto w-full">
+    <!-- Upload Section -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold mb-4">Upload New Item</h2>
+      <div class="flex flex-col md:flex-row gap-3 md:items-center">
+        <select id="category" class="border px-3 py-2 rounded">
+          <option value="Template">Template</option>
+          <option value="Block">Block</option>
+          <option value="Theme">Theme</option>
+          <option value="Subscription Box">Subscription Box</option>
+        </select>
+        <input type="file" id="fileInput" class="border px-3 py-2 rounded bg-white">
+        <button onclick="uploadItem()" class="bg-black text-white px-4 py-2 rounded">Upload</button>
       </div>
-    </div>
 
-    <h2 class="text-xl font-semibold mb-4">Library Items</h2>
-    <div id="libraryItems" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+      <!-- Progress Bar -->
+      <div id="progressBox" class="hidden mt-4 w-full">
+        <p id="progressText" class="text-sm">Uploading 0%</p>
+        <div class="w-full bg-gray-200 rounded h-2 mt-1">
+          <div id="progressBar" class="bg-black h-2 rounded" style="width:0%"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Library Section -->
+    <section>
+      <h2 class="text-xl font-semibold mb-4">Library Items</h2>
+      <div id="libraryItems" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
   </main>
 
-  <!-- Thumbnail Editor Modal -->
-  <div id="thumbnailModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50">
-    <div class="bg-white p-4 rounded-lg max-w-3xl w-full relative">
-      <h3 class="font-semibold mb-2">Adjust Thumbnail</h3>
-      <div class="relative w-full h-60 border overflow-hidden bg-gray-100 mb-3">
-        <img id="thumbImage" src="" class="absolute cursor-grab">
-      </div>
-      <input id="zoomSlider" type="range" min="0.5" max="2" step="0.01" value="1" class="w-full mb-3">
-      <div class="flex justify-end gap-2">
-        <button onclick="cancelThumbnail()" class="px-4 py-2 border rounded">Cancel</button>
-        <button onclick="saveThumbnail()" class="px-4 py-2 bg-black text-white rounded">Save Thumbnail</button>
-      </div>
-    </div>
-  </div>
-
   <script>
-    let currentScreenshot = null;
-    let drag = { x:0, y:0, startX:0, startY:0, dragging:false };
-    let scale = 1;
+    // Fake smooth progress bar
+    function fakeProgress(cb) {
+      let percent = 0;
+      const interval = setInterval(() => {
+        percent += 5;
+        if (percent > 90) clearInterval(interval);
+        cb(percent);
+      }, 120);
+      return interval;
+    }
+
+    function updateProgress(percent) {
+      document.getElementById("progressText").textContent = `Uploading ${percent}%`;
+      document.getElementById("progressBar").style.width = percent + "%";
+    }
 
     function uploadItem() {
       const category = document.getElementById("category").value;
@@ -66,22 +73,16 @@
       const reader = new FileReader();
 
       document.getElementById("progressBox").classList.remove("hidden");
-      document.getElementById("progressText").textContent = "Uploading 0%";
-      document.getElementById("progressBar").style.width = "0%";
-
-      reader.onloadstart = () => updateProgress(0);
-      reader.onprogress = e => {
-        if (e.lengthComputable) {
-          const percent = Math.round((e.loaded / e.total) * 100);
-          updateProgress(percent);
-        }
-      };
-      reader.onloadend = () => updateProgress(100);
+      let fake = fakeProgress(updateProgress);
 
       reader.onload = function(e) {
+        clearInterval(fake);
+        updateProgress(100);
+
         const content = e.target.result;
         const name = file.name.replace(/\.[^/.]+$/, "");
 
+        // Create hidden iframe for rendering
         const iframe = document.createElement("iframe");
         iframe.style.position = "absolute";
         iframe.style.left = "-9999px";
@@ -94,91 +95,22 @@
         iframe.contentDocument.write(content);
         iframe.contentDocument.close();
 
+        // Give time for assets to load
         setTimeout(() => {
-          html2canvas(iframe.contentDocument.body, { useCORS:true }).then(canvas => {
-            currentScreenshot = { canvas, name, category, content };
-            openThumbnailEditor(canvas);
+          html2canvas(iframe.contentDocument.body, { useCORS:true, scale:0.3 }).then(canvas => {
+            const preview = canvas.toDataURL("image/png");
+
+            const newItem = { name, category, content, preview };
+            const library = JSON.parse(localStorage.getItem("sitegenLibrary")) || [];
+            library.push(newItem);
+            localStorage.setItem("sitegenLibrary", JSON.stringify(library));
+
+            loadLibrary();
             iframe.remove();
           });
-        }, 800);
+        }, 1000);
       };
       reader.readAsText(file);
-    }
-
-    function updateProgress(percent) {
-      document.getElementById("progressText").textContent = `Uploading ${percent}%`;
-      document.getElementById("progressBar").style.width = percent + "%";
-    }
-
-    function openThumbnailEditor(canvas) {
-      const modal = document.getElementById("thumbnailModal");
-      modal.classList.remove("hidden");
-      const img = document.getElementById("thumbImage");
-      img.src = canvas.toDataURL("image/png");
-      img.style.transform = "translate(0px,0px) scale(1)";
-      drag.x = drag.y = 0; scale = 1;
-
-      img.onmousedown = e => {
-        drag.dragging = true;
-        drag.startX = e.clientX - drag.x;
-        drag.startY = e.clientY - drag.y;
-      };
-      window.onmouseup = () => drag.dragging = false;
-      window.onmousemove = e => {
-        if (!drag.dragging) return;
-        drag.x = e.clientX - drag.startX;
-        drag.y = e.clientY - drag.startY;
-        updateTransform();
-      };
-      document.getElementById("zoomSlider").oninput = e => {
-        scale = e.target.value;
-        updateTransform();
-      };
-    }
-
-    function updateTransform() {
-      const img = document.getElementById("thumbImage");
-      img.style.transform = `translate(${drag.x}px,${drag.y}px) scale(${scale})`;
-    }
-
-    function cancelThumbnail() {
-      document.getElementById("thumbnailModal").classList.add("hidden");
-      currentScreenshot = null;
-    }
-
-    function saveThumbnail() {
-      const modal = document.getElementById("thumbnailModal");
-      const img = document.getElementById("thumbImage");
-      const box = img.parentElement.getBoundingClientRect();
-
-      const tmpCanvas = document.createElement("canvas");
-      tmpCanvas.width = box.width;
-      tmpCanvas.height = box.height;
-      const ctx = tmpCanvas.getContext("2d");
-
-      const screenshotCanvas = currentScreenshot.canvas;
-      const sx = (-drag.x + (box.width/2)*(1-1/scale)) / scale;
-      const sy = (-drag.y + (box.height/2)*(1-1/scale)) / scale;
-      const sw = box.width / scale;
-      const sh = box.height / scale;
-
-      ctx.drawImage(screenshotCanvas, sx, sy, sw, sh, 0, 0, box.width, box.height);
-
-      const preview = tmpCanvas.toDataURL("image/png");
-      const newItem = {
-        name: currentScreenshot.name,
-        category: currentScreenshot.category,
-        content: currentScreenshot.content,
-        preview
-      };
-
-      const library = JSON.parse(localStorage.getItem("sitegenLibrary")) || [];
-      library.push(newItem);
-      localStorage.setItem("sitegenLibrary", JSON.stringify(library));
-      loadLibrary();
-
-      modal.classList.add("hidden");
-      currentScreenshot = null;
     }
 
     function loadLibrary() {
@@ -187,15 +119,15 @@
       container.innerHTML = "";
       library.forEach((item, idx) => {
         const card = document.createElement("div");
-        card.className = "border rounded-lg shadow p-4 flex flex-col";
+        card.className = "border rounded-lg shadow p-4 flex flex-col bg-white";
 
         const img = document.createElement("img");
         img.src = item.preview || "";
         img.alt = item.name;
-        img.className = "w-full h-60 object-cover rounded mb-3 bg-gray-100";
+        img.className = "w-full h-48 object-contain rounded mb-3 bg-gray-50";
 
         const title = document.createElement("h3");
-        title.className = "font-semibold text-lg mb-2";
+        title.className = "font-semibold text-lg mb-1";
         title.textContent = item.name;
 
         const cat = document.createElement("p");
