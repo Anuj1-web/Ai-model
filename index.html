@@ -255,6 +255,7 @@
         var clickTimers={};
         function ensureId(el){if(!el.getAttribute(EDIT_ATTR)) el.setAttribute(EDIT_ATTR,'e'+Math.random().toString(36).slice(2,9));return el.getAttribute(EDIT_ATTR);}
         function buildSnapshot(el){return {
+          html: el.innerHTML || '',
           text: el.innerText || '',
           placeholder: ('placeholder' in el ? el.placeholder || undefined : undefined),
           src: (el.tagName==='IMG'?(el.getAttribute('src')||el.src||''):undefined),
@@ -302,7 +303,7 @@
           if(d.type==='APPLY_COLOR'){if(d.target==='background')el.style.backgroundColor=d.color;else el.style.color=d.color;}
           if(d.type==='APPLY_IMAGE'&&el.tagName==='IMG')el.src=d.src;
           if(d.type==='RESTORE_ELEMENT'&&d.snapshot){
-            if(d.snapshot.text!==undefined && !('placeholder' in el)) el.innerText=d.snapshot.text;
+            if(d.snapshot.html!==undefined && !('placeholder' in el)) el.innerHTML=d.snapshot.html;
             if(d.snapshot.placeholder!==undefined && 'placeholder' in el) el.placeholder=d.snapshot.placeholder;
             if(d.snapshot.src!==undefined&&el.tagName==='IMG')el.src=d.snapshot.src;
             if(d.snapshot.inline){el.style.color=d.snapshot.inline.color||'';el.style.backgroundColor=d.snapshot.inline.backgroundColor||'';}
