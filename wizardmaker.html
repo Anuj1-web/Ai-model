@@ -395,18 +395,22 @@
   </script>
 <script>
   // --- Auto-load template if ?template=... is in URL ---
-  async function autoLoadTemplate() {
+  function autoLoadTemplate() {
     const urlParams = new URLSearchParams(window.location.search);
-    const templateUrl = urlParams.get("template"); // template zip link
-    if (!templateUrl) return;
+    const templateData = urlParams.get("template"); // base64 zip from library
+    if (!templateData) return;
 
     try {
-      const response = await fetch(templateUrl);
-      if (!response.ok) throw new Error("Failed to fetch template zip");
-      const blob = await response.blob();
+      // Decode base64 zip string back into a Blob
+      const binary = atob(templateData.split(',')[1]);
+      const array = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        array[i] = binary.charCodeAt(i);
+      }
+      const blob = new Blob([array], { type: "application/zip" });
       const file = new File([blob], "template.zip", { type: "application/zip" });
 
-      // Reuse the same zipInput handler
+      // Feed the file into zipInput
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(file);
       const zipInput = document.getElementById("zipInput");
