@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Wizard Maker — Button Fix (v11 UI)</title>
+  <title>Wizard Maker — Button Fix (v11 UI + Placeholder)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
@@ -46,15 +46,13 @@
       padding: .5rem .9rem;
       border: none;
       border-radius: .5rem;
+      background: #111; /* BLACK EXPORT BUTTON */
+      color: #fff;
       cursor: pointer;
       font-size: 0.9rem;
     }
     button:hover {
-      opacity: 0.9;
-    }
-    #exportBtn {
-      background: #000;
-      color: #fff;
+      background: #333;
     }
     .tabs {
       display: flex;
@@ -127,19 +125,12 @@
     #cancelBtn:hover {
       background: #d1d5db;
     }
-    #saveBtn {
-      background: #2563eb;
-      color: #fff;
-    }
-    #saveBtn:hover {
-      background: #1e4fc2;
-    }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>Wizard Maker — Button Fix (v11)</h1>
-    <p>Upload EduPro (multi-page). Double-click or double-tap buttons/links to edit. Cancel fully restores. Fonts untouched.</p>
+    <p>Upload EduPro (multi-page). Double-click or double-tap buttons/links/inputs to edit. Cancel fully restores. Fonts untouched.</p>
 
     <div class="topbar">
       <input type="file" id="zipInput" accept=".zip">
@@ -204,7 +195,7 @@
     let activePage = "";
     let iframeRefs = {};
 
-    let modalTarget = { page: "", id: "", hasText: false };
+    let modalTarget = { page: "", id: "", hasText: false, hasPlaceholder: false };
     let originalSnapshot = null;
 
     // --- File handling ---
@@ -263,17 +254,25 @@
         var EDIT_ATTR='data-edit-id';
         var clickTimers={};
         function ensureId(el){if(!el.getAttribute(EDIT_ATTR)) el.setAttribute(EDIT_ATTR,'e'+Math.random().toString(36).slice(2,9));return el.getAttribute(EDIT_ATTR);}
-        function buildSnapshot(el){return {html:el.innerHTML||'',placeholder:('placeholder'in el?el.placeholder||undefined:undefined),src:(el.tagName==='IMG'?(el.getAttribute('src')||el.src||''):undefined),inline:{color:el.style.color,backgroundColor:el.style.backgroundColor}};}
+        function buildSnapshot(el){return {
+          text: el.innerText || '',
+          placeholder: ('placeholder' in el ? el.placeholder || undefined : undefined),
+          src: (el.tagName==='IMG'?(el.getAttribute('src')||el.src||''):undefined),
+          inline:{color:el.style.color,backgroundColor:el.style.backgroundColor}
+        };}
         document.addEventListener('click',function(e){
           var el=e.target;if(!el)return;
           var tn=(el.tagName||'').toUpperCase();
-          if(tn==='A'||tn==='BUTTON'){
+          if(tn==='A'||tn==='BUTTON'||tn==='INPUT'||tn==='TEXTAREA'){
             var id=ensureId(el);
             e.preventDefault();e.stopPropagation();
             if(clickTimers[id]){
               clearTimeout(clickTimers[id]);clickTimers[id]=null;
               var snap=buildSnapshot(el);
-              parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,hasText:!!el.innerHTML,...snap},'*');
+              parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,
+                hasText:!!el.innerText,
+                hasPlaceholder:('placeholder' in el),
+                ...snap},'*');
             }else{
               clickTimers[id]=setTimeout(function(){
                 clickTimers[id]=null;
@@ -288,18 +287,23 @@
           e.preventDefault();e.stopPropagation();
           var id=ensureId(el);
           var snap=buildSnapshot(el);
-          parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,hasText:!!el.innerHTML,...snap},'*');
+          parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,
+            hasText:!!el.innerText,
+            hasPlaceholder:('placeholder' in el),
+            ...snap},'*');
         },true);
         window.addEventListener('message',function(ev){
           var d=ev.data||{};
           var el=document.querySelector('['+EDIT_ATTR+'="'+d.id+'"]');
           if(!el)return;
-          if(d.type==='APPLY_TEXT')el.innerHTML=d.text||'';
+          if(d.type==='APPLY_TEXT'){
+            if('placeholder' in el) el.placeholder=d.text||''; else el.innerText=d.text||'';
+          }
           if(d.type==='APPLY_COLOR'){if(d.target==='background')el.style.backgroundColor=d.color;else el.style.color=d.color;}
           if(d.type==='APPLY_IMAGE'&&el.tagName==='IMG')el.src=d.src;
           if(d.type==='RESTORE_ELEMENT'&&d.snapshot){
-            if(d.snapshot.html!==undefined)el.innerHTML=d.snapshot.html;
-            if(d.snapshot.placeholder!==undefined&&'placeholder'in el)el.placeholder=d.snapshot.placeholder;
+            if(d.snapshot.text!==undefined && !('placeholder' in el)) el.innerText=d.snapshot.text;
+            if(d.snapshot.placeholder!==undefined && 'placeholder' in el) el.placeholder=d.snapshot.placeholder;
             if(d.snapshot.src!==undefined&&el.tagName==='IMG')el.src=d.snapshot.src;
             if(d.snapshot.inline){el.style.color=d.snapshot.inline.color||'';el.style.backgroundColor=d.snapshot.inline.backgroundColor||'';}
           }
@@ -320,12 +324,12 @@
     window.addEventListener("message", (event) => {
       const d = event.data || {};
       if (d.type === "OPEN_EDITOR") {
-        modalTarget = { page: d.page, id: d.id, hasText: !!d.hasText };
-        modalText.value = d.html || "";
+        modalTarget = { page: d.page, id: d.id, hasText: !!d.hasText, hasPlaceholder: !!d.hasPlaceholder };
+        modalText.value = d.hasPlaceholder ? d.placeholder || "" : (d.text || "");
         modalColor.value = "#000000";
         originalSnapshot = d;
         modalBackdrop.style.display = "flex";
-        document.getElementById("textSection").style.display = d.hasText ? "block" : "none";
+        document.getElementById("textSection").style.display = (d.hasText || d.hasPlaceholder) ? "block" : "none";
       }
     });
 
