@@ -720,163 +720,388 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-<!-- 🎨 Theme Switcher START -->
+<!-- ====================== SGWM THEME ENGINE — START ====================== -->
 <style>
-  /* Floating button just above + icon */
-  #theme-toggle {
+  /* 🎨 Floating palette button just above your ➕ assets button */
+  #sgwm-theme-toggle {
     position: fixed;
-    bottom: 100px; /* slightly above + button */
+    bottom: 100px;           /* <- adjust if your + button differs */
     right: 20px;
-    background: #fff;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
-    padding: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    background: #ffffff;
+    border: 2px solid #d0d5dd;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
     cursor: pointer;
     z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
   }
-  #theme-toggle:hover { background: #f1f1f1; }
+  #sgwm-theme-toggle:hover { transform: scale(1.06); background:#f7f7f9; box-shadow: 0 8px 26px rgba(0,0,0,0.18); }
 
-  #theme-panel {
+  /* Panel */
+  #sgwm-theme-panel {
     position: fixed;
-    bottom: 160px;
+    bottom: 160px;           /* sits above the toggle button */
     right: 20px;
-    width: 320px;
-    max-height: 400px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    overflow-y: auto;
-    display: none;
-    z-index: 9999;
+    width: 360px;
+    max-height: 520px;
+    overflow: auto;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.18);
     padding: 12px;
+    z-index: 9999;
+    display: none;
   }
-  #theme-panel h3 {
-    font-size: 16px;
-    margin-bottom: 10px;
-    font-weight: bold;
-    text-align: center;
+  #sgwm-theme-panel h3 {
+    margin: 6px 4px 10px 4px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    color: #374151;
   }
-  .theme-card {
-    display: flex;
-    align-items: center;
-    margin: 6px 0;
-    padding: 6px;
-    border-radius: 8px;
+  .sgwm-theme-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .sgwm-theme-card {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 64px auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
     cursor: pointer;
-    border: 1px solid #ddd;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    background: #fff;
   }
-  .theme-card:hover {
-    transform: scale(1.03);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  .sgwm-theme-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.10);
+    border-color:#cfd3d9;
   }
-  .swatch {
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-    margin-right: 6px;
-    border: 1px solid #aaa;
+  .sgwm-swatches { display: grid; grid-template-columns: 1fr 1fr 1fr; height: 64px; }
+  .sgwm-swatch { width: 100%; height: 100%; }
+  .sgwm-theme-name {
+    font-size: 13px; font-weight: 600; color:#111827;
+    padding: 8px 10px; border-top: 1px solid #eef2f7;
+    background: #fff;
   }
+
+  /* Tiny helpers for in-iframe preview (smooth feel) — ONLY color/spacing, no fonts */
+  /* These selectors will style common elements IF a site doesn't have strong CSS */
+  /* They live inside theme.css along with variables for pro looks. */
 </style>
 
-<div id="theme-toggle" title="Change Theme">
-  🎨
-</div>
-<div id="theme-panel">
-  <h3>Choose Theme</h3>
-  <div id="theme-list"></div>
+<!-- Toggle + Panel HTML -->
+<div id="sgwm-theme-toggle" title="Change Theme">🎨</div>
+<div id="sgwm-theme-panel" role="dialog" aria-label="Theme Picker">
+  <h3>Choose a Theme</h3>
+  <div class="sgwm-theme-grid" id="sgwm-theme-grid"></div>
 </div>
 
 <script>
-  // =========================
-  // Theme Presets (20 Wix-like)
-  // =========================
-  const THEMES = [
-    { name: "Corporate Blue", css: ":root{--bg:#ffffff;--text:#222;--primary:#0d47a1;--accent:#1976d2;}body{background:var(--bg);color:var(--text);}a,button{color:var(--primary);}"},
-    { name: "Creative Studio", css: ":root{--bg:#f8f9fa;--text:#333;--primary:#ff6f61;--accent:#009688;}body{background:var(--bg);color:var(--text);}"},
-    { name: "Luxury Black & Gold", css: ":root{--bg:#000;--text:#f5f5f5;--primary:#d4af37;--accent:#9e9e9e;}body{background:var(--bg);color:var(--text);}"},
-    { name: "Eco Green", css: ":root{--bg:#faf7f0;--text:#2e382e;--primary:#2e7d32;--accent:#81c784;}body{background:var(--bg);color:var(--text);}"},
-    { name: "Ocean Breeze", css: ":root{--bg:#e0f7fa;--text:#004d60;--primary:#00bcd4;--accent:#4dd0e1;}body{background:var(--bg);color:var(--text);}"},
-    { name: "Minimal White", css: ":root{--bg:#ffffff;--text:#111;--primary:#42a5f5;--accent:#90caf9;}body{background:var(--bg);color:var(--text);}"},
-    { name: "Sunset Glow", css: ":root{--bg:#fff3e0;--text:#5d4037;--primary:#ff7043;--accent:#ffab91;}body{background:var(--bg);color:var(--text);}"},
-    { name: "Royal Purple", css: ":root{--bg:#f8f5ff;--text:#311b92;--primary:#673ab7;--accent:#fbc02d;}body{background:var(--bg);color:var(--text);}"},
-    { name: "Tech Dark Neon", css: ":root{--bg:#121212;--text:#eee;--primary:#00e5ff;--accent:#ff00ff;}body{background:var(--bg);color:var(--text);}"},
-    { name: "Pastel Candy", css: ":root{--bg:#fdf1f5;--text:#333;--primary:#f48fb1;--accent:#81d4fa;}body{background:var(--bg);color:var(--text);}"},
-    { name: "Vintage Sepia", css: ":root{--bg:#f9f4ec;--text:#3e2723;--primary:#795548;--accent:#d7ccc8;}body{background:var(--bg);color:var(--text);}"},
-    { name: "Elegant Navy", css: ":root{--bg:#fafafa;--text:#1a237e;--primary:#283593;--accent:#9fa8da;}body{background:var(--bg);color:var(--text);}"},
-    { name: "Energetic Orange", css: ":root{--bg:#ffffff;--text:#222;--primary:#ff5722;--accent:#ff9800;}body{background:var(--bg);color:var(--text);}"},
-    { name: "Cyberpunk", css: ":root{--bg:#0d0d0d;--text:#f0f0f0;--primary:#ff00ff;--accent:#00ffff;}body{background:var(--bg);color:var(--text);}"},
-    { name: "Artistic Gradient", css: "body{background:linear-gradient(135deg,#6a11cb,#ff4b2b);color:#fff;}a,button{color:#ffeb3b;}"},
-    { name: "Fresh Mint", css: ":root{--bg:#f0fff4;--text:#004d40;--primary:#4db6ac;--accent:#a7ffeb;}body{background:var(--bg);color:var(--text);}"},
-    { name: "Bold Red", css: ":root{--bg:#ffffff;--text:#212121;--primary:#e53935;--accent:#c62828;}body{background:var(--bg);color:var(--text);}"},
-    { name: "Newspaper Classic", css: ":root{--bg:#fdfdfd;--text:#111;--primary:#000;--accent:#555;}body{background:var(--bg);color:var(--text);font-family:serif;}"},
-    { name: "Modern Gradient", css: "body{background:#fff;color:#222;}header,footer{background:linear-gradient(90deg,#00c6ff,#0072ff);color:#fff;}"},
-    { name: "Fashion Magenta", css: ":root{--bg:#fff;--text:#000;--primary:#e91e63;--accent:#ff4081;}body{background:var(--bg);color:var(--text);}"},
-  ];
+/* ==================== THEME ENGINE ==================== */
+/* Base design tokens used by all themes. We avoid changing fonts per your direction. */
+const THEME_BASE_CSS = `
+:root{
+  --bg:#ffffff;--bg-alt:#f7f7fb;--surface:#ffffff;
+  --text:#111827;--muted:#6b7280;
+  --primary:#3b82f6;--primary-contrast:#ffffff;
+  --accent:#22d3ee;--accent-contrast:#0f172a;
+  --border:#e5e7eb;--ring:#93c5fd;--link:#2563eb;--link-hover:#1d4ed8;
+  --success:#16a34a;--warning:#f59e0b;--danger:#dc2626;
+  --radius:14px;--shadow:0 12px 30px rgba(0,0,0,.12);
+}
 
-  let CURRENT_THEME = null;
-  let ZIP_REF = null; // must be set from your upload code
+/* Core surfaces */
+html,body{background:var(--bg);color:var(--text);}
+section,.section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);}
 
-  const toggleBtn = document.getElementById("theme-toggle");
-  const panel = document.getElementById("theme-panel");
-  const list = document.getElementById("theme-list");
+/* Links */
+a{color:var(--link);text-decoration:none;transition:color .2s ease;}
+a:hover{color:var(--link-hover);}
 
-  toggleBtn.addEventListener("click", () => {
-    panel.style.display = panel.style.display === "block" ? "none" : "block";
-  });
+/* Buttons */
+button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  padding:.65rem 1rem;border-radius:12px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);transition:all .18s ease;cursor:pointer;}
+button:hover,.btn:hover{transform:translateY(-1px);box-shadow:0 10px 18px rgba(0,0,0,.08);}
+.btn-primary{background:var(--primary);color:var(--primary-contrast);border-color:transparent;}
+.btn-primary:hover{filter:saturate(1.15) brightness(1.02);}
+.btn-outline{background:transparent;border-color:var(--primary);color:var(--primary);}
+.btn-accent{background:var(--accent);color:var(--accent-contrast);border-color:transparent;}
 
-  // Render theme cards
-  THEMES.forEach((theme, i) => {
-    const div = document.createElement("div");
-    div.className = "theme-card";
-    div.innerHTML = `
-      <div class="swatch" style="background:${theme.css.match(/--primary:([^;]+)/)?.[1] || '#ccc'}"></div>
-      <span>${theme.name}</span>
-    `;
-    div.onclick = () => applyTheme(theme);
-    list.appendChild(div);
-  });
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);}
+.card .card-title{font-size:1.125rem;font-weight:700;margin-bottom:.35rem;}
+.card .card-sub{color:var(--muted);font-size:.9rem;margin-bottom:.75rem;}
 
-  function applyTheme(theme) {
-    CURRENT_THEME = theme;
+/* Navbar / Header */
+.navbar, header{background:linear-gradient(180deg, var(--surface), var(--bg-alt));
+  border-bottom:1px solid var(--border);padding:14px 18px;border-radius:0 0 18px 18px;}
+.navbar .nav-link{color:var(--text);padding:8px 12px;border-radius:10px;}
+.navbar .nav-link.active,.navbar .nav-link:hover{background:var(--bg-alt);}
 
-    // Live Preview
-    const frame = document.getElementById("previewFrame");
-    if (frame) {
-      const doc = frame.contentDocument || frame.contentWindow.document;
-      let styleEl = doc.getElementById("sgwm-theme-style");
-      if (!styleEl) {
-        styleEl = doc.createElement("style");
-        styleEl.id = "sgwm-theme-style";
-        doc.head.appendChild(styleEl);
-      }
-      styleEl.innerHTML = theme.css;
+/* Footer */
+footer{background:var(--bg-alt);border-top:1px solid var(--border);padding:20px;border-radius:18px 18px 0 0;}
+
+/* Badges & Pills */
+.badge{display:inline-block;padding:.25rem .5rem;border-radius:999px;border:1px solid var(--border);color:var(--text);background:var(--surface);}
+.badge.success{border-color:var(--success);color:var(--success);}
+.badge.warning{border-color:var(--warning);color:var(--warning);}
+.badge.danger{border-color:var(--danger);color:var(--danger);}
+
+/* Forms */
+input,textarea,select{background:var(--surface);color:var(--text);border:1px solid var(--border);
+  border-radius:12px;padding:.6rem .75rem;outline:none;transition:border .18s ease, box-shadow .18s ease;}
+input:focus,textarea:focus,select:focus{border-color:var(--link);box-shadow:0 0 0 3px var(--ring);}
+
+/* Sections / Hero */
+.hero{border-radius:22px;padding:38px 28px;margin:12px 0;background:linear-gradient(135deg, var(--primary), var(--accent));color:var(--primary-contrast);}
+.hero .btn{filter:drop-shadow(0 10px 24px rgba(0,0,0,.18));}
+
+/* Subtle motion */
+*{transition:background-color .18s ease, color .18s ease, border-color .18s ease;}
+`;
+
+/* 20 WORLD-CLASS THEMES – variables only (no font family). Each packs pro palettes + extras */
+const THEMES = [
+  {name:"Corporate Blue", vars:{
+    "--bg":"#ffffff","--bg-alt":"#f3f6fb","--surface":"#ffffff","--text":"#0f172a","--muted":"#6b7280",
+    "--primary":"#0b5ed7","--primary-contrast":"#ffffff","--accent":"#60a5fa","--accent-contrast":"#0f172a",
+    "--border":"#e5e7eb","--ring":"#bfdbfe","--link":"#0b5ed7","--link-hover":"#0a58ca"
+  }, extras:".navbar{background:linear-gradient(180deg,#ffffff,#e9f1ff);} .hero{background:linear-gradient(135deg,#0b5ed7,#60a5fa);}"},
+  {name:"Luxury Black & Gold", vars:{
+    "--bg":"#0a0a0a","--bg-alt":"#111111","--surface":"#0f0f0f","--text":"#f5f5f5","--muted":"#bdbdbd",
+    "--primary":"#c8a848","--primary-contrast":"#161616","--accent":"#f0d679","--accent-contrast":"#161616",
+    "--border":"#2a2a2a","--ring":"#e6d69a","--link":"#d6b451","--link-hover":"#edc864"
+  }, extras:".navbar,header{background:linear-gradient(180deg,#0f0f0f,#151515);} .hero{background:linear-gradient(135deg,#c8a848,#f0d679);color:#161616;}"},
+  {name:"Ocean Breeze", vars:{
+    "--bg":"#e6f7fb","--bg-alt":"#def1f6","--surface":"#ffffff","--text":"#033d4e","--muted":"#4a7080",
+    "--primary":"#0096b6","--primary-contrast":"#ffffff","--accent":"#47c5e0","--accent-contrast":"#083344",
+    "--border":"#cbe7ef","--ring":"#b9ecff","--link":"#007c99","--link-hover":"#006a84"
+  }, extras:".hero{background:linear-gradient(135deg,#0096b6,#47c5e0);}"},
+  {name:"Minimal Snow", vars:{
+    "--bg":"#ffffff","--bg-alt":"#f7f7f7","--surface":"#ffffff","--text":"#18181b","--muted":"#6b7280",
+    "--primary":"#111827","--primary-contrast":"#ffffff","--accent":"#9ca3af","--accent-contrast":"#111827",
+    "--border":"#e5e7eb","--ring":"#e5e7eb","--link":"#111827","--link-hover":"#0b1220"
+  }, extras:".navbar .nav-link:hover{background:#efefef;} .hero{background:linear-gradient(135deg,#111827,#6b7280);}"},
+  {name:"Sunset Coral", vars:{
+    "--bg":"#fff6ef","--bg-alt":"#ffe7d7","--surface":"#ffffff","--text":"#5a382d","--muted":"#8d6e63",
+    "--primary":"#ff6a3d","--primary-contrast":"#ffffff","--accent":"#ffb199","--accent-contrast":"#4e342e",
+    "--border":"#ffd8c6","--ring":"#ffd0c4","--link":"#ff6a3d","--link-hover":"#ff4f1b"
+  }, extras:".hero{background:linear-gradient(135deg,#ff6a3d,#ffb199);}"},
+  {name:"Royal Purple", vars:{
+    "--bg":"#f7f3ff","--bg-alt":"#efe8ff","--surface":"#ffffff","--text":"#2c1a6b","--muted":"#6c5aa6",
+    "--primary":"#6b46c1","--primary-contrast":"#ffffff","--accent":"#b794f4","--accent-contrast":"#1b103e",
+    "--border":"#e9defe","--ring":"#d8c8ff","--link":"#6b46c1","--link-hover":"#5a3aad"
+  }, extras:".hero{background:linear-gradient(135deg,#6b46c1,#b794f4);}"},
+  {name:"Dark Neon", vars:{
+    "--bg":"#111114","--bg-alt":"#18181c","--surface":"#141419","--text":"#e9eef6","--muted":"#a0a3ad",
+    "--primary":"#00eaff","--primary-contrast":"#071018","--accent":"#ff3bf0","--accent-contrast":"#100414",
+    "--border":"#24262b","--ring":"#00eaff55","--link":"#31d7ff","--link-hover":"#14c6ff"
+  }, extras:".navbar{background:linear-gradient(180deg,#141419,#18181c);} .hero{background:linear-gradient(135deg,#00eaff,#ff3bf0);}"},
+  {name:"Pastel Candy", vars:{
+    "--bg":"#fff7fb","--bg-alt":"#fbeeff","--surface":"#ffffff","--text":"#2f2f33","--muted":"#6d6d73",
+    "--primary":"#f48fb1","--primary-contrast":"#2b1a22","--accent":"#81d4fa","--accent-contrast":"#12202a",
+    "--border":"#f4dced","--ring":"#ffd7e7","--link":"#ec407a","--link-hover":"#d81b60"
+  }, extras:".hero{background:linear-gradient(135deg,#f48fb1,#81d4fa);}"},
+  {name:"Vintage Sepia", vars:{
+    "--bg":"#fbf5ea","--bg-alt":"#f3e6d3","--surface":"#ffffff","--text":"#3e2d23","--muted":"#7b6458",
+    "--primary":"#8d6e63","--primary-contrast":"#ffffff","--accent":"#d7ccc8","--accent-contrast":"#3e2723",
+    "--border":"#e5d8c8","--ring":"#e5d8c8","--link":"#6d4c41","--link-hover":"#5d4037"
+  }, extras:".hero{background:linear-gradient(135deg,#8d6e63,#d7ccc8);}"},
+  {name:"Elegant Navy", vars:{
+    "--bg":"#f7f8fc","--bg-alt":"#ebeffb","--surface":"#ffffff","--text":"#1a237e","--muted":"#5c6bc0",
+    "--primary":"#283593","--primary-contrast":"#ffffff","--accent":"#9fa8da","--accent-contrast":"#111827",
+    "--border":"#e2e8ff","--ring":"#c7d2fe","--link":"#283593","--link-hover":"#1e2d7a"
+  }, extras:".hero{background:linear-gradient(135deg,#283593,#9fa8da);}"},
+  {name:"Energetic Orange", vars:{
+    "--bg":"#fff9f3","--bg-alt":"#ffe7d2","--surface":"#ffffff","--text":"#262626","--muted":"#8a6a55",
+    "--primary":"#ff6a1a","--primary-contrast":"#fffaf5","--accent":"#ff9f59","--accent-contrast":"#3a1e0b",
+    "--border":"#ffd2b1","--ring":"#ffd6bf","--link":"#ff6a1a","--link-hover":"#e85a0a"
+  }, extras:".hero{background:linear-gradient(135deg,#ff6a1a,#ff9f59);}"},
+  {name:"Cyberpunk", vars:{
+    "--bg":"#0d0d12","--bg-alt":"#101017","--surface":"#12121a","--text":"#f0f2ff","--muted":"#b6b9c7",
+    "--primary":"#ff00ff","--primary-contrast":"#17001a","--accent":"#00ffff","--accent-contrast":"#001a1a",
+    "--border":"#222331","--ring":"#a600ff55","--link":"#ff55ff","--link-hover":"#ff22ff"
+  }, extras:".hero{background:linear-gradient(135deg,#ff00ff,#00ffff);}"},
+  {name:"Gradient Sunrise", vars:{
+    "--bg":"#fff5f7","--bg-alt":"#ffe9ee","--surface":"#ffffff","--text":"#2f1d2a","--muted":"#7a5a67",
+    "--primary":"#ff7a69","--primary-contrast":"#2a0e10","--accent":"#ffd08a","--accent-contrast":"#33220e",
+    "--border":"#ffd7de","--ring":"#ffdbe4","--link":"#ff6b6b","--link-hover":"#ff4d4d"
+  }, extras:".hero{background:linear-gradient(135deg,#ff7a69,#ffd08a);}"},
+  {name:"Fresh Mint", vars:{
+    "--bg":"#f2fffb","--bg-alt":"#e1fbf3","--surface":"#ffffff","--text":"#083b34","--muted":"#3f7b72",
+    "--primary":"#17c3b2","--primary-contrast":"#042724","--accent":"#7ae3d7","--accent-contrast":"#083b34",
+    "--border":"#ccefe7","--ring":"#b8f1e9","--link":"#17c3b2","--link-hover":"#11a99a"
+  }, extras:".hero{background:linear-gradient(135deg,#17c3b2,#7ae3d7);}"},
+  {name:"Bold Red", vars:{
+    "--bg":"#ffffff","--bg-alt":"#fff1f1","--surface":"#ffffff","--text":"#1f2937","--muted":"#6b7280",
+    "--primary":"#e11d48","--primary-contrast":"#ffffff","--accent":"#fb7185","--accent-contrast":"#3b0a14",
+    "--border":"#fecdd3","--ring":"#fecaca","--link":"#e11d48","--link-hover":"#be123c"
+  }, extras:".hero{background:linear-gradient(135deg,#e11d48,#fb7185);}"},
+  {name:"Newspaper Classic", vars:{
+    "--bg":"#f7f7f7","--bg-alt":"#efefef","--surface":"#ffffff","--text":"#121212","--muted":"#4b5563",
+    "--primary":"#111111","--primary-contrast":"#ffffff","--accent":"#6b7280","--accent-contrast":"#ffffff",
+    "--border":"#d1d5db","--ring":"#d1d5db","--link":"#111111","--link-hover":"#000000"
+  }, extras:".hero{background:linear-gradient(135deg,#111111,#6b7280);}"},
+  {name:"Modern Teal", vars:{
+    "--bg":"#f7fffe","--bg-alt":"#e6fffb","--surface":"#ffffff","--text":"#0e2a2b","--muted":"#557a7b",
+    "--primary":"#0891b2","--primary-contrast":"#ffffff","--accent":"#5eead4","--accent-contrast":"#05201f",
+    "--border":"#cdecec","--ring":"#a7f3d0","--link":"#0e7490","--link-hover":"#155e75"
+  }, extras:".hero{background:linear-gradient(135deg,#0891b2,#5eead4);}"},
+  {name:"Fashion Magenta", vars:{
+    "--bg":"#ffffff","--bg-alt":"#fff0f7","--surface":"#ffffff","--text":"#1a1220","--muted":"#6d516c",
+    "--primary":"#d946ef","--primary-contrast":"#2a0a2e","--accent":"#f0abfc","--accent-contrast":"#2a0a2e",
+    "--border":"#f3d7fb","--ring":"#f5d0fe","--link":"#c026d3","--link-hover":"#a21caf"
+  }, extras:".hero{background:linear-gradient(135deg,#d946ef,#f0abfc);}"},
+  {name:"Golden Sunrise", vars:{
+    "--bg":"#fffceb","--bg-alt":"#fff3c7","--surface":"#ffffff","--text":"#4b2e07","--muted":"#7c5d26",
+    "--primary":"#f59e0b","--primary-contrast":"#231a09","--accent":"#fde68a","--accent-contrast":"#3a2c0f",
+    "--border":"#fde9b5","--ring":"#fde68a","--link":"#d97706","--link-hover":"#b45309"
+  }, extras:".hero{background:linear-gradient(135deg,#f59e0b,#fde68a);}"},
+  {name:"Arctic Frost", vars:{
+    "--bg":"#f3faff","--bg-alt":"#e8f4ff","--surface":"#ffffff","--text":"#0b2a3b","--muted":"#4b6a7f",
+    "--primary":"#0284c7","--primary-contrast":"#ffffff","--accent":"#7dd3fc","--accent-contrast":"#062332",
+    "--border":"#cfe8fb","--ring":"#bae6fd","--link":"#0ea5e9","--link-hover":"#0284c7"
+  }, extras:".hero{background:linear-gradient(135deg,#0284c7,#7dd3fc);}"},
+  {name:"Slate & Lime", vars:{
+    "--bg":"#0b1220","--bg-alt":"#0f172a","--surface":"#0f172a","--text":"#e5f2ff","--muted":"#9fb5cc",
+    "--primary":"#84cc16","--primary-contrast":"#0b1220","--accent":"#a3e635","--accent-contrast":"#0b1220",
+    "--border":"#1e293b","--ring":"#a3e63555","--link":"#bef264","--link-hover":"#a3e635"
+  }, extras:".hero{background:linear-gradient(135deg,#84cc16,#22c55e);}"},
+  {name:"Rosewood", vars:{
+    "--bg":"#fcf2f2","--bg-alt":"#fde6e6","--surface":"#ffffff","--text":"#2a0f12","--muted":"#805157",
+    "--primary":"#b91c1c","--primary-contrast":"#fff5f5","--accent":"#fda4af","--accent-contrast":"#2a0f12",
+    "--border":"#f7c7cf","--ring":"#fecdd3","--link":"#991b1b","--link-hover":"#7f1d1d"
+  }, extras:".hero{background:linear-gradient(135deg,#b91c1c,#fda4af);}"},
+  {name:"Jade Noir", vars:{
+    "--bg":"#0b1716","--bg-alt":"#0f201e","--surface":"#0f201e","--text":"#e6fffb","--muted":"#9ee3d8",
+    "--primary":"#10b981","--primary-contrast":"#031a14","--accent":"#34d399","--accent-contrast":"#042317",
+    "--border":"#1a2f2c","--ring":"#34d39955","--link":"#6ee7b7","--link-hover":"#34d399"
+  }, extras:".hero{background:linear-gradient(135deg,#10b981,#34d399);}"},
+];
+
+/* Build CSS string for a theme: variables block + base + extras */
+function buildThemeCSS(theme){
+  const varLines = Object.entries(theme.vars).map(([k,v])=>`${k}:${v}`).join(';');
+  return `:root{${varLines}}` + THEME_BASE_CSS + (theme.extras || "");
+}
+
+/* UI rendering */
+const grid = document.getElementById('sgwm-theme-grid');
+THEMES.forEach((t, idx) => {
+  const card = document.createElement('div');
+  card.className = 'sgwm-theme-card';
+  // swatches pulled from key vars
+  const s1 = t.vars["--primary"] || "#ccc";
+  const s2 = t.vars["--accent"]  || "#ddd";
+  const s3 = t.vars["--bg-alt"]  || "#eee";
+  card.innerHTML = `
+    <div class="sgwm-swatches">
+      <div class="sgwm-swatch" style="background:${s1}"></div>
+      <div class="sgwm-swatch" style="background:${s2}"></div>
+      <div class="sgwm-swatch" style="background:${s3}"></div>
+    </div>
+    <div class="sgwm-theme-name">${idx+1}. ${t.name}</div>
+  `;
+  card.addEventListener('click', () => applyThemeToPreviewAndZip(t));
+  grid.appendChild(card);
+});
+
+/* Toggle panel */
+const toggleBtn = document.getElementById('sgwm-theme-toggle');
+const panel     = document.getElementById('sgwm-theme-panel');
+toggleBtn.addEventListener('click', () => {
+  panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+});
+
+/* ---- Core logic: live iframe + write into ZIP and all pages ---- */
+async function applyThemeToPreviewAndZip(themeObj){
+  const css = buildThemeCSS(themeObj);
+
+  // 1) Live preview injection (iframe)
+  const frame = document.getElementById('previewFrame');
+  if (frame && (frame.contentDocument || frame.contentWindow)) {
+    const doc = frame.contentDocument || frame.contentWindow.document;
+    let styleEl = doc.getElementById('sgwm-theme-style');
+    if (!styleEl) {
+      styleEl = doc.createElement('style');
+      styleEl.id = 'sgwm-theme-style';
+      doc.head.appendChild(styleEl);
     }
-
-    // Update ZIP (overwrite theme.css + inject in all pages)
-    if (ZIP_REF) {
-      ZIP_REF.file("theme.css", theme.css);
-      ZIP_REF.forEach((path, file) => {
-        if (path.endsWith(".html")) {
-          file.async("string").then(content => {
-            if (!content.includes("theme.css")) {
-              content = content.replace(
-                /<\/head>/i,
-                `<link rel="stylesheet" href="theme.css">\n</head>`
-              );
-            }
-            ZIP_REF.file(path, content);
-          });
-        }
-      });
-    }
+    styleEl.innerHTML = css;
+  } else {
+    console.warn('[SGWM Theme] previewFrame not found — live preview skipped.');
   }
-</script>
-<!-- 🎨 Theme Switcher END -->
 
+  // 2) Persist into ZIP and link from ALL pages
+  if (!window.ZIP_REF) {
+    console.warn('[SGWM Theme] window.ZIP_REF not found — cannot write theme.css into uploaded ZIP.');
+    return;
+  }
+  // write (or overwrite) theme.css at root
+  window.ZIP_REF.file('theme.css', css);
+
+  // go through all .html files; inject relative link to theme.css if missing
+  const ops = [];
+  window.ZIP_REF.forEach((path, file) => {
+    if (path.toLowerCase().endsWith('.html')) {
+      ops.push(
+        file.async('string').then(content => {
+          const needsLink = !/theme\.css/i.test(content);
+          const linked = insertThemeLink(content, relativeToRoot(path, 'theme.css'));
+          // If it already had theme.css we still replace the <link> href to correct relative path (idempotent)
+          const finalHtml = needsLink ? linked : normalizeExistingThemeLink(content, relativeToRoot(path, 'theme.css'));
+          window.ZIP_REF.file(path, finalHtml);
+        })
+      );
+    }
+  });
+  await Promise.all(ops);
+  console.info('[SGWM Theme] theme.css written, links ensured across all pages.');
+}
+
+/* Insert <link rel="stylesheet" href="REL"> before </head> (case-insensitive) */
+function insertThemeLink(html, relHref){
+  if (new RegExp(`<link[^>]+href=["']${escapeReg(relHref)}["']`, 'i').test(html)) return html;
+  const tag = `<link rel="stylesheet" href="${relHref}?v=${Date.now()}">`;
+  if (/<\/head>/i.test(html)) {
+    return html.replace(/<\/head>/i, `${tag}\n</head>`);
+  }
+  // No head? prepend to start as a last resort
+  return `${tag}\n${html}`;
+}
+
+/* If a theme.css link exists but with wrong path, normalize it to the right relative href */
+function normalizeExistingThemeLink(html, relHref){
+  return html.replace(
+    /<link([^>]*?)href=(['"])([^'"]*theme\.css[^'"]*)\2([^>]*)>/ig,
+    (m, pre, q, oldHref, post) => `<link${pre}href=${q}${relHref}?v=${Date.now()}${q}${post}>`
+  );
+}
+
+/* Compute relative path from a page path (maybe inside folders) to a root file */
+function relativeToRoot(pagePath, targetFileAtRoot){
+  if (!pagePath.includes('/')) return targetFileAtRoot;      // root html
+  const depth = pagePath.split('/').length - 1;               // folders deep
+  const up = Array(depth).fill('..').join('/');
+  return `${up}/${targetFileAtRoot}`;
+}
+
+/* Escape for regex */
+function escapeReg(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+</script>
+<!-- ======================= SGWM THEME ENGINE — END ======================= -->
 
 </body>
 </html>
