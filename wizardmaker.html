@@ -720,166 +720,553 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-<!-- ======================= SGWM THEME ENGINE (ROBUST) — START ======================= -->
-<style>
-  #theme-toggle {
-    position: fixed;
-    bottom: 100px;
-    right: 20px;
-    background: #fff;
-    border-radius: 50%;
-    padding: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    cursor: pointer;
-    z-index: 9999;
+<!-- ===================== SGWM THEME CHANGER (drop-in) ===================== -->
+<style id="sgwm-theme-ui-styles">
+  :root { --sgwm-z: 99999; }
+  #sgwm-theme-root { all: initial; font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; }
+  #sgwm-theme-fab {
+    position: fixed; right: 20px; bottom: 70px; /* moved up above the + icon */
+    z-index: var(--sgwm-z);
+    width: 56px; height: 56px; border-radius: 9999px; border: 1px solid rgba(0,0,0,.08);
+    background:#fff; box-shadow: 0 10px 25px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06);
+    display: grid; place-items: center; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease;
   }
-  #theme-panel {
-    position: fixed;
-    bottom: 160px;
-    right: 20px;
-    width: 280px;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  #sgwm-theme-fab:hover { transform: scale(1.05); box-shadow: 0 12px 28px rgba(0,0,0,.12), 0 3px 10px rgba(0,0,0,.08); }
+  #sgwm-theme-panel {
+    position: fixed; right: 20px; bottom: 138px; /* shifted up with button */
+    z-index: var(--sgwm-z);
+    width: 320px; max-height: 75vh; overflow: auto; background:#fff; color:#111;
+    border: 1px solid rgba(0,0,0,.08); border-radius: 18px; box-shadow: 0 20px 40px rgba(0,0,0,.12);
     display: none;
-    z-index: 9999;
-    padding: 10px;
-    max-height: 350px;
-    overflow-y: auto;
   }
-  .theme-card {
-    display: flex;
-    align-items: center;
-    margin: 6px 0;
-    padding: 6px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
+  #sgwm-theme-panel.open { display: block; }
+  .sgwm-hdr { position: sticky; top: 0; background: #fff; padding: 12px 14px; border-bottom: 1px solid rgba(0,0,0,.06); }
+  .sgwm-title { font-weight: 700; font-size: 14px; }
+  .sgwm-sub { font-size: 12px; color:#666; margin-top: 2px; }
+  .sgwm-sec { padding: 12px 14px; }
+  .sgwm-swatch { height: 18px; border-radius: 6px; border: 1px solid rgba(0,0,0,.08); }
+  .sgwm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .sgwm-card {
+    border: 1px solid rgba(0,0,0,.08); border-radius: 14px; padding: 10px; cursor: pointer;
+    transition: box-shadow .15s ease, transform .06s ease;
   }
-  .theme-card:hover { background:#f3f3f3; }
-  .swatch {
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-    margin-right: 8px;
-    border: 1px solid #999;
+  .sgwm-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.10); transform: translateY(-1px); }
+  .sgwm-card-name { font-size: 12px; font-weight: 700; margin-bottom: 8px; opacity: .9; }
+  .sgwm-band { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+  .sgwm-row { display:flex; gap:8px; align-items:center; }
+  .sgwm-pill { padding: 6px 10px; border-radius: 999px; font-size: 12px; border: 1px solid rgba(0,0,0,.08); background:#fafafa; cursor:pointer; }
+  .sgwm-pill:active { transform: translateY(1px); }
+  .sgwm-muted { color:#777; font-size:11px; }
+  .sgwm-divider { height:1px; background:rgba(0,0,0,.06); margin: 10px -14px; }
+  /* Small screens: full-width sheet */
+  @media (max-width: 480px) {
+    #sgwm-theme-panel { right: 10px; left: 10px; width: auto; bottom: 136px; }
+    #sgwm-theme-fab { right: 12px; bottom: 62px; }
   }
 </style>
 
-<div id="theme-toggle" title="Change Theme">🎨</div>
-<div id="theme-panel">
-  <h3 style="text-align:center;font-size:15px;margin-bottom:8px;">Choose Theme</h3>
-  <div id="theme-list"></div>
+<div id="sgwm-theme-root" aria-live="polite">
+  <!-- Floating Button -->
+  <button id="sgwm-theme-fab" title="Theme (colors only)">
+    <!-- inline SVG palette icon -->
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 3C7.03 3 3 7.03 3 12c0 3.31 2.69 6 6 6h1.25a1.75 1.75 0 0 1 0 3.5H10c-4.97 0-9-4.03-9-9S5.03 3 10 3s9 4.03 9 9c0 1.66-1.34 3-3 3h-1.25a1.75 1.75 0 0 1 0-3.5H16c.83 0 1.5-.67 1.5-1.5C17.5 7.47 15.03 5 12 5" stroke="#6b46c1" stroke-width="1.8" stroke-linecap="round"/>
+      <circle cx="8" cy="10" r="1.25" fill="#6b46c1"/>
+      <circle cx="11.5" cy="8.5" r="1.25" fill="#22d3ee"/>
+      <circle cx="14.5" cy="11" r="1.25" fill="#f472b6"/>
+      <circle cx="10" cy="13.5" r="1.25" fill="#f59e0b"/>
+    </svg>
+  </button>
+
+  <!-- Panel -->
+  <div id="sgwm-theme-panel" role="dialog" aria-modal="false" aria-label="Theme Changer">
+    <div class="sgwm-hdr">
+      <div class="sgwm-title">Theme Changer (Colors Only)</div>
+      <div class="sgwm-sub">Reads current site colors → apply 1-click theme</div>
+    </div>
+
+    <div class="sgwm-sec" id="sgwm-base-sec">
+      <div class="sgwm-row" style="justify-content:space-between;">
+        <div>
+          <div class="sgwm-muted">Detected base</div>
+          <div class="sgwm-row" style="margin-top:6px">
+            <div style="width:90px">
+              <div class="sgwm-muted">Primary</div>
+              <div class="sgwm-swatch" id="sgwm-b-primary"></div>
+            </div>
+            <div style="width:90px">
+              <div class="sgwm-muted">Background</div>
+              <div class="sgwm-swatch" id="sgwm-b-bg"></div>
+            </div>
+            <div style="width:90px">
+              <div class="sgwm-muted">Text</div>
+              <div class="sgwm-swatch" id="sgwm-b-text"></div>
+            </div>
+          </div>
+        </div>
+        <button class="sgwm-pill" id="sgwm-refresh">Refresh</button>
+      </div>
+      <div class="sgwm-divider"></div>
+    </div>
+
+    <div class="sgwm-sec">
+      <div class="sgwm-row" style="justify-content:space-between; margin-bottom:8px">
+        <div class="sgwm-title" style="font-size:13px">20 Professional Themes</div>
+        <button class="sgwm-pill" id="sgwm-clear">Reset</button>
+      </div>
+      <div class="sgwm-grid" id="sgwm-theme-grid"><!-- cards injected by JS --></div>
+    </div>
+  </div>
 </div>
 
 <script>
-(function(){
+(() => {
+  // --------------------- Utilities: color math ---------------------
+  const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+  const toHex = (n) => Math.round(clamp(n,0,255)).toString(16).padStart(2,'0');
 
-  console.log("[SGWM Theme] Robust Theme Engine loaded.");
-
-  // --------------------
-  // Helpers
-  // --------------------
-  function sgwmInsertThemeLink(html, relHref){
-    const tag = `<link rel="stylesheet" href="${relHref}?v=${Date.now()}">`;
-    if (/<\/head>/i.test(html)) {
-      return html.replace(/<\/head>/i, `${tag}\n</head>`);
+  function parseColor(input) {
+    if (!input) return null;
+    const s = String(input).trim().toLowerCase();
+    let m;
+    if ((m = s.match(/^#([0-9a-f]{3,8})$/i))) {
+      let h = m[1];
+      if (h.length === 3) h = h.split('').map(ch => ch+ch).join('');
+      const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+      return { r, g, b };
     }
-    return `${tag}\n${html}`; // fallback
+    if ((m = s.match(/^rgba?\(([^)]+)\)$/i))) {
+      const [r,g,b] = m[1].split(',').map(v => parseFloat(v));
+      return { r, g, b };
+    }
+    if ((m = s.match(/^hsla?\(([^)]+)\)$/i))) {
+      const [H,S,L] = m[1].split(',').map(v => v.trim());
+      return hslToRgb({ h: parseFloat(H), s: parseFloat(S)/100, l: parseFloat(L)/100 });
+    }
+    return null;
   }
-
-  function sgwmRepairBrokenRefs(html){
-    return html
-      .replace(/styles\.css/gi, "style.css")
-      .replace(/scripts\.js/gi, "script.js");
-  }
-
-  async function applyThemeToPreviewAndZip(theme){
-
-    // 1) Live preview iframe
-    const frame = document.getElementById("previewFrame");
-    if(frame){
-      const doc = frame.contentDocument || frame.contentWindow.document;
-      let styleEl = doc.getElementById("sgwm-theme-style");
-      if(!styleEl){
-        styleEl = doc.createElement("style");
-        styleEl.id = "sgwm-theme-style";
-        doc.head.appendChild(styleEl);
+  function rgbToHex({r,g,b}) { return `#${toHex(r)}${toHex(g)}${toHex(b)}`; }
+  function rgbToHsl({r,g,b}) {
+    r/=255; g/=255; b/=255;
+    const max=Math.max(r,g,b), min=Math.min(r,g,b);
+    let h,s,l=(max+min)/2;
+    if (max===min) { h=s=0; }
+    else {
+      const d=max-min;
+      s = l>0.5 ? d/(2-max-min) : d/(max+min);
+      switch(max){
+        case r: h=(g-b)/d + (g<b?6:0); break;
+        case g: h=(b-r)/d + 2; break;
+        case b: h=(r-g)/d + 4; break;
       }
-      styleEl.innerHTML = theme.css;
-    } else {
-      console.warn("[SGWM Theme] previewFrame not found — live preview skipped.");
+      h/=6;
     }
+    return { h:h*360, s, l };
+  }
+  function hslToRgb({h,s,l}) {
+    h = ((h%360)+360)%360;
+    const C=(1-Math.abs(2*l-1))*s, X=C*(1-Math.abs(((h/60)%2)-1)), m=l-C/2;
+    let r1=0,g1=0,b1=0;
+    if (h<60) [r1,g1,b1]=[C,X,0];
+    else if (h<120) [r1,g1,b1]=[X,C,0];
+    else if (h<180) [r1,g1,b1]=[0,C,X];
+    else if (h<240) [r1,g1,b1]=[0,X,C];
+    else if (h<300) [r1,g1,b1]=[X,0,C];
+    else [r1,g1,b1]=[C,0,X];
+    return { r:(r1+m)*255, g:(g1+m)*255, b:(b1+m)*255 };
+  }
+  const hex = (c) => { const v = parseColor(c); return v ? rgbToHex(v).toLowerCase() : null; };
+  const lighten = (h,a=0.08)=> rgbToHex(hslToRgb({...rgbToHsl(parseColor(h)||{r:0,g:0,b:0}), l: clamp(rgbToHsl(parseColor(h)||{r:0,g:0,b:0}).l + a, 0, 1)}));
+  const darken  = (h,a=0.08)=> rgbToHex(hslToRgb({...rgbToHsl(parseColor(h)||{r:0,g:0,b:0}), l: clamp(rgbToHsl(parseColor(h)||{r:0,g:0,b:0}).l - a, 0, 1)}));
+  const shiftHue = (h,deg=20)=> rgbToHex(hslToRgb({...rgbToHsl(parseColor(h)||{r:0,g:0,b:0}), h: rgbToHsl(parseColor(h)||{r:0,g:0,b:0}).h + deg }));
 
-    // 2) Inject into ZIP
-    if(window.ZIP_REF){
-      window.ZIP_REF.file("theme.css", theme.css);
-      window.ZIP_REF.forEach((path,file)=>{
-        if(path.endsWith(".html")){
-          file.async("string").then(content=>{
-            content = sgwmRepairBrokenRefs(content);
-            if(!/theme\.css/i.test(content)){
-              content = sgwmInsertThemeLink(content,"theme.css");
-            }
-            window.ZIP_REF.file(path, content);
-          });
-        }
-      });
-      console.log("[SGWM Theme] theme.css linked across all pages. Ready to export.");
-    } else {
-      console.warn("[SGWM Theme] window.ZIP_REF not found — cannot write theme.css into uploaded ZIP.");
+  function ensureContrast(fg, bg) {
+    const c1=parseColor(fg), c2=parseColor(bg); if (!c1||!c2) return fg;
+    const lum=c=>{const a=[c.r,c.g,c.b].map(v=>{v/=255;return v<=0.03928? v/12.92 : Math.pow((v+0.055)/1.055,2.4)});return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2]};
+    const L1=lum(c1)+0.05, L2=lum(c2)+0.05; const ratio = L1>L2 ? L1/L2 : L2/L1;
+    if (ratio>=4.5) return fg;
+    const bgIsLight = L2 > L1;
+    return bgIsLight ? darken(fg, .22) : lighten(fg, .22);
+  }
+
+  // --------------------- Find preview iframe & read base ---------------------
+  function findPreviewFrame() {
+    // Try common IDs first
+    const hints = ['#site-preview','#wizardPreview','#preview','#editor-preview','iframe[title*="Preview" i]'];
+    for (const sel of hints) { const el = document.querySelector(sel); if (el && el.tagName === 'IFRAME') return el; }
+    // else pick the largest visible iframe
+    const iframes = [...document.querySelectorAll('iframe')].filter(f=>{
+      const r=f.getBoundingClientRect(); return r.width*r.height>30000 && r.top<window.innerHeight; // heuristic
+    }).sort((a,b)=> (b.clientWidth*b.clientHeight)-(a.clientWidth*a.clientHeight));
+    return iframes[0] || null;
+  }
+  function getPreviewDocument() {
+    const f = findPreviewFrame();
+    try { return f ? (f.contentDocument || f.contentWindow?.document) : document; } catch { return null; }
+  }
+
+  const EMPTY_BASE = { primary:'#3366ff', bg:'#ffffff', text:'#111111' };
+
+  function readBasePalette(doc) {
+    try {
+      const RS = (el)=> el ? getComputedStyle(el) : null;
+      const root = RS(doc.documentElement), body = RS(doc.body);
+      const tryVars = ['--color-primary','--primary','--brand','--accent','--theme-primary'];
+      let primary = null;
+      for (const v of tryVars) { const val = root.getPropertyValue(v).trim(); if (val) { primary = hex(val); break; } }
+      if (!primary) {
+        const a = doc.querySelector('a'); const c = RS(a||doc.body)?.color; primary = hex(c) || EMPTY_BASE.primary;
+      }
+      const bg  = hex(body?.backgroundColor || root?.backgroundColor) || '#ffffff';
+      const text= hex(body?.color || '#111') || '#111111';
+      return { primary, bg, text };
+    } catch {
+      return { ...EMPTY_BASE };
     }
   }
 
-  // --------------------
-  // Themes (20 distinct professional looks)
-  // --------------------
-  const THEMES = [
-    { name:"Corporate Blue", css:`body{background:#fff;color:#1a237e;font-family:Arial, sans-serif;}header,footer{background:#0d47a1;color:#fff;}a,button{color:#1565c0;}h1,h2,h3{font-weight:700;}` },
-    { name:"Luxury Black & Gold", css:`body{background:#000;color:#f5f5f5;font-family:'Times New Roman', serif;}header,footer{background:#111;color:#d4af37;}a,button{color:#d4af37;}h1,h2,h3{color:#d4af37;}` },
-    { name:"Ocean Breeze", css:`body{background:#e0f7fa;color:#004d60;font-family:Verdana;}header,footer{background:#006064;color:#fff;}a,button{color:#00acc1;}h1,h2,h3{color:#00796b;}` },
-    { name:"Tech Dark Neon", css:`body{background:#121212;color:#eee;font-family:'Roboto', sans-serif;}header,footer{background:#1f1f1f;color:#00e5ff;}a,button{color:#00e5ff;}h1,h2,h3{color:#00bcd4;}` },
-    { name:"Pastel Candy", css:`body{background:#fdf1f5;color:#333;font-family:'Comic Sans MS', cursive;}header,footer{background:#f48fb1;color:#fff;}a,button{color:#ec407a;}h1,h2,h3{color:#d81b60;}` },
-    { name:"Nature Green", css:`body{background:#f1f8e9;color:#2e7d32;}header,footer{background:#1b5e20;color:#fff;}a,button{color:#388e3c;}h1,h2,h3{color:#1b5e20;}` },
-    { name:"Minimal White", css:`body{background:#fff;color:#111;font-family:Helvetica, sans-serif;}header,footer{background:#fafafa;border-top:1px solid #eee;}a,button{color:#111;}h1,h2,h3{font-weight:300;}` },
-    { name:"Royal Purple", css:`body{background:#f3e5f5;color:#4a148c;}header,footer{background:#4a148c;color:#fff;}a,button{color:#7b1fa2;}h1,h2,h3{color:#6a1b9a;}` },
-    { name:"Sunset Orange", css:`body{background:#fff3e0;color:#e65100;}header,footer{background:#ef6c00;color:#fff;}a,button{color:#f57c00;}h1,h2,h3{color:#e65100;}` },
-    { name:"Elegant Gray", css:`body{background:#f5f5f5;color:#212121;}header,footer{background:#9e9e9e;color:#fff;}a,button{color:#424242;}h1,h2,h3{color:#212121;}` },
-    { name:"Aqua Fresh", css:`body{background:#e0f2f1;color:#004d40;}header,footer{background:#00695c;color:#fff;}a,button{color:#009688;}h1,h2,h3{color:#004d40;}` },
-    { name:"Fiery Red", css:`body{background:#ffebee;color:#b71c1c;}header,footer{background:#c62828;color:#fff;}a,button{color:#d32f2f;}h1,h2,h3{color:#b71c1c;}` },
-    { name:"Golden Sunrise", css:`body{background:#fffde7;color:#f57f17;}header,footer{background:#f9a825;color:#fff;}a,button{color:#fbc02d;}h1,h2,h3{color:#f57f17;}` },
-    { name:"Cool Slate", css:`body{background:#eceff1;color:#263238;}header,footer{background:#455a64;color:#fff;}a,button{color:#37474f;}h1,h2,h3{color:#263238;}` },
-    { name:"Vibrant Pink", css:`body{background:#fce4ec;color:#880e4f;}header,footer{background:#c2185b;color:#fff;}a,button{color:#ad1457;}h1,h2,h3{color:#880e4f;}` },
-    { name:"Cyber Lime", css:`body{background:#f9fbe7;color:#33691e;}header,footer{background:#827717;color:#fff;}a,button{color:#689f38;}h1,h2,h3{color:#33691e;}` },
-    { name:"Deep Indigo", css:`body{background:#e8eaf6;color:#1a237e;}header,footer{background:#303f9f;color:#fff;}a,button{color:#283593;}h1,h2,h3{color:#1a237e;}` },
-    { name:"Rustic Brown", css:`body{background:#efebe9;color:#4e342e;}header,footer{background:#3e2723;color:#fff;}a,button{color:#6d4c41;}h1,h2,h3{color:#4e342e;}` },
-    { name:"Silver & Teal", css:`body{background:#fafafa;color:#004d40;}header,footer{background:#00897b;color:#fff;}a,button{color:#00695c;}h1,h2,h3{color:#004d40;}` },
-    { name:"Warm Beige", css:`body{background:#fff8e1;color:#5d4037;}header,footer{background:#795548;color:#fff;}a,button{color:#8d6e63;}h1,h2,h3{color:#5d4037;}` }
-  ];
+  // --------------------- 20 professional themes (functions) ---------------------
+  // Each theme adapts to the site's base (primary/bg/text) and keeps fonts untouched.
+ const THEMES = [
+  {
+    id: 'clean-corporate',
+    name: 'Clean Corporate',
+    fn: (b) => ({
+      primary: '#0052cc', secondary: '#2684ff', accent: '#36b37e',
+      bg: '#f9fafc', surface: '#ffffff', text: '#172b4d', muted: '#dfe1e6',
+      navbar: '#ffffff', hero: '#ebf2ff', footer: '#091e42', card: '#ffffff', block: '#f4f5f7'
+    })
+  },
+  {
+    id: 'dark-pro',
+    name: 'Dark Pro',
+    fn: (b) => ({
+      primary: '#0d6efd', secondary: '#6c757d', accent: '#20c997',
+      bg: '#121212', surface: '#1e1e1e', text: '#f8f9fa', muted: '#6c757d',
+      navbar: '#1c1c1c', hero: '#0d1117', footer: '#0a0a0a', card: '#1f1f1f', block: '#222222'
+    })
+  },
+  {
+    id: 'fresh-green',
+    name: 'Fresh Green',
+    fn: (b) => ({
+      primary: '#16a34a', secondary: '#86efac', accent: '#22c55e',
+      bg: '#f0fdf4', surface: '#dcfce7', text: '#064e3b', muted: '#86efac',
+      navbar: '#bbf7d0', hero: '#a7f3d0', footer: '#064e3b', card: '#ecfdf5', block: '#d1fae5'
+    })
+  },
+  {
+    id: 'sunset-glow',
+    name: 'Sunset Glow',
+    fn: (b) => ({
+      primary: '#f97316', secondary: '#fb923c', accent: '#f59e0b',
+      bg: '#fff7ed', surface: '#ffedd5', text: '#431407', muted: '#fed7aa',
+      navbar: '#fdba74', hero: '#fed7aa', footer: '#7c2d12', card: '#fff7ed', block: '#ffe4e6'
+    })
+  },
+  {
+    id: 'royal-elegance',
+    name: 'Royal Elegance',
+    fn: (b) => ({
+      primary: '#6d28d9', secondary: '#c4b5fd', accent: '#f472b6',
+      bg: '#f5f3ff', surface: '#ede9fe', text: '#1e1b4b', muted: '#a5b4fc',
+      navbar: '#4c1d95', hero: '#c7d2fe', footer: '#2e1065', card: '#ede9fe', block: '#e0e7ff'
+    })
+  },
+  {
+    id: 'aqua-tech',
+    name: 'Aqua Tech',
+    fn: (b) => ({
+      primary: '#06b6d4', secondary: '#67e8f9', accent: '#3b82f6',
+      bg: '#ecfeff', surface: '#cffafe', text: '#0e7490', muted: '#bae6fd',
+      navbar: '#06b6d4', hero: '#67e8f9', footer: '#0c4a6e', card: '#e0f2fe', block: '#f0f9ff'
+    })
+  },
+  {
+    id: 'luxury-black-gold',
+    name: 'Luxury Black & Gold',
+    fn: (b) => ({
+      primary: '#d4af37', secondary: '#b8860b', accent: '#ffcc00',
+      bg: '#0a0a0a', surface: '#1a1a1a', text: '#ffffff', muted: '#555555',
+      navbar: '#111111', hero: '#1c1c1c', footer: '#000000', card: '#1a1a1a', block: '#2a2a2a'
+    })
+  },
+  {
+    id: 'playful-candy',
+    name: 'Playful Candy',
+    fn: (b) => ({
+      primary: '#ec4899', secondary: '#f9a8d4', accent: '#facc15',
+      bg: '#fff0f6', surface: '#ffe4e6', text: '#3b0764', muted: '#fbcfe8',
+      navbar: '#f472b6', hero: '#fdf4ff', footer: '#701a75', card: '#ffe4e6', block: '#faf5ff'
+    })
+  },
+  {
+    id: 'minimal-white',
+    name: 'Minimal White',
+    fn: (b) => ({
+      primary: '#0f172a', secondary: '#64748b', accent: '#2563eb',
+      bg: '#ffffff', surface: '#f8fafc', text: '#0f172a', muted: '#e2e8f0',
+      navbar: '#ffffff', hero: '#f8fafc', footer: '#f1f5f9', card: '#ffffff', block: '#f9fafb'
+    })
+  },
+  {
+    id: 'cyberpunk',
+    name: 'Cyberpunk',
+    fn: (b) => ({
+      primary: '#ff00ff', secondary: '#00ffff', accent: '#ff8a00',
+      bg: '#121212', surface: '#1a1a1a', text: '#e0e0e0', muted: '#808080',
+      navbar: '#0f0f0f', hero: '#1e1e2e', footer: '#000000', card: '#1a1a1a', block: '#2a2a2a'
+    })
+  },
+  {
+    id: 'earthy-tones',
+    name: 'Earthy Tones',
+    fn: (b) => ({
+      primary: '#78350f', secondary: '#d97706', accent: '#a16207',
+      bg: '#fafaf9', surface: '#fef3c7', text: '#3f3f46', muted: '#d6d3d1',
+      navbar: '#92400e', hero: '#fde68a', footer: '#451a03', card: '#fef3c7', block: '#f5f5f4'
+    })
+  },
+  {
+    id: 'glassmorphism',
+    name: 'Glassmorphism',
+    fn: (b) => ({
+      primary: '#3b82f6', secondary: '#a855f7', accent: '#22d3ee',
+      bg: 'rgba(255,255,255,0.7)', surface: 'rgba(255,255,255,0.2)', text: '#111827', muted: '#9ca3af',
+      navbar: 'rgba(255,255,255,0.2)', hero: 'rgba(255,255,255,0.3)', footer: 'rgba(0,0,0,0.5)', card: 'rgba(255,255,255,0.25)', block: 'rgba(255,255,255,0.2)'
+    })
+  },
+  {
+    id: 'retro-vintage',
+    name: 'Retro Vintage',
+    fn: (b) => ({
+      primary: '#b45309', secondary: '#fde68a', accent: '#78350f',
+      bg: '#fffbeb', surface: '#fef3c7', text: '#3b2f2f', muted: '#d6d3d1',
+      navbar: '#fbbf24', hero: '#fef9c3', footer: '#78350f', card: '#fef3c7', block: '#fef9c3'
+    })
+  },
+  {
+    id: 'space-nebula',
+    name: 'Space Nebula',
+    fn: (b) => ({
+      primary: '#7c3aed', secondary: '#2563eb', accent: '#f472b6',
+      bg: '#0f172a', surface: '#1e293b', text: '#f1f5f9', muted: '#94a3b8',
+      navbar: '#1e1b4b', hero: '#312e81', footer: '#111827', card: '#1e293b', block: '#334155'
+    })
+  },
+  {
+    id: 'pastel-dream',
+    name: 'Pastel Dream',
+    fn: (b) => ({
+      primary: '#a78bfa', secondary: '#f9a8d4', accent: '#6ee7b7',
+      bg: '#faf5ff', surface: '#fce7f3', text: '#374151', muted: '#e9d5ff',
+      navbar: '#f3e8ff', hero: '#fdf4ff', footer: '#a78bfa', card: '#fce7f3', block: '#ede9fe'
+    })
+  },
+  {
+    id: 'warm-coffee',
+    name: 'Warm Coffee',
+    fn: (b) => ({
+      primary: '#6b4226', secondary: '#d6a36c', accent: '#a16207',
+      bg: '#fefae0', surface: '#faedcd', text: '#3b2f2f', muted: '#d6ccc2',
+      navbar: '#ddb892', hero: '#fefae0', footer: '#4a342e', card: '#faedcd', block: '#e6ccb2'
+    })
+  },
+  {
+    id: 'forest-mist',
+    name: 'Forest Mist',
+    fn: (b) => ({
+      primary: '#166534', secondary: '#4ade80', accent: '#22c55e',
+      bg: '#f0fdf4', surface: '#dcfce7', text: '#064e3b', muted: '#bbf7d0',
+      navbar: '#14532d', hero: '#bbf7d0', footer: '#052e16', card: '#ecfdf5', block: '#d1fae5'
+    })
+  },
+  {
+    id: 'modern-gradient',
+    name: 'Modern Gradient',
+    fn: (b) => ({
+      primary: 'linear-gradient(90deg,#06b6d4,#3b82f6)', secondary: '#67e8f9', accent: '#22d3ee',
+      bg: '#f0f9ff', surface: '#e0f2fe', text: '#0e7490', muted: '#bae6fd',
+      navbar: '#06b6d4', hero: '#3b82f6', footer: '#0c4a6e', card: '#e0f2fe', block: '#f0f9ff'
+    })
+  }
+];
 
-  // --------------------
-  // Build UI
-  // --------------------
-  const toggleBtn = document.getElementById("theme-toggle");
-  const panel = document.getElementById("theme-panel");
-  const list = document.getElementById("theme-list");
+  // --------------------- Apply + CSS generation ---------------------
+  function paletteCss(p) {
+  return `
+  :root {
+    --color-primary:${p.primary};
+    --color-secondary:${p.secondary};
+    --color-accent:${p.accent};
+    --color-bg:${p.bg};
+    --color-surface:${p.surface};
+    --color-text:${p.text};
+    --color-muted:${p.muted};
+  }
 
-  toggleBtn.addEventListener("click",()=> {
-    panel.style.display = panel.style.display==="block"?"none":"block";
+  /* Base */
+  body { background:${p.bg} !important; color:${p.text} !important; }
+  a, a:visited { color:${p.primary} !important; }
+  h1,h2,h3,h4,h5,h6 { color:${p.text} !important; }
+  p, span, li { color:${p.text} !important; }
+
+  /* Buttons */
+  button,.btn,.button {
+    background:${p.primary} !important;
+    color:#fff !important;
+    border:none !important;
+  }
+  button:hover,.btn:hover { background:${p.accent} !important; }
+
+  /* Navbar */
+  .navbar, header.navbar, .site-header {
+    background:${p.navbar || p.surface} !important;
+    color:${p.text} !important;
+  }
+  .navbar a, header.navbar a { color:${p.text} !important; }
+
+  /* Hero */
+  .hero, .hero-section {
+    background:${p.hero || p.surface} !important;
+    color:${p.text} !important;
+  }
+
+  /* Footer */
+  .footer, footer {
+    background:${p.footer || p.surface} !important;
+    color:${p.text} !important;
+  }
+
+  /* Cards & Panels */
+  .card, .panel {
+    background:${p.card || p.surface} !important;
+    border:1px solid ${p.muted} !important;
+    color:${p.text} !important;
+  }
+
+  /* Sections & Blocks */
+  .section, .block, .content-block {
+    background:${p.block || p.surface} !important;
+    color:${p.text} !important;
+  }
+
+  /* HR / Dividers */
+  hr { border-color:${p.muted} !important; }
+
+  /* Forms */
+  input,textarea,select {
+    background:${p.surface} !important;
+    border:1px solid ${p.muted} !important;
+    color:${p.text} !important;
+  }
+  input:focus,textarea:focus,select:focus {
+    border-color:${p.primary} !important;
+    outline:none !important;
+  }
+  `;
+}
+
+function applyPaletteToDoc(doc, palette) {
+  if (!doc) return;
+  let style = doc.getElementById('sgwm-theme-override');
+  if (!style) {
+    style = doc.createElement('style');
+    style.id = 'sgwm-theme-override';
+    doc.head.appendChild(style);
+  }
+  style.textContent = paletteCss(palette);
+}
+
+
+  // --------------------- UI construction ---------------------
+  const $fab = document.getElementById('sgwm-theme-fab');
+  const $panel = document.getElementById('sgwm-theme-panel');
+  const $grid = document.getElementById('sgwm-theme-grid');
+  const $bPrimary = document.getElementById('sgwm-b-primary');
+  const $bBg = document.getElementById('sgwm-b-bg');
+  const $bText = document.getElementById('sgwm-b-text');
+  const $refresh = document.getElementById('sgwm-refresh');
+  const $clear = document.getElementById('sgwm-clear');
+
+  let BASE = EMPTY_BASE;
+  let CURRENT = null;
+
+  function refreshBase() {
+    const doc = getPreviewDocument();
+    if (!doc) return;
+    BASE = readBasePalette(doc);
+    $bPrimary.style.background = BASE.primary;
+    $bBg.style.background = BASE.bg;
+    $bText.style.background = BASE.text;
+  }
+
+  function onPickTheme(themeDef) {
+    const doc = getPreviewDocument();
+    const palette = themeDef.fn(BASE);
+    CURRENT = { name: themeDef.name, id: themeDef.id, palette, cssText: paletteCss(palette) };
+    applyPaletteToDoc(doc, palette);
+    // expose for exporter
+    window.SGWM_THEME = CURRENT;
+    document.dispatchEvent(new CustomEvent('sgwm:themeChanged', { detail: CURRENT }));
+  }
+
+  function clearTheme() {
+    const doc = getPreviewDocument();
+    const style = doc?.getElementById('sgwm-theme-override');
+    if (style) style.remove();
+    CURRENT = null;
+    window.SGWM_THEME = null;
+    document.dispatchEvent(new CustomEvent('sgwm:themeCleared'));
+  }
+
+  // Build theme cards
+  function buildGrid() {
+    $grid.innerHTML = '';
+    THEMES.forEach(def => {
+      const tmpBase = BASE;
+      const p = def.fn(tmpBase);
+      const card = document.createElement('div');
+      card.className = 'sgwm-card';
+      card.setAttribute('role','button');
+      card.innerHTML = `
+        <div class="sgwm-card-name">${def.name}</div>
+        <div class="sgwm-band">
+          <div class="sgwm-swatch" style="background:${p.primary}"></div>
+          <div class="sgwm-swatch" style="background:${p.secondary}"></div>
+          <div class="sgwm-swatch" style="background:${p.accent}"></div>
+          <div class="sgwm-swatch" style="background:${p.bg}"></div>
+          <div class="sgwm-swatch" style="background:${p.surface}"></div>
+          <div class="sgwm-swatch" style="background:${p.text}"></div>
+        </div>`;
+      card.addEventListener('click', () => onPickTheme(def));
+      $grid.appendChild(card);
+    });
+  }
+
+  // Events
+  $fab.addEventListener('click', () => {
+    if (!$panel.classList.contains('open')) {
+      refreshBase();
+      buildGrid();
+    }
+    $panel.classList.toggle('open');
+  });
+  $refresh.addEventListener('click', () => { refreshBase(); buildGrid(); });
+  $clear.addEventListener('click', clearTheme);
+
+  // Initialize
+  refreshBase();
+
+  // Optional: if your editor re-renders the preview iframe, call this to re-apply selected theme
+  document.addEventListener('sgwm:previewReloaded', () => {
+    if (CURRENT) applyPaletteToDoc(getPreviewDocument(), CURRENT.palette);
   });
 
-  THEMES.forEach(theme=>{
-    const card=document.createElement("div");
-    card.className="theme-card";
-    card.innerHTML=`<div class="swatch" style="background:${theme.css.match(/#[0-9a-fA-F]{3,6}/)?.[0]||'#ccc'}"></div><span>${theme.name}</span>`;
-    card.onclick=()=>applyThemeToPreviewAndZip(theme);
-    list.appendChild(card);
-  });
-
+  // If you already know your preview iframe ID, you can emit the event yourself after you reload it.
+  // Example elsewhere: document.dispatchEvent(new CustomEvent('sgwm:previewReloaded'));
 })();
 </script>
-<!-- ======================= SGWM THEME ENGINE (ROBUST) — END ======================= -->
-
+<!-- ===================== /SGWM THEME CHANGER ===================== -->     
 </body>
 </html>
