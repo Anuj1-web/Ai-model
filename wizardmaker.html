@@ -720,13 +720,11 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-<!-- ====================== SGWM THEME ENGINE — START ====================== -->
+<!-- ====================== SGWM THEME ENGINE (ROBUST) — START ====================== -->
 <style>
-  /* 🎨 Floating palette button just above your ➕ assets button (which is bottom:20px; right:20px) */
+  /* 🎨 Floating palette button just above your ➕ assets button (assumed bottom:20px) */
   #sgwm-theme-toggle {
-    position: fixed;
-    bottom: 76px; /* sits just above the + button */
-    right: 20px;
+    position: fixed; bottom: 76px; right: 20px;
     width: 46px; height: 46px; border-radius: 50%;
     background: #ffffff; border: 2px solid #d0d5dd;
     box-shadow: 0 6px 18px rgba(0,0,0,.15);
@@ -750,6 +748,12 @@ renderLibraryAssets();
   .sgwm-swatches { display: grid; grid-template-columns: 1fr 1fr 1fr; height: 68px; }
   .sgwm-swatch { width: 100%; height: 100%; }
   .sgwm-theme-name { font-size: 12.5px; font-weight: 700; color:#111827; padding: 8px 10px; border-top: 1px solid #eef2f7; background: #fff; }
+
+  /* small helper toast */
+  #sgwm-toast {
+    position: fixed; right: 20px; bottom: 190px; background:#111827; color:#fff; padding:10px 14px; border-radius:10px;
+    font-size:12.5px; box-shadow: 0 12px 26px rgba(0,0,0,.2); z-index: 2600; display: none;
+  }
 </style>
 
 <div id="sgwm-theme-toggle" title="Change Theme">🎨</div>
@@ -757,23 +761,24 @@ renderLibraryAssets();
   <h3>Choose a Theme</h3>
   <div class="sgwm-theme-grid" id="sgwm-theme-grid"></div>
 </div>
+<div id="sgwm-toast"></div>
 
 <script>
-/* ===================== UTIL: PREVIEW & ZIP & MODEL HOOKS ===================== */
+/* ===================== ROBUST THEME ENGINE ===================== */
+/** CORE GOALS
+ * 1) Live preview: inject CSS + convert theme.css to blob URL so iframe never 404s
+ * 2) Export: write theme.css into ZIP and fix all HTML links in editedContents/pages
+ * 3) Robust: repair broken asset references (styles.css vs style.css, case, folders)
+ */
 
-/* 1) Find your live preview iframe. Your editor creates it inside #iframeContainer (no fixed id). */
+/* ---------- Utility: toast ---------- */
+function sgwmToast(msg, ms=1800){ const t=document.getElementById('sgwm-toast'); t.textContent=msg; t.style.display='block'; clearTimeout(t.__h); t.__h=setTimeout(()=>t.style.display='none', ms); }
+
+/* ---------- 1) Find live preview iframe ---------- */
 let SGWM_PREVIEW = null;
 function sgwmFindPreview() {
-  const sels = [
-    '#iframeContainer iframe',   // your editor’s preview container
-    '#previewFrame', '#sitePreviewFrame', '#editor-preview', '#preview',
-    'iframe[name="preview"]', '.preview iframe', '#canvas iframe', 'iframe[srcdoc]',
-    'iframe'
-  ];
-  for (const s of sels) {
-    const el = document.querySelector(s);
-    if (el) return el;
-  }
+  const sels = ['#iframeContainer iframe','#previewFrame','#sitePreviewFrame','#editor-preview','#preview','iframe[name="preview"]','.preview iframe','#canvas iframe','iframe[srcdoc]','iframe'];
+  for (const s of sels) { const el = document.querySelector(s); if (el) return el; }
   return null;
 }
 function sgwmAttachPreviewObserver() {
@@ -781,12 +786,11 @@ function sgwmAttachPreviewObserver() {
     const f = sgwmFindPreview();
     if (f && f !== SGWM_PREVIEW) {
       SGWM_PREVIEW = f;
-      SGWM_PREVIEW.addEventListener('load', () => {
-        if (window.__SGWM_CURRENT_THEME_CSS) {
-          sgwmInjectIntoFrame(SGWM_PREVIEW, window.__SGWM_CURRENT_THEME_CSS); // re-apply on page switch
-        }
+      SGWM_PREVIEW.addEventListener('load', async () => {
+        /* Re-apply theme + repair links on page switch */
+        if (window.__SGWM_CURRENT_THEME_CSS) await sgwmApplyThemeToFrame(SGWM_PREVIEW, window.__SGWM_CURRENT_THEME_CSS);
       }, { passive: true });
-      if (window.__SGWM_CURRENT_THEME_CSS) sgwmInjectIntoFrame(SGWM_PREVIEW, window.__SGWM_CURRENT_THEME_CSS);
+      if (window.__SGWM_CURRENT_THEME_CSS) sgwmApplyThemeToFrame(SGWM_PREVIEW, window.__SGWM_CURRENT_THEME_CSS);
     }
   };
   tryAttach();
@@ -795,30 +799,21 @@ function sgwmAttachPreviewObserver() {
 }
 document.addEventListener('DOMContentLoaded', sgwmAttachPreviewObserver);
 
-/* 2) Hook JSZip so we can keep a reference to the uploaded ZIP regardless of where loadAsync is called */
+/* ---------- 2) Hook JSZip to capture uploaded ZIP ---------- */
 (function sgwmHookZip(){
   try {
-    if (window.ZIP_REF) return;
     if (window.JSZip && !window.JSZip.__sgwm_patched) {
       const origStatic = window.JSZip.loadAsync;
       if (typeof origStatic === 'function') {
         window.JSZip.loadAsync = function(...args){
-          return origStatic.apply(this, args).then(zip => {
-            window.ZIP_REF = zip;
-            window.dispatchEvent(new CustomEvent('sgwm:zip-ready', { detail: { zip } }));
-            return zip;
-          });
+          return origStatic.apply(this, args).then(zip => { window.ZIP_REF = zip; window.dispatchEvent(new CustomEvent('sgwm:zip-ready',{detail:{zip}})); return zip; });
         };
       }
       const proto = window.JSZip.prototype || {};
       const origProto = proto.loadAsync;
       if (typeof origProto === 'function') {
         proto.loadAsync = function(...args){
-          return origProto.apply(this, args).then(zip => {
-            window.ZIP_REF = zip;
-            window.dispatchEvent(new CustomEvent('sgwm:zip-ready', { detail: { zip } }));
-            return zip;
-          });
+          return origProto.apply(this, args).then(zip => { window.ZIP_REF = zip; window.dispatchEvent(new CustomEvent('sgwm:zip-ready',{detail:{zip}})); return zip; });
         };
       }
       window.JSZip.__sgwm_patched = true;
@@ -826,24 +821,58 @@ document.addEventListener('DOMContentLoaded', sgwmAttachPreviewObserver);
   } catch(e){ console.warn('[SGWM Theme] JSZip hook failed', e); }
 })();
 
-/* Optional public API: call this if you already have a zip instance */
+/* Optional manual set */
 window.SGWM_THEME = window.SGWM_THEME || {};
-window.SGWM_THEME.setZip = function(zip){
-  window.ZIP_REF = zip;
-  window.dispatchEvent(new CustomEvent('sgwm:zip-ready', { detail: { zip } }));
-};
+window.SGWM_THEME.setZip = function(zip){ window.ZIP_REF = zip; window.dispatchEvent(new CustomEvent('sgwm:zip-ready', { detail: { zip } })); };
 
-/* Access your editor’s in-memory model so export includes themed pages (your export uses pages & editedContents). */
+/* ---------- 3) Access your editor model ---------- */
 const SGWM_MODEL = {
   get pages(){ try { return window.pages || []; } catch { return []; } },
   get edited(){ try { return window.editedContents || {}; } catch { return {}; } },
+  raw(name){ return (this.edited[name] ?? (window.pageContents ? window.pageContents[name] : "")) || ""; },
   setEdited(name, html){ if (window.editedContents) window.editedContents[name] = html; }
 };
 
-/* ===================== THEME BASE & 20 UNIQUE THEMES ===================== */
+/* ---------- 4) Build a ZIP filename index for robust repairs ---------- */
+let SGWM_ZIP_INDEX = null;
+async function sgwmBuildZipIndex() {
+  if (!window.ZIP_REF) return null;
+  const idx = { files: new Set(), lower: new Map(), basenameMap: new Map() };
+  Object.keys(window.ZIP_REF.files).forEach(path => {
+    const norm = path.replace(/^\.\/+/,'');
+    idx.files.add(norm);
+    idx.lower.set(norm.toLowerCase(), norm);
+    const base = norm.split('/').pop();
+    const key = base.toLowerCase();
+    if (!idx.basenameMap.has(key)) idx.basenameMap.set(key, []);
+    idx.basenameMap.get(key).push(norm);
+  });
+  SGWM_ZIP_INDEX = idx;
+  return idx;
+}
+function sgwmGuessFileFromIndex(requestPath) {
+  if (!SGWM_ZIP_INDEX) return null;
+  const q = requestPath.replace(/^\.\/+/,'');
+  if (SGWM_ZIP_INDEX.files.has(q)) return q; // exact
+  const lower = SGWM_ZIP_INDEX.lower.get(q.toLowerCase());
+  if (lower) return lower; // case-insensitive exact
 
+  // Try basename match (handles folder differences)
+  const base = q.split('/').pop().toLowerCase();
+  const candidates = SGWM_ZIP_INDEX.basenameMap.get(base);
+  if (candidates && candidates.length) return candidates[0];
+
+  // Try singular/plural (styles.css <-> style.css)
+  if (base === 'styles.css') return SGWM_ZIP_INDEX.basenameMap.get('style.css')?.[0] || null;
+  if (base === 'style.css')  return SGWM_ZIP_INDEX.basenameMap.get('styles.css')?.[0] || null;
+  if (base === 'scripts.js') return SGWM_ZIP_INDEX.basenameMap.get('script.js')?.[0] || null;
+  if (base === 'script.js')  return SGWM_ZIP_INDEX.basenameMap.get('scripts.js')?.[0] || null;
+
+  return null;
+}
+
+/* ---------- 5) THEME BASE + 20 UNIQUE THEMES ---------- */
 const THEME_BASE_CSS = `
-/* Base tokens every theme overrides via :root custom properties */
 :root{
   --bg:#ffffff;--bg-alt:#f7f7fb;--surface:#ffffff;
   --text:#111827;--muted:#6b7280;
@@ -853,19 +882,13 @@ const THEME_BASE_CSS = `
   --success:#16a34a;--warning:#f59e0b;--danger:#dc2626;
   --radius:14px;--shadow:0 12px 30px rgba(0,0,0,.12);
 }
-
-/* Global & layouts */
 html,body{background:var(--bg);color:var(--text);}
 section, .section, .panel, .container, .content, main {
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   padding:24px;box-shadow:var(--shadow);
 }
-
-/* Links */
 a{color:var(--link);text-decoration:none;transition:color .2s;}
 a:hover{color:var(--link-hover);}
-
-/* Buttons */
 button, .btn, input[type="submit"], .button {
   display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
   padding:.65rem 1rem;border-radius:12px;border:1px solid var(--border);
@@ -875,35 +898,18 @@ button:hover, .btn:hover { transform:translateY(-1px); box-shadow:0 10px 18px rg
 .btn-primary, .button.primary { background:var(--primary); color:var(--primary-contrast); border-color:transparent; }
 .btn-outline { background:transparent; border-color:var(--primary); color:var(--primary); }
 .btn-accent  { background:var(--accent);  color:var(--accent-contrast); border-color:transparent; }
-
-/* Cards, inputs, tables */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);}
 .card .card-title{font-size:1.125rem;font-weight:700;margin-bottom:.35rem;}
 .card .card-sub{color:var(--muted);font-size:.9rem;margin-bottom:.75rem;}
-input, select, textarea {
-  background:#fff;border:1px solid var(--border);border-radius:12px;padding:.6rem .7rem; outline: none;
-}
+input, select, textarea { background:#fff;border:1px solid var(--border);border-radius:12px;padding:.6rem .7rem; outline: none; }
 input:focus, select:focus, textarea:focus { border-color:var(--ring); box-shadow: 0 0 0 3px var(--ring); }
-
-/* Navbars & headers */
-.navbar, header, .site-header {
-  background:linear-gradient(180deg, var(--surface), var(--bg-alt));
-  border-bottom:1px solid var(--border);padding:14px 18px;border-radius:12px; margin-bottom:18px;
-}
-
-/* Footer */
+.navbar, header, .site-header { background:linear-gradient(180deg, var(--surface), var(--bg-alt)); border-bottom:1px solid var(--border);padding:14px 18px;border-radius:12px; margin-bottom:18px; }
 footer { background:var(--bg-alt); border-top:1px solid var(--border); padding:16px; border-radius:12px; }
-
-/* Hero & CTA (many themes override via extras) */
 .hero { border-radius:18px; padding:48px 28px; margin: 18px 0; background: linear-gradient(135deg, var(--primary), var(--accent)); color: var(--primary-contrast); }
 .hero h1, .hero h2 { color: var(--primary-contrast); }
-
-/* Utilities */
 .tag, .badge { background:var(--bg-alt);border:1px solid var(--border);border-radius:999px;padding:.25rem .6rem;font-size:.75rem; }
 .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:var(--bg-alt); border:1px solid var(--border); border-bottom-width:2px; padding:.2rem .4rem; border-radius:6px; }
 `;
-
-/* 20 distinctive, professional themes (color system + extras for morphology) */
 const THEMES = [
   { name: "Nordic Frost", vars: {"--bg":"#0b1220","--bg-alt":"#0e1628","--surface":"#111b2f","--text":"#e5f0ff","--muted":"#a0b4d0","--primary":"#5aa5ff","--primary-contrast":"#061226","--accent":"#7dd3fc","--accent-contrast":"#071422","--border":"#1e2a44","--ring":"#5aa5ff66","--link":"#93c5fd","--link-hover":"#60a5fa"}, extras:".hero{background:linear-gradient(135deg,#5aa5ff,#7dd3fc);} body{letter-spacing:.01em;}"},
   { name: "Sunset Coral", vars: {"--bg":"#fff7f5","--bg-alt":"#fff1ee","--surface":"#ffffff","--text":"#2b2a2a","--muted":"#7c6f6f","--primary":"#ff6b6b","--primary-contrast":"#ffffff","--accent":"#ffd166","--accent-contrast":"#2b2a2a","--border":"#ffe1dc","--ring":"#ffb3b366","--link":"#ef4444","--link-hover":"#dc2626"}, extras:".hero{background:linear-gradient(135deg,#ff6b6b,#ffd166);} .btn-primary{border-radius:999px;}"},
@@ -928,29 +934,15 @@ const THEMES = [
   { name: "Aurora Neon", vars: {"--bg":"#040810","--bg-alt":"#070d18","--surface":"#0a1020","--text":"#e6fbff","--muted":"#9bd8e6","--primary":"#06d6a0","--primary-contrast":"#031a10","--accent":"#60a5fa","--accent-contrast":"#041225","--border":"#16243d","--ring":"#06d6a066","--link":"#67e8f9","--link-hover":"#06d6a0"}, extras:".hero{background:conic-gradient(from 90deg at 20% 20%, #06d6a0, #60a5fa);}"},
   { name: "Forest Dew", vars: {"--bg":"#0a1310","--bg-alt":"#0f201e","--surface":"#0f201e","--text":"#e6fffb","--muted":"#9ee3d8","--primary":"#10b981","--primary-contrast":"#031a14","--accent":"#34d399","--accent-contrast":"#042317","--border":"#1a2f2c","--ring":"#34d39955","--link":"#6ee7b7","--link-hover":"#34d399"}, extras:".hero{background:linear-gradient(135deg,#10b981,#34d399);}"},
 ];
+function sgwmBuildCSS(theme){ const varLines = Object.entries(theme.vars).map(([k,v])=>`${k}:${v}`).join(';'); return `:root{${varLines}}` + THEME_BASE_CSS + (theme.extras || ""); }
 
-/* Build CSS for a theme */
-function sgwmBuildCSS(theme){
-  const varLines = Object.entries(theme.vars).map(([k,v])=>`${k}:${v}`).join(';');
-  return `:root{${varLines}}` + THEME_BASE_CSS + (theme.extras || "");
-}
-
-/* ===================== UI RENDERING ===================== */
+/* ---------- 6) UI render ---------- */
 const grid = document.getElementById('sgwm-theme-grid');
 THEMES.forEach((t, idx) => {
   const card = document.createElement('div');
   card.className = 'sgwm-theme-card';
-  const s1 = t.vars["--primary"] || "#ccc";
-  const s2 = t.vars["--accent"]  || "#ddd";
-  const s3 = t.vars["--bg-alt"]  || "#eee";
-  card.innerHTML = `
-    <div class="sgwm-swatches">
-      <div class="sgwm-swatch" style="background:${s1}"></div>
-      <div class="sgwm-swatch" style="background:${s2}"></div>
-      <div class="sgwm-swatch" style="background:${s3}"></div>
-    </div>
-    <div class="sgwm-theme-name">${idx+1}. ${t.name}</div>
-  `;
+  const s1 = t.vars["--primary"] || "#ccc", s2 = t.vars["--accent"]||"#ddd", s3 = t.vars["--bg-alt"]||"#eee";
+  card.innerHTML = `<div class="sgwm-swatches"><div class="sgwm-swatch" style="background:${s1}"></div><div class="sgwm-swatch" style="background:${s2}"></div><div class="sgwm-swatch" style="background:${s3}"></div></div><div class="sgwm-theme-name">${idx+1}. ${t.name}</div>`;
   card.addEventListener('click', () => sgwmApplyTheme(t));
   grid.appendChild(card);
 });
@@ -959,64 +951,129 @@ document.getElementById('sgwm-theme-toggle').addEventListener('click', () => {
   p.style.display = (p.style.display === 'block') ? 'none' : 'block';
 });
 
-/* ===================== APPLY: LIVE + ZIP + EDITOR MODEL ===================== */
+/* ---------- 7) Apply theme (preview + export + repairs) ---------- */
 async function sgwmApplyTheme(themeObj){
   const css = sgwmBuildCSS(themeObj);
   window.__SGWM_CURRENT_THEME_CSS = css;
 
-  // 1) Live preview inside the editor’s iframe
+  // Ensure ZIP index
+  if (window.ZIP_REF && !SGWM_ZIP_INDEX) await sgwmBuildZipIndex();
+
+  // Live preview
   if (!SGWM_PREVIEW) SGWM_PREVIEW = sgwmFindPreview();
-  if (SGWM_PREVIEW) {
-    sgwmInjectIntoFrame(SGWM_PREVIEW, css);
-  } else {
-    console.warn('[SGWM Theme] preview iframe not found — live preview skipped.');
-  }
+  if (SGWM_PREVIEW) await sgwmApplyThemeToFrame(SGWM_PREVIEW, css);
+  else console.warn('[SGWM Theme] preview iframe not found — live preview skipped.');
 
-  // 2) Write theme.css into the uploaded ZIP (if available)
-  if (window.ZIP_REF) {
-    window.ZIP_REF.file('theme.css', css);
-  }
+  // Write theme.css into ZIP (for export)
+  if (window.ZIP_REF) { window.ZIP_REF.file('theme.css', css); }
 
-  // 3) Update ALL HTML files in your editor model so your Export button includes the theme
-  const pages = SGWM_MODEL.pages.slice(); // array of file paths (may include subfolders)
-  const edits = [];
-  for (const path of pages) {
-    if (!/\.html?$/i.test(path)) continue;
-    const current = (SGWM_MODEL.edited[path] || (window.pageContents ? window.pageContents[path] : "")) || "";
-    const relHref = sgwmRelativeToRoot(path, 'theme.css');
-    let out = current;
-    if (!/theme\.css/i.test(out)) {
-      out = sgwmInsertThemeLink(out, relHref);
-    } else {
-      out = sgwmNormalizeExistingThemeLink(out, relHref);
-    }
-    SGWM_MODEL.setEdited(path, out);
-  }
-  console.info('[SGWM Theme] theme.css linked across all pages. Ready to export.');
+  // Repair + link theme.css in editor model (so Export uses fixed/corrected HTML)
+  await sgwmRepairAndLinkAll(css);
+
+  sgwmToast('Theme applied. Preview updated • Export will include theme.css and repaired links.');
 }
 
-/* ===== Helpers for live preview injection ===== */
-function sgwmInjectIntoFrame(frame, css){
+/* ---------- 8) Live preview: inject CSS & prevent 404s by using blobs ---------- */
+async function sgwmApplyThemeToFrame(frame, css){
   const doc = frame.contentDocument || frame.contentWindow?.document;
   if (!doc) return;
-  // <style> for instant change
+
+  // <style> for immediate visual theme
   let styleEl = doc.getElementById('sgwm-theme-style');
   if (!styleEl) { styleEl = doc.createElement('style'); styleEl.id = 'sgwm-theme-style'; doc.head.appendChild(styleEl); }
   styleEl.textContent = css;
 
-  // Blob <link> so any references to theme.css don’t 404 in-memory
+  // Ensure any <link href="theme.css"> points to a blob (no 404)
   const blob = new Blob([css], {type:'text/css'});
   const url  = URL.createObjectURL(blob);
+
+  // Update or add link just for preview
   let linkEl = doc.getElementById('sgwm-theme-link');
   if (!linkEl) { linkEl = doc.createElement('link'); linkEl.id='sgwm-theme-link'; linkEl.rel='stylesheet'; doc.head.appendChild(linkEl); }
   linkEl.href = url;
+
+  // REPAIR known-bad asset refs inside the iframe (styles.css/scripts.js mismatches etc.)
+  if (window.ZIP_REF) {
+    await sgwmBuildZipIndex();
+    const nodes = [...doc.querySelectorAll('link[rel="stylesheet"][href], script[src]')];
+    for (const n of nodes) {
+      const attr = n.tagName.toLowerCase()==='link' ? 'href' : 'src';
+      const href = n.getAttribute(attr);
+      if (!href || href.startsWith('blob:') || href.startsWith('data:')) continue;
+      // Skip absolute URLs (CDNs)
+      try { const u = new URL(href, location.origin); if (u.origin !== location.origin) continue; } catch {}
+
+      const guess = sgwmGuessFileFromIndex(href);
+      if (guess) {
+        // Load from ZIP and convert to blob URL
+        const file = window.ZIP_REF.file(guess);
+        if (file) {
+          try {
+            const blob = await file.async('blob');
+            const url = URL.createObjectURL(blob);
+            n.setAttribute(attr, url);
+            n.setAttribute('data-sgwm-fixed','1');
+          } catch(e){}
+        }
+      }
+    }
+  }
 }
 
-/* ===== Helpers for HTML link injection into content/ZIP ===== */
+/* ---------- 9) Repair + link theme.css across ALL pages in model ---------- */
+async function sgwmRepairAndLinkAll(themeCss){
+  const pages = SGWM_MODEL.pages.slice();
+  if (window.ZIP_REF && !SGWM_ZIP_INDEX) await sgwmBuildZipIndex();
+
+  for (const path of pages) {
+    if (!/\.html?$/i.test(path)) continue;
+    let html = SGWM_MODEL.raw(path);
+    if (!html) continue;
+
+    // Repair broken styles/scripts references inside HTML based on ZIP index
+    html = await sgwmRepairHtmlAssetRefs(html);
+
+    // Link theme.css (relative)
+    const relHref = sgwmRelativeToRoot(path, 'theme.css');
+    if (!/theme\.css/i.test(html)) html = sgwmInsertThemeLink(html, relHref);
+    else html = sgwmNormalizeExistingThemeLink(html, relHref);
+
+    SGWM_MODEL.setEdited(path, html);
+  }
+}
+
+/* ----- Asset repair helpers ----- */
+async function sgwmRepairHtmlAssetRefs(html){
+  if (!SGWM_ZIP_INDEX) return html;
+
+  // Replace in <link rel="stylesheet">
+  html = html.replace(/<link([^>]*?)rel=(['"])stylesheet\2([^>]*?)href=(['"])([^'"]+)\4([^>]*)>/ig,
+    (m, pre, q1, mid, q2, href, post) => {
+      const fixed = sgwmGuessFileFromIndex(href);
+      if (fixed) return `<link${pre}rel=${q1}stylesheet${q1}${mid}href=${q2}${fixed}${q2}${post}>`;
+      // try simple plural/singular fix if no ZIP match (common case for external uploads)
+      if (/\/?styles\.css$/i.test(href)) return m.replace(/styles\.css/i,'style.css');
+      if (/\/?scripts\.js$/i.test(href)) return m.replace(/scripts\.js/i,'script.js');
+      return m;
+    });
+
+  // Replace in <script src="...">
+  html = html.replace(/<script([^>]*?)src=(['"])([^'"]+)\2([^>]*)>\s*<\/script>/ig,
+    (m, pre, q, src, post) => {
+      const fixed = sgwmGuessFileFromIndex(src);
+      if (fixed) return `<script${pre}src=${q}${fixed}${q}${post}></script>`;
+      if (/\/?scripts\.js$/i.test(src)) return m.replace(/scripts\.js/i,'script.js');
+      return m;
+    });
+
+  return html;
+}
+
+/* ----- HTML link injection helpers ----- */
 function sgwmInsertThemeLink(html, relHref){
   const tag = `<link rel="stylesheet" href="${relHref}?v=${Date.now()}">`;
   if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `${tag}\n</head>`);
-  return `${tag}\n${html}`; // fallback if <head> is missing
+  return `${tag}\n${html}`; // fallback if <head> missing
 }
 function sgwmNormalizeExistingThemeLink(html, relHref){
   return html.replace(
@@ -1030,8 +1087,15 @@ function sgwmRelativeToRoot(pagePath, fileAtRoot){
   const up = Array(depth).fill('..').join('/');
   return `${up}/${fileAtRoot}`;
 }
+
+/* ---------- 10) Build the picker UI ---------- */
+(function buildPicker(){
+  const grid = document.getElementById('sgwm-theme-grid');
+  if (!grid) return;
+  // cards are already appended above — this IIFE is kept if you want to add filters later
+})();
 </script>
-<!-- ======================= SGWM THEME ENGINE — END ======================= -->
+<!-- ======================= SGWM THEME ENGINE (ROBUST) — END ======================= -->
 
 </body>
 </html>
