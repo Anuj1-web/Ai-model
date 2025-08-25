@@ -725,7 +725,7 @@ renderLibraryAssets();
   :root { --sgwm-z: 99999; }
   #sgwm-theme-root { all: initial; font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; }
   #sgwm-theme-fab {
-    position: fixed; right: 20px; bottom: 70px; /* moved up above the + icon */
+    position: fixed; right: 20px; bottom: 70px;
     z-index: var(--sgwm-z);
     width: 56px; height: 56px; border-radius: 9999px; border: 1px solid rgba(0,0,0,.08);
     background:#fff; box-shadow: 0 10px 25px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06);
@@ -733,7 +733,7 @@ renderLibraryAssets();
   }
   #sgwm-theme-fab:hover { transform: scale(1.05); box-shadow: 0 12px 28px rgba(0,0,0,.12), 0 3px 10px rgba(0,0,0,.08); }
   #sgwm-theme-panel {
-    position: fixed; right: 20px; bottom: 138px; /* shifted up with button */
+    position: fixed; right: 20px; bottom: 138px;
     z-index: var(--sgwm-z);
     width: 320px; max-height: 75vh; overflow: auto; background:#fff; color:#111;
     border: 1px solid rgba(0,0,0,.08); border-radius: 18px; box-shadow: 0 20px 40px rgba(0,0,0,.12);
@@ -758,7 +758,6 @@ renderLibraryAssets();
   .sgwm-pill:active { transform: translateY(1px); }
   .sgwm-muted { color:#777; font-size:11px; }
   .sgwm-divider { height:1px; background:rgba(0,0,0,.06); margin: 10px -14px; }
-  /* Small screens: full-width sheet */
   @media (max-width: 480px) {
     #sgwm-theme-panel { right: 10px; left: 10px; width: auto; bottom: 136px; }
     #sgwm-theme-fab { right: 12px; bottom: 62px; }
@@ -766,9 +765,7 @@ renderLibraryAssets();
 </style>
 
 <div id="sgwm-theme-root" aria-live="polite">
-  <!-- Floating Button -->
   <button id="sgwm-theme-fab" title="Theme (colors only)">
-    <!-- inline SVG palette icon -->
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M12 3C7.03 3 3 7.03 3 12c0 3.31 2.69 6 6 6h1.25a1.75 1.75 0 0 1 0 3.5H10c-4.97 0-9-4.03-9-9S5.03 3 10 3s9 4.03 9 9c0 1.66-1.34 3-3 3h-1.25a1.75 1.75 0 0 1 0-3.5H16c.83 0 1.5-.67 1.5-1.5C17.5 7.47 15.03 5 12 5" stroke="#6b46c1" stroke-width="1.8" stroke-linecap="round"/>
       <circle cx="8" cy="10" r="1.25" fill="#6b46c1"/>
@@ -778,7 +775,6 @@ renderLibraryAssets();
     </svg>
   </button>
 
-  <!-- Panel -->
   <div id="sgwm-theme-panel" role="dialog" aria-modal="false" aria-label="Theme Changer">
     <div class="sgwm-hdr">
       <div class="sgwm-title">Theme Changer (Colors Only)</div>
@@ -814,14 +810,14 @@ renderLibraryAssets();
         <div class="sgwm-title" style="font-size:13px">20 Professional Themes</div>
         <button class="sgwm-pill" id="sgwm-clear">Reset</button>
       </div>
-      <div class="sgwm-grid" id="sgwm-theme-grid"><!-- cards injected by JS --></div>
+      <div class="sgwm-grid" id="sgwm-theme-grid"></div>
     </div>
   </div>
 </div>
 
 <script>
 (() => {
-  // --------------------- Utilities: color math ---------------------
+  // ===================== Color utilities =====================
   const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
   const toHex = (n) => Math.round(clamp(n,0,255)).toString(16).padStart(2,'0');
 
@@ -876,9 +872,10 @@ renderLibraryAssets();
     return { r:(r1+m)*255, g:(g1+m)*255, b:(b1+m)*255 };
   }
   const hex = (c) => { const v = parseColor(c); return v ? rgbToHex(v).toLowerCase() : null; };
-  const lighten = (h,a=0.08)=> rgbToHex(hslToRgb({...rgbToHsl(parseColor(h)||{r:0,g:0,b:0}), l: clamp(rgbToHsl(parseColor(h)||{r:0,g:0,b:0}).l + a, 0, 1)}));
-  const darken  = (h,a=0.08)=> rgbToHex(hslToRgb({...rgbToHsl(parseColor(h)||{r:0,g:0,b:0}), l: clamp(rgbToHsl(parseColor(h)||{r:0,g:0,b:0}).l - a, 0, 1)}));
-  const shiftHue = (h,deg=20)=> rgbToHex(hslToRgb({...rgbToHsl(parseColor(h)||{r:0,g:0,b:0}), h: rgbToHsl(parseColor(h)||{r:0,g:0,b:0}).h + deg }));
+  const _hslOp = (h,fn)=>{ const base=parseColor(h)||{r:0,g:0,b:0}; const t=rgbToHsl(base); fn(t); return rgbToHex(hslToRgb(t)); };
+  const lighten = (h,a=0.08)=>_hslOp(h,t=>t.l=clamp(t.l+a,0,1));
+  const darken  = (h,a=0.08)=>_hslOp(h,t=>t.l=clamp(t.l-a,0,1));
+  const shiftHue= (h,deg=20)=>_hslOp(h,t=>t.h=(t.h+deg)%360);
 
   function ensureContrast(fg, bg) {
     const c1=parseColor(fg), c2=parseColor(bg); if (!c1||!c2) return fg;
@@ -889,14 +886,12 @@ renderLibraryAssets();
     return bgIsLight ? darken(fg, .22) : lighten(fg, .22);
   }
 
-  // --------------------- Find preview iframe & read base ---------------------
+  // ===================== Preview detection =====================
   function findPreviewFrame() {
-    // Try common IDs first
     const hints = ['#site-preview','#wizardPreview','#preview','#editor-preview','iframe[title*="Preview" i]'];
     for (const sel of hints) { const el = document.querySelector(sel); if (el && el.tagName === 'IFRAME') return el; }
-    // else pick the largest visible iframe
     const iframes = [...document.querySelectorAll('iframe')].filter(f=>{
-      const r=f.getBoundingClientRect(); return r.width*r.height>30000 && r.top<window.innerHeight; // heuristic
+      const r=f.getBoundingClientRect(); return r.width*r.height>30000 && r.top<window.innerHeight;
     }).sort((a,b)=> (b.clientWidth*b.clientHeight)-(a.clientWidth*a.clientHeight));
     return iframes[0] || null;
   }
@@ -905,8 +900,8 @@ renderLibraryAssets();
     try { return f ? (f.contentDocument || f.contentWindow?.document) : document; } catch { return null; }
   }
 
+  // ===================== Base palette read =====================
   const EMPTY_BASE = { primary:'#3366ff', bg:'#ffffff', text:'#111111' };
-
   function readBasePalette(doc) {
     try {
       const RS = (el)=> el ? getComputedStyle(el) : null;
@@ -925,261 +920,144 @@ renderLibraryAssets();
     }
   }
 
-  // --------------------- 20 professional themes (functions) ---------------------
-  // Each theme adapts to the site's base (primary/bg/text) and keeps fonts untouched.
- const THEMES = [
-  {
-    id: 'clean-corporate',
-    name: 'Clean Corporate',
-    fn: (b) => ({
-      primary: '#0052cc', secondary: '#2684ff', accent: '#36b37e',
-      bg: '#f9fafc', surface: '#ffffff', text: '#172b4d', muted: '#dfe1e6',
-      navbar: '#ffffff', hero: '#ebf2ff', footer: '#091e42', card: '#ffffff', block: '#f4f5f7'
-    })
-  },
-  {
-    id: 'dark-pro',
-    name: 'Dark Pro',
-    fn: (b) => ({
-      primary: '#0d6efd', secondary: '#6c757d', accent: '#20c997',
-      bg: '#121212', surface: '#1e1e1e', text: '#f8f9fa', muted: '#6c757d',
-      navbar: '#1c1c1c', hero: '#0d1117', footer: '#0a0a0a', card: '#1f1f1f', block: '#222222'
-    })
-  },
-  {
-    id: 'fresh-green',
-    name: 'Fresh Green',
-    fn: (b) => ({
-      primary: '#16a34a', secondary: '#86efac', accent: '#22c55e',
-      bg: '#f0fdf4', surface: '#dcfce7', text: '#064e3b', muted: '#86efac',
-      navbar: '#bbf7d0', hero: '#a7f3d0', footer: '#064e3b', card: '#ecfdf5', block: '#d1fae5'
-    })
-  },
-  {
-    id: 'sunset-glow',
-    name: 'Sunset Glow',
-    fn: (b) => ({
-      primary: '#f97316', secondary: '#fb923c', accent: '#f59e0b',
-      bg: '#fff7ed', surface: '#ffedd5', text: '#431407', muted: '#fed7aa',
-      navbar: '#fdba74', hero: '#fed7aa', footer: '#7c2d12', card: '#fff7ed', block: '#ffe4e6'
-    })
-  },
-  {
-    id: 'royal-elegance',
-    name: 'Royal Elegance',
-    fn: (b) => ({
-      primary: '#6d28d9', secondary: '#c4b5fd', accent: '#f472b6',
-      bg: '#f5f3ff', surface: '#ede9fe', text: '#1e1b4b', muted: '#a5b4fc',
-      navbar: '#4c1d95', hero: '#c7d2fe', footer: '#2e1065', card: '#ede9fe', block: '#e0e7ff'
-    })
-  },
-  {
-    id: 'aqua-tech',
-    name: 'Aqua Tech',
-    fn: (b) => ({
-      primary: '#06b6d4', secondary: '#67e8f9', accent: '#3b82f6',
-      bg: '#ecfeff', surface: '#cffafe', text: '#0e7490', muted: '#bae6fd',
-      navbar: '#06b6d4', hero: '#67e8f9', footer: '#0c4a6e', card: '#e0f2fe', block: '#f0f9ff'
-    })
-  },
-  {
-    id: 'luxury-black-gold',
-    name: 'Luxury Black & Gold',
-    fn: (b) => ({
-      primary: '#d4af37', secondary: '#b8860b', accent: '#ffcc00',
-      bg: '#0a0a0a', surface: '#1a1a1a', text: '#ffffff', muted: '#555555',
-      navbar: '#111111', hero: '#1c1c1c', footer: '#000000', card: '#1a1a1a', block: '#2a2a2a'
-    })
-  },
-  {
-    id: 'playful-candy',
-    name: 'Playful Candy',
-    fn: (b) => ({
-      primary: '#ec4899', secondary: '#f9a8d4', accent: '#facc15',
-      bg: '#fff0f6', surface: '#ffe4e6', text: '#3b0764', muted: '#fbcfe8',
-      navbar: '#f472b6', hero: '#fdf4ff', footer: '#701a75', card: '#ffe4e6', block: '#faf5ff'
-    })
-  },
-  {
-    id: 'minimal-white',
-    name: 'Minimal White',
-    fn: (b) => ({
-      primary: '#0f172a', secondary: '#64748b', accent: '#2563eb',
-      bg: '#ffffff', surface: '#f8fafc', text: '#0f172a', muted: '#e2e8f0',
-      navbar: '#ffffff', hero: '#f8fafc', footer: '#f1f5f9', card: '#ffffff', block: '#f9fafb'
-    })
-  },
-  {
-    id: 'cyberpunk',
-    name: 'Cyberpunk',
-    fn: (b) => ({
-      primary: '#ff00ff', secondary: '#00ffff', accent: '#ff8a00',
-      bg: '#121212', surface: '#1a1a1a', text: '#e0e0e0', muted: '#808080',
-      navbar: '#0f0f0f', hero: '#1e1e2e', footer: '#000000', card: '#1a1a1a', block: '#2a2a2a'
-    })
-  },
-  {
-    id: 'earthy-tones',
-    name: 'Earthy Tones',
-    fn: (b) => ({
-      primary: '#78350f', secondary: '#d97706', accent: '#a16207',
-      bg: '#fafaf9', surface: '#fef3c7', text: '#3f3f46', muted: '#d6d3d1',
-      navbar: '#92400e', hero: '#fde68a', footer: '#451a03', card: '#fef3c7', block: '#f5f5f4'
-    })
-  },
-  {
-    id: 'glassmorphism',
-    name: 'Glassmorphism',
-    fn: (b) => ({
-      primary: '#3b82f6', secondary: '#a855f7', accent: '#22d3ee',
-      bg: 'rgba(255,255,255,0.7)', surface: 'rgba(255,255,255,0.2)', text: '#111827', muted: '#9ca3af',
-      navbar: 'rgba(255,255,255,0.2)', hero: 'rgba(255,255,255,0.3)', footer: 'rgba(0,0,0,0.5)', card: 'rgba(255,255,255,0.25)', block: 'rgba(255,255,255,0.2)'
-    })
-  },
-  {
-    id: 'retro-vintage',
-    name: 'Retro Vintage',
-    fn: (b) => ({
-      primary: '#b45309', secondary: '#fde68a', accent: '#78350f',
-      bg: '#fffbeb', surface: '#fef3c7', text: '#3b2f2f', muted: '#d6d3d1',
-      navbar: '#fbbf24', hero: '#fef9c3', footer: '#78350f', card: '#fef3c7', block: '#fef9c3'
-    })
-  },
-  {
-    id: 'space-nebula',
-    name: 'Space Nebula',
-    fn: (b) => ({
-      primary: '#7c3aed', secondary: '#2563eb', accent: '#f472b6',
-      bg: '#0f172a', surface: '#1e293b', text: '#f1f5f9', muted: '#94a3b8',
-      navbar: '#1e1b4b', hero: '#312e81', footer: '#111827', card: '#1e293b', block: '#334155'
-    })
-  },
-  {
-    id: 'pastel-dream',
-    name: 'Pastel Dream',
-    fn: (b) => ({
-      primary: '#a78bfa', secondary: '#f9a8d4', accent: '#6ee7b7',
-      bg: '#faf5ff', surface: '#fce7f3', text: '#374151', muted: '#e9d5ff',
-      navbar: '#f3e8ff', hero: '#fdf4ff', footer: '#a78bfa', card: '#fce7f3', block: '#ede9fe'
-    })
-  },
-  {
-    id: 'warm-coffee',
-    name: 'Warm Coffee',
-    fn: (b) => ({
-      primary: '#6b4226', secondary: '#d6a36c', accent: '#a16207',
-      bg: '#fefae0', surface: '#faedcd', text: '#3b2f2f', muted: '#d6ccc2',
-      navbar: '#ddb892', hero: '#fefae0', footer: '#4a342e', card: '#faedcd', block: '#e6ccb2'
-    })
-  },
-  {
-    id: 'forest-mist',
-    name: 'Forest Mist',
-    fn: (b) => ({
-      primary: '#166534', secondary: '#4ade80', accent: '#22c55e',
-      bg: '#f0fdf4', surface: '#dcfce7', text: '#064e3b', muted: '#bbf7d0',
-      navbar: '#14532d', hero: '#bbf7d0', footer: '#052e16', card: '#ecfdf5', block: '#d1fae5'
-    })
-  },
-  {
-    id: 'modern-gradient',
-    name: 'Modern Gradient',
-    fn: (b) => ({
-      primary: 'linear-gradient(90deg,#06b6d4,#3b82f6)', secondary: '#67e8f9', accent: '#22d3ee',
-      bg: '#f0f9ff', surface: '#e0f2fe', text: '#0e7490', muted: '#bae6fd',
-      navbar: '#06b6d4', hero: '#3b82f6', footer: '#0c4a6e', card: '#e0f2fe', block: '#f0f9ff'
-    })
-  }
-];
+  // ===================== Themes (20) =====================
+  const THEMES = [
+    { id:'clean-corporate', name:'Clean Corporate', fn:(b)=>({ primary:'#0052cc',secondary:'#2684ff',accent:'#36b37e',bg:'#f9fafc',surface:'#ffffff',text:'#172b4d',muted:'#dfe1e6',navbar:'#ffffff',hero:'#ebf2ff',footer:'#091e42',card:'#ffffff',block:'#f4f5f7' }) },
+    { id:'dark-pro', name:'Dark Pro', fn:(b)=>({ primary:'#0d6efd',secondary:'#6c757d',accent:'#20c997',bg:'#121212',surface:'#1e1e1e',text:'#f8f9fa',muted:'#6c757d',navbar:'#1c1c1c',hero:'#0d1117',footer:'#0a0a0a',card:'#1f1f1f',block:'#222222' }) },
+    { id:'fresh-green', name:'Fresh Green', fn:(b)=>({ primary:'#16a34a',secondary:'#86efac',accent:'#22c55e',bg:'#f0fdf4',surface:'#dcfce7',text:'#064e3b',muted:'#86efac',navbar:'#bbf7d0',hero:'#a7f3d0',footer:'#064e3b',card:'#ecfdf5',block:'#d1fae5' }) },
+    { id:'sunset-glow', name:'Sunset Glow', fn:(b)=>({ primary:'#f97316',secondary:'#fb923c',accent:'#f59e0b',bg:'#fff7ed',surface:'#ffedd5',text:'#431407',muted:'#fed7aa',navbar:'#fdba74',hero:'#fed7aa',footer:'#7c2d12',card:'#fff7ed',block:'#ffe4e6' }) },
+    { id:'royal-elegance', name:'Royal Elegance', fn:(b)=>({ primary:'#6d28d9',secondary:'#c4b5fd',accent:'#f472b6',bg:'#f5f3ff',surface:'#ede9fe',text:'#1e1b4b',muted:'#a5b4fc',navbar:'#4c1d95',hero:'#c7d2fe',footer:'#2e1065',card:'#ede9fe',block:'#e0e7ff' }) },
+    { id:'aqua-tech', name:'Aqua Tech', fn:(b)=>({ primary:'#06b6d4',secondary:'#67e8f9',accent:'#3b82f6',bg:'#ecfeff',surface:'#cffafe',text:'#0e7490',muted:'#bae6fd',navbar:'#06b6d4',hero:'#67e8f9',footer:'#0c4a6e',card:'#e0f2fe',block:'#f0f9ff' }) },
+    { id:'luxury-black-gold', name:'Luxury Black & Gold', fn:(b)=>({ primary:'#d4af37',secondary:'#b8860b',accent:'#ffcc00',bg:'#0a0a0a',surface:'#1a1a1a',text:'#ffffff',muted:'#555555',navbar:'#111',hero:'#1c1c1c',footer:'#000',card:'#1a1a1a',block:'#2a2a2a' }) },
+    { id:'playful-candy', name:'Playful Candy', fn:(b)=>({ primary:'#ec4899',secondary:'#f9a8d4',accent:'#facc15',bg:'#fff0f6',surface:'#ffe4e6',text:'#3b0764',muted:'#fbcfe8',navbar:'#f472b6',hero:'#fdf4ff',footer:'#701a75',card:'#ffe4e6',block:'#faf5ff' }) },
+    { id:'minimal-white', name:'Minimal White', fn:(b)=>({ primary:'#0f172a',secondary:'#64748b',accent:'#2563eb',bg:'#ffffff',surface:'#f8fafc',text:'#0f172a',muted:'#e2e8f0',navbar:'#fff',hero:'#f8fafc',footer:'#f1f5f9',card:'#fff',block:'#f9fafb' }) },
+    { id:'cyberpunk', name:'Cyberpunk', fn:(b)=>({ primary:'#ff00ff',secondary:'#00ffff',accent:'#ff8a00',bg:'#121212',surface:'#1a1a1a',text:'#e0e0e0',muted:'#808080',navbar:'#0f0f0f',hero:'#1e1e2e',footer:'#000',card:'#1a1a1a',block:'#2a2a2a' }) },
+    { id:'earthy-tones', name:'Earthy Tones', fn:(b)=>({ primary:'#78350f',secondary:'#d97706',accent:'#a16207',bg:'#fafaf9',surface:'#fef3c7',text:'#3f3f46',muted:'#d6d3d1',navbar:'#92400e',hero:'#fde68a',footer:'#451a03',card:'#fef3c7',block:'#f5f5f4' }) },
+    { id:'glassmorphism', name:'Glassmorphism', fn:(b)=>({ primary:'#3b82f6',secondary:'#a855f7',accent:'#22d3ee',bg:'rgba(255,255,255,0.7)',surface:'rgba(255,255,255,0.2)',text:'#111827',muted:'#9ca3af',navbar:'rgba(255,255,255,0.2)',hero:'rgba(255,255,255,0.3)',footer:'rgba(0,0,0,0.5)',card:'rgba(255,255,255,0.25)',block:'rgba(255,255,255,0.2)' }) },
+    { id:'retro-vintage', name:'Retro Vintage', fn:(b)=>({ primary:'#b45309',secondary:'#fde68a',accent:'#78350f',bg:'#fffbeb',surface:'#fef3c7',text:'#3b2f2f',muted:'#d6d3d1',navbar:'#fbbf24',hero:'#fef9c3',footer:'#78350f',card:'#fef3c7',block:'#fef9c3' }) },
+    { id:'space-nebula', name:'Space Nebula', fn:(b)=>({ primary:'#7c3aed',secondary:'#2563eb',accent:'#f472b6',bg:'#0f172a',surface:'#1e293b',text:'#f1f5f9',muted:'#94a3b8',navbar:'#1e1b4b',hero:'#312e81',footer:'#111827',card:'#1e293b',block:'#334155' }) },
+    { id:'pastel-dream', name:'Pastel Dream', fn:(b)=>({ primary:'#a78bfa',secondary:'#f9a8d4',accent:'#6ee7b7',bg:'#faf5ff',surface:'#fce7f3',text:'#374151',muted:'#e9d5ff',navbar:'#f3e8ff',hero:'#fdf4ff',footer:'#a78bfa',card:'#fce7f3',block:'#ede9fe' }) },
+    { id:'warm-coffee', name:'Warm Coffee', fn:(b)=>({ primary:'#6b4226',secondary:'#d6a36c',accent:'#a16207',bg:'#fefae0',surface:'#faedcd',text:'#3b2f2f',muted:'#d6ccc2',navbar:'#ddb892',hero:'#fefae0',footer:'#4a342e',card:'#faedcd',block:'#e6ccb2' }) },
+    { id:'forest-mist', name:'Forest Mist', fn:(b)=>({ primary:'#166534',secondary:'#4ade80',accent:'#22c55e',bg:'#f0fdf4',surface:'#dcfce7',text:'#064e3b',muted:'#bbf7d0',navbar:'#14532d',hero:'#bbf7d0',footer:'#052e16',card:'#ecfdf5',block:'#d1fae5' }) },
+    { id:'modern-gradient', name:'Modern Gradient', fn:(b)=>({ primary:'linear-gradient(90deg,#06b6d4,#3b82f6)',secondary:'#67e8f9',accent:'#22d3ee',bg:'#f0f9ff',surface:'#e0f2fe',text:'#0e7490',muted:'#bae6fd',navbar:'#06b6d4',hero:'#3b82f6',footer:'#0c4a6e',card:'#e0f2fe',block:'#f0f9ff' }) },
+    { id:'monochrome-pro', name:'Monochrome Pro', fn:(b)=>({ primary:'#4b5563',secondary:'#9ca3af',accent:'#111827',bg:'#ffffff',surface:'#f3f4f6',text:'#111827',muted:'#e5e7eb',navbar:'#ffffff',hero:'#f9fafb',footer:'#111827',card:'#ffffff',block:'#f3f4f6' }) },
+    { id:'vivid-royal', name:'Vivid Royal', fn:(b)=>({ primary:'#7c3aed',secondary:'#22d3ee',accent:'#f59e0b',bg:'#0b1020',surface:'#111827',text:'#e5e7eb',muted:'#334155',navbar:'#0b1020',hero:'#1f2a44',footer:'#0b1020',card:'#111827',block:'#0f172a' }) }
+  ];
 
-  // --------------------- Apply + CSS generation ---------------------
+  // ===================== CSS generation (broad, semantic-safe) =====================
+  const SEMANTIC = {
+    header: [
+      'header','[role="banner"]','.navbar','.nav-bar','.site-header','.appbar','.app-bar','.topbar','.top-bar','.masthead',
+      '.navigation','.main-nav','.menu','.menu-bar','.site-nav','.global-nav'
+    ],
+    footer: [
+      'footer','[role="contentinfo"]','.site-footer','.app-footer','.page-footer','.footbar','.foot-bar'
+    ],
+    hero: [
+      '.hero','.hero-section','.jumbotron','.page-hero','.header-hero'
+    ],
+    sections: [
+      'section','.section','.content-section','.content-block','.block','.feature','.features','.module','.panel','.widget'
+    ],
+    cards: [
+      '.card','.panel','.tile','.box','.well','.portlet'
+    ],
+    text: [
+      'h1','h2','h3','h4','h5','h6','p','span','li','dt','dd','blockquote'
+    ],
+    buttons: [
+      'button','.btn','.button','[role="button"]','input[type="button"]','input[type="submit"]','input[type="reset"]','a.button','a.btn','.badge','.chip','.tag'
+    ],
+    forms: [
+      'input','textarea','select','label','fieldset','legend'
+    ],
+    tables: [
+      'table','th','td','thead','tbody','tfoot','.table','.table-striped','.table-bordered'
+    ],
+    alerts: [
+      '.alert','.notice','.callout','.toast','.message','.notification'
+    ],
+    misc: [
+      'hr','.divider','.breadcrumb','.pagination','.tabs','.tab','.modal','.dialog','[role="dialog"]','.dropdown-menu','.dropdown','.toolbar','.sidebar','.aside'
+    ]
+  };
+
   function paletteCss(p) {
-  return `
-  :root {
-    --color-primary:${p.primary};
-    --color-secondary:${p.secondary};
-    --color-accent:${p.accent};
-    --color-bg:${p.bg};
-    --color-surface:${p.surface};
-    --color-text:${p.text};
-    --color-muted:${p.muted};
-  }
-
-  /* Base */
-  body { background:${p.bg} !important; color:${p.text} !important; }
-  a, a:visited { color:${p.primary} !important; }
-  h1,h2,h3,h4,h5,h6 { color:${p.text} !important; }
-  p, span, li { color:${p.text} !important; }
-
-  /* Buttons */
-  button,.btn,.button {
-    background:${p.primary} !important;
-    color:#fff !important;
-    border:none !important;
-  }
-  button:hover,.btn:hover { background:${p.accent} !important; }
-
-  /* Navbar */
-  .navbar, header.navbar, .site-header {
-    background:${p.navbar || p.surface} !important;
-    color:${p.text} !important;
-  }
-  .navbar a, header.navbar a { color:${p.text} !important; }
-
-  /* Hero */
-  .hero, .hero-section {
-    background:${p.hero || p.surface} !important;
-    color:${p.text} !important;
-  }
-
-  /* Footer */
-  .footer, footer {
-    background:${p.footer || p.surface} !important;
-    color:${p.text} !important;
-  }
-
-  /* Cards & Panels */
-  .card, .panel {
-    background:${p.card || p.surface} !important;
-    border:1px solid ${p.muted} !important;
-    color:${p.text} !important;
-  }
-
-  /* Sections & Blocks */
-  .section, .block, .content-block {
-    background:${p.block || p.surface} !important;
-    color:${p.text} !important;
-  }
-
-  /* HR / Dividers */
-  hr { border-color:${p.muted} !important; }
-
-  /* Forms */
-  input,textarea,select {
-    background:${p.surface} !important;
-    border:1px solid ${p.muted} !important;
-    color:${p.text} !important;
-  }
-  input:focus,textarea:focus,select:focus {
-    border-color:${p.primary} !important;
-    outline:none !important;
-  }
-  `;
+    const textOnPrimary = ensureContrast('#ffffff', p.primary);
+    const linkColor = p.primary.includes('linear-gradient') ? '#2563eb' : p.primary;
+    const s = (arr)=>arr.join(',');
+    return `
+:root{
+  --color-primary:${p.primary};
+  --color-secondary:${p.secondary};
+  --color-accent:${p.accent};
+  --color-bg:${p.bg};
+  --color-surface:${p.surface};
+  --color-text:${p.text};
+  --color-muted:${p.muted};
 }
 
-function applyPaletteToDoc(doc, palette) {
-  if (!doc) return;
-  let style = doc.getElementById('sgwm-theme-override');
-  if (!style) {
-    style = doc.createElement('style');
-    style.id = 'sgwm-theme-override';
-    doc.head.appendChild(style);
-  }
-  style.textContent = paletteCss(palette);
+body, html { background:${p.bg} !important; color:${p.text} !important; }
+
+a, a:visited { color:${linkColor} !important; text-decoration-color:${ensureContrast(linkColor, p.bg)}; }
+a:hover { filter: brightness(0.95); }
+
+${s(SEMANTIC.text)} { color:${p.text} !important; }
+${s(SEMANTIC.header)} { background:${p.navbar || p.surface} !important; color:${p.text} !important; border-bottom:1px solid ${p.muted} !important; }
+${s(SEMANTIC.footer)} { background:${p.footer || p.surface} !important; color:${ensureContrast(p.text, p.footer||p.surface)} !important; border-top:1px solid ${p.muted} !important; }
+${s(SEMANTIC.hero)} { background:${p.hero || p.surface} !important; color:${p.text} !important; }
+${s(SEMANTIC.sections)} { background:${p.block || p.surface} !important; color:${p.text} !important; }
+${s(SEMANTIC.cards)} { background:${p.card || p.surface} !important; color:${p.text} !important; border:1px solid ${p.muted} !important; border-radius:10px; }
+
+${s(SEMANTIC.buttons)}{
+  background:${p.primary} !important;
+  color:${textOnPrimary} !important;
+  border:1px solid ${p.primary} !important;
 }
+${s(SEMANTIC.buttons)}:hover{ filter: brightness(0.95); }
+${s(SEMANTIC.buttons)}:active{ transform: translateY(1px); }
+${s(SEMANTIC.buttons)}.secondary, .btn-secondary { background:${p.secondary} !important; border-color:${p.secondary} !important; color:${ensureContrast('#ffffff', p.secondary)} !important; }
+${s(SEMANTIC.buttons)}.accent, .btn-accent { background:${p.accent} !important; border-color:${p.accent} !important; color:${ensureContrast('#ffffff', p.accent)} !important; }
 
+${s(SEMANTIC.forms)}{
+  background:${p.surface} !important;
+  color:${p.text} !important;
+  border:1px solid ${p.muted} !important;
+}
+input::placeholder, textarea::placeholder { color:${darken(p.text,.35)} !important; }
+input:focus, textarea:focus, select:focus { border-color:${p.primary} !important; outline: 2px solid ${lighten(p.primary,.18)} !important; outline-offset: 1px; }
 
-  // --------------------- UI construction ---------------------
+${s(SEMANTIC.tables)} { border-color:${p.muted} !important; color:${p.text} !important; }
+.table-striped tr:nth-child(odd) { background:${lighten(p.surface,.04)} !important; }
+thead, th { background:${lighten(p.surface,.06)} !important; color:${p.text} !important; }
+
+${s(SEMANTIC.alerts)}{ background:${lighten(p.accent,.45)} !important; border:1px solid ${p.accent} !important; color:${ensureContrast(p.text, lighten(p.accent,.45))} !important; }
+
+${s(SEMANTIC.misc)} { color:${p.text} !important; border-color:${p.muted} !important; }
+hr, .divider { border-color:${p.muted} !important; }
+
+.badge, .chip, .tag { background:${lighten(p.primary,.25)} !important; color:${ensureContrast(p.text, lighten(p.primary,.25))} !important; border:1px solid ${p.primary} !important; }
+.pagination a, .pagination button { background:${p.surface} !important; color:${p.text} !important; border:1px solid ${p.muted} !important; }
+.pagination .active a, .pagination .active button { background:${p.primary} !important; color:${textOnPrimary} !important; border-color:${p.primary} !important; }
+
+.modal, .dialog, [role="dialog"] { background:${p.surface} !important; color:${p.text} !important; border:1px solid ${p.muted} !important; }
+.dropdown, .dropdown-menu { background:${p.surface} !important; color:${p.text} !important; border:1px solid ${p.muted} !important; }
+.toolbar, .sidebar, .aside { background:${p.surface} !important; color:${p.text} !important; border-right:1px solid ${p.muted} !important; }
+`;
+  }
+
+  function applyPaletteToDoc(doc, palette) {
+    if (!doc) return;
+    let style = doc.getElementById('sgwm-theme-override');
+    if (!style) {
+      style = doc.createElement('style');
+      style.id = 'sgwm-theme-override';
+      doc.head.appendChild(style);
+    }
+    style.textContent = paletteCss(palette);
+  }
+
+  // ===================== UI wiring =====================
   const $fab = document.getElementById('sgwm-theme-fab');
   const $panel = document.getElementById('sgwm-theme-panel');
   const $grid = document.getElementById('sgwm-theme-grid');
@@ -1204,9 +1082,15 @@ function applyPaletteToDoc(doc, palette) {
   function onPickTheme(themeDef) {
     const doc = getPreviewDocument();
     const palette = themeDef.fn(BASE);
+    // enforce contrast for core combos
+    palette.text = ensureContrast(palette.text, palette.bg);
+    const btnText = ensureContrast('#ffffff', palette.primary);
+    if (btnText !== '#ffffff') {
+      // adjust primary slightly if needed to keep good button contrast
+      palette.primary = darken(palette.primary, .08);
+    }
     CURRENT = { name: themeDef.name, id: themeDef.id, palette, cssText: paletteCss(palette) };
     applyPaletteToDoc(doc, palette);
-    // expose for exporter
     window.SGWM_THEME = CURRENT;
     document.dispatchEvent(new CustomEvent('sgwm:themeChanged', { detail: CURRENT }));
   }
@@ -1220,12 +1104,10 @@ function applyPaletteToDoc(doc, palette) {
     document.dispatchEvent(new CustomEvent('sgwm:themeCleared'));
   }
 
-  // Build theme cards
   function buildGrid() {
     $grid.innerHTML = '';
     THEMES.forEach(def => {
-      const tmpBase = BASE;
-      const p = def.fn(tmpBase);
+      const p = def.fn(BASE);
       const card = document.createElement('div');
       card.className = 'sgwm-card';
       card.setAttribute('role','button');
@@ -1244,7 +1126,6 @@ function applyPaletteToDoc(doc, palette) {
     });
   }
 
-  // Events
   $fab.addEventListener('click', () => {
     if (!$panel.classList.contains('open')) {
       refreshBase();
@@ -1255,16 +1136,112 @@ function applyPaletteToDoc(doc, palette) {
   $refresh.addEventListener('click', () => { refreshBase(); buildGrid(); });
   $clear.addEventListener('click', clearTheme);
 
-  // Initialize
   refreshBase();
 
-  // Optional: if your editor re-renders the preview iframe, call this to re-apply selected theme
   document.addEventListener('sgwm:previewReloaded', () => {
     if (CURRENT) applyPaletteToDoc(getPreviewDocument(), CURRENT.palette);
   });
 
-  // If you already know your preview iframe ID, you can emit the event yourself after you reload it.
-  // Example elsewhere: document.dispatchEvent(new CustomEvent('sgwm:previewReloaded'));
+  // ===================== Export helper =====================
+  // This helper bakes the chosen theme into exported HTML.
+  // Use it from your export pipeline to:
+  //  1) create css/sgwm-theme.css
+  //  2) inject <link rel="stylesheet" href="css/sgwm-theme.css"> into every HTML (even if none existed)
+  //  3) optionally prepend variables into each CSS file (disabled by default; link is usually enough)
+  //
+  // Expected "files" shape: Array<{ path: "index.html", content: string | Uint8Array | Blob }>
+  // Works with JSZip if you pass a zip instance; if not, it returns an updated files array.
+  function injectLinkIntoHtml(html, href) {
+    if (!html || typeof html !== 'string') return html;
+    if (new RegExp(`href=["']${href}["']`).test(html)) return html; // already linked
+    const link = `<link rel="stylesheet" href="${href}">`;
+    if (/<\/head>/i.test(html)) {
+      return html.replace(/<\/head>/i, `  ${link}\n</head>`);
+    }
+    // No </head> — inject at top of file
+    if (/<html[^>]*>/i.test(html)) {
+      return html.replace(/<html[^>]*>/i, m => `${m}\n<head>\n  ${link}\n</head>`);
+    }
+    // Fallback: before first <body>
+    if (/<body[^>]*>/i.test(html)) {
+      return html.replace(/<body[^>]*>/i, m => `<head>\n  ${link}\n</head>\n${m}`);
+    }
+    // Absolute fallback: just prepend
+    return `${link}\n${html}`;
+  }
+
+  function normalizeText(content) {
+    if (typeof content === 'string') return content;
+    if (content instanceof Uint8Array) return new TextDecoder('utf-8').decode(content);
+    if (content instanceof Blob) { /* caller should convert */ }
+    return String(content ?? '');
+  }
+
+  function attachThemeToFiles(files, cssText, cssPath = 'css/sgwm-theme.css') {
+    const out = [];
+    let hadHtml = false;
+
+    for (const f of files) {
+      const isHtml = /\.html?$/i.test(f.path);
+      const isCss  = /\.css$/i.test(f.path);
+      if (isHtml) hadHtml = true;
+
+      if (isHtml) {
+        const html = normalizeText(f.content);
+        const updated = injectLinkIntoHtml(html, cssPath);
+        out.push({ path: f.path, content: updated });
+      } else {
+        out.push(f); // unchanged
+      }
+    }
+
+    // Ensure the theme CSS file exists/overwrites
+    out.push({ path: cssPath, content: cssText });
+
+    // If there was no HTML at all, just return with CSS added
+    return out;
+  }
+
+  // If you pass a JSZip instance, we'll write into it directly.
+  async function writeToZip(zip, files) {
+    for (const f of files) {
+      zip.file(f.path, typeof f.content === 'string' ? f.content : f.content);
+    }
+  }
+
+  // Public API: window.SGWM_THEME_EXPORTER
+  window.SGWM_THEME_EXPORTER = {
+    ensureThemeInFiles(files, cssPath = 'css/sgwm-theme.css') {
+      const theme = window.SGWM_THEME;
+      if (!theme?.cssText) return files;
+      return attachThemeToFiles(files, theme.cssText, cssPath);
+    },
+    async ensureThemeInZip(zip, files, cssPath = 'css/sgwm-theme.css') {
+      const theme = window.SGWM_THEME;
+      if (!theme?.cssText) {
+        // still write original files
+        await writeToZip(zip, files);
+        return;
+      }
+      const updated = attachThemeToFiles(files, theme.cssText, cssPath);
+      await writeToZip(zip, updated);
+    },
+    // Convenience: returns the active CSS text (so you can store or preview)
+    getActiveCss() { return window.SGWM_THEME?.cssText || ''; }
+  };
+
+  // Expose current state for host apps
+  window.SGWM_THEME = null;
+
+  // ===================== Usage in your export (example) =====================
+  // Example (pseudocode):
+  // const files = collectFilesFromEditor(); // [{path, content}, ...]
+  // const withTheme = window.SGWM_THEME_EXPORTER.ensureThemeInFiles(files);
+  // // then add to JSZip:
+  // const zip = new JSZip();
+  // for (const f of withTheme) zip.file(f.path, f.content);
+  // const blob = await zip.generateAsync({type:'blob'});
+  // saveAs(blob, 'project.zip');
 })();
 </script>
 <!-- ===================== /SGWM THEME CHANGER ===================== -->     
