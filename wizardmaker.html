@@ -722,33 +722,34 @@ renderLibraryAssets();
 </script>
 <!-- ====================== SGWM THEME ENGINE — START ====================== -->
 <style>
-  /* 🎨 Floating palette button just above your ➕ assets button */
+  /* 🎨 Floating palette button just above your ➕ assets button (which is bottom:20px; right:20px) */
   #sgwm-theme-toggle {
     position: fixed;
-    bottom: 100px; /* adjust if your + button sits elsewhere */
+    bottom: 76px; /* sits just above the + button */
     right: 20px;
     width: 46px; height: 46px; border-radius: 50%;
-    background: #fff; border: 2px solid #d0d5dd;
-    box-shadow: 0 6px 20px rgba(0,0,0,.15);
-    cursor: pointer; z-index: 9999; display: grid; place-items: center;
-    font-size: 22px; transition: transform .2s, box-shadow .2s, background .2s;
+    background: #ffffff; border: 2px solid #d0d5dd;
+    box-shadow: 0 6px 18px rgba(0,0,0,.15);
+    cursor: pointer; z-index: 2500; display: grid; place-items: center;
+    font-size: 22px; transition: transform .18s, box-shadow .18s, background .18s;
   }
-  #sgwm-theme-toggle:hover { transform: scale(1.06); background:#f7f7f9; box-shadow: 0 8px 26px rgba(0,0,0,.18); }
+  #sgwm-theme-toggle:hover { transform: translateY(-1px); background:#f8fafc; box-shadow: 0 10px 28px rgba(0,0,0,.18); }
+
   #sgwm-theme-panel {
-    position: fixed; bottom: 160px; right: 20px; width: 360px; max-height: 520px; overflow: auto;
+    position: fixed; bottom: 132px; right: 20px; width: 380px; max-height: 560px; overflow: auto;
     background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.18);
-    padding: 12px; z-index: 9999; display: none;
+    padding: 12px; z-index: 2500; display: none;
   }
-  #sgwm-theme-panel h3 { margin: 6px 4px 10px; font-size: 14px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: #374151; }
+  #sgwm-theme-panel h3 { margin: 6px 4px 10px; font-size: 13px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: #374151; }
   .sgwm-theme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .sgwm-theme-card {
-    display: grid; grid-template-rows: 64px auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; cursor: pointer;
-    transition: transform .18s, box-shadow .18s, border-color .18s; background: #fff;
+    display: grid; grid-template-rows: 68px auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; cursor: pointer;
+    transition: transform .16s, box-shadow .16s, border-color .16s; background: #fff;
   }
-  .sgwm-theme-card:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,.10); border-color:#cfd3d9; }
-  .sgwm-swatches { display: grid; grid-template-columns: 1fr 1fr 1fr; height: 64px; }
+  .sgwm-theme-card:hover { transform: translateY(-2px); box-shadow: 0 12px 22px rgba(0,0,0,.10); border-color:#cfd3d9; }
+  .sgwm-swatches { display: grid; grid-template-columns: 1fr 1fr 1fr; height: 68px; }
   .sgwm-swatch { width: 100%; height: 100%; }
-  .sgwm-theme-name { font-size: 13px; font-weight: 600; color:#111827; padding: 8px 10px; border-top: 1px solid #eef2f7; background: #fff; }
+  .sgwm-theme-name { font-size: 12.5px; font-weight: 700; color:#111827; padding: 8px 10px; border-top: 1px solid #eef2f7; background: #fff; }
 </style>
 
 <div id="sgwm-theme-toggle" title="Change Theme">🎨</div>
@@ -758,14 +759,16 @@ renderLibraryAssets();
 </div>
 
 <script>
-/* ==================== UTIL: PREVIEW & ZIP HOOKS ==================== */
+/* ===================== UTIL: PREVIEW & ZIP & MODEL HOOKS ===================== */
 
-/* Find your preview iframe (tries many selectors, watches DOM, reapplies on load) */
+/* 1) Find your live preview iframe. Your editor creates it inside #iframeContainer (no fixed id). */
 let SGWM_PREVIEW = null;
 function sgwmFindPreview() {
   const sels = [
-    '#previewFrame', '#sitePreviewFrame', '#editor-preview', '#preview', 'iframe[name="preview"]',
-    '.preview iframe', '#canvas iframe', 'iframe[srcdoc]', 'iframe'
+    '#iframeContainer iframe',   // your editor’s preview container
+    '#previewFrame', '#sitePreviewFrame', '#editor-preview', '#preview',
+    'iframe[name="preview"]', '.preview iframe', '#canvas iframe', 'iframe[srcdoc]',
+    'iframe'
   ];
   for (const s of sels) {
     const el = document.querySelector(s);
@@ -780,7 +783,7 @@ function sgwmAttachPreviewObserver() {
       SGWM_PREVIEW = f;
       SGWM_PREVIEW.addEventListener('load', () => {
         if (window.__SGWM_CURRENT_THEME_CSS) {
-          sgwmInjectIntoFrame(SGWM_PREVIEW, window.__SGWM_CURRENT_THEME_CSS); // re-apply on page change
+          sgwmInjectIntoFrame(SGWM_PREVIEW, window.__SGWM_CURRENT_THEME_CSS); // re-apply on page switch
         }
       }, { passive: true });
       if (window.__SGWM_CURRENT_THEME_CSS) sgwmInjectIntoFrame(SGWM_PREVIEW, window.__SGWM_CURRENT_THEME_CSS);
@@ -792,7 +795,7 @@ function sgwmAttachPreviewObserver() {
 }
 document.addEventListener('DOMContentLoaded', sgwmAttachPreviewObserver);
 
-/* Hook JSZip so we automatically capture the uploaded zip as window.ZIP_REF */
+/* 2) Hook JSZip so we can keep a reference to the uploaded ZIP regardless of where loadAsync is called */
 (function sgwmHookZip(){
   try {
     if (window.ZIP_REF) return;
@@ -823,16 +826,24 @@ document.addEventListener('DOMContentLoaded', sgwmAttachPreviewObserver);
   } catch(e){ console.warn('[SGWM Theme] JSZip hook failed', e); }
 })();
 
-/* Optional public API: call this from your uploader once you have the zip */
+/* Optional public API: call this if you already have a zip instance */
 window.SGWM_THEME = window.SGWM_THEME || {};
 window.SGWM_THEME.setZip = function(zip){
   window.ZIP_REF = zip;
   window.dispatchEvent(new CustomEvent('sgwm:zip-ready', { detail: { zip } }));
 };
 
-/* ==================== THEME LIBRARY ==================== */
+/* Access your editor’s in-memory model so export includes themed pages (your export uses pages & editedContents). */
+const SGWM_MODEL = {
+  get pages(){ try { return window.pages || []; } catch { return []; } },
+  get edited(){ try { return window.editedContents || {}; } catch { return {}; } },
+  setEdited(name, html){ if (window.editedContents) window.editedContents[name] = html; }
+};
+
+/* ===================== THEME BASE & 20 UNIQUE THEMES ===================== */
 
 const THEME_BASE_CSS = `
+/* Base tokens every theme overrides via :root custom properties */
 :root{
   --bg:#ffffff;--bg-alt:#f7f7fb;--surface:#ffffff;
   --text:#111827;--muted:#6b7280;
@@ -842,71 +853,89 @@ const THEME_BASE_CSS = `
   --success:#16a34a;--warning:#f59e0b;--danger:#dc2626;
   --radius:14px;--shadow:0 12px 30px rgba(0,0,0,.12);
 }
+
+/* Global & layouts */
 html,body{background:var(--bg);color:var(--text);}
-section,.section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);}
+section, .section, .panel, .container, .content, main {
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:24px;box-shadow:var(--shadow);
+}
+
+/* Links */
 a{color:var(--link);text-decoration:none;transition:color .2s;}
 a:hover{color:var(--link-hover);}
-button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+
+/* Buttons */
+button, .btn, input[type="submit"], .button {
+  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
   padding:.65rem 1rem;border-radius:12px;border:1px solid var(--border);
-  background:var(--surface);color:var(--text);transition:all .18s;cursor:pointer;}
-button:hover,.btn:hover{transform:translateY(-1px);box-shadow:0 10px 18px rgba(0,0,0,.08);}
-.btn-primary{background:var(--primary);color:var(--primary-contrast);border-color:transparent;}
-.btn-primary:hover{filter:saturate(1.1) brightness(1.02);}
-.btn-outline{background:transparent;border-color:var(--primary);color:var(--primary);}
-.btn-accent{background:var(--accent);color:var(--accent-contrast);border-color:transparent;}
+  background:var(--surface);color:var(--text);transition:all .18s;cursor:pointer;
+}
+button:hover, .btn:hover { transform:translateY(-1px); box-shadow:0 10px 18px rgba(0,0,0,.08); }
+.btn-primary, .button.primary { background:var(--primary); color:var(--primary-contrast); border-color:transparent; }
+.btn-outline { background:transparent; border-color:var(--primary); color:var(--primary); }
+.btn-accent  { background:var(--accent);  color:var(--accent-contrast); border-color:transparent; }
+
+/* Cards, inputs, tables */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);}
 .card .card-title{font-size:1.125rem;font-weight:700;margin-bottom:.35rem;}
 .card .card-sub{color:var(--muted);font-size:.9rem;margin-bottom:.75rem;}
-.navbar, header{background:linear-gradient(180deg, var(--surface), var(--bg-alt));
-  border-bottom:1px solid var(--border);padding:14px 18px;border-radius:0 0 18px 18px;}
-.navbar .nav-link{color:var(--text);padding:8px 12px;border-radius:10px;}
-.navbar .nav-link.active,.navbar .nav-link:hover{background:var(--bg-alt);}
-footer{background:var(--bg-alt);border-top:1px solid var(--border);padding:20px;border-radius:18px 18px 0 0;}
-.badge{display:inline-block;padding:.25rem .5rem;border-radius:999px;border:1px solid var(--border);color:var(--text);background:var(--surface);}
-.badge.success{border-color:var(--success);color:var(--success);}
-.badge.warning{border-color:var(--warning);color:var(--warning);}
-.badge.danger{border-color:var(--danger);color:var(--danger);}
-input,textarea,select{background:var(--surface);color:var(--text);border:1px solid var(--border);
-  border-radius:12px;padding:.6rem .75rem;outline:none;transition:border .18s, box-shadow .18s;}
-input:focus,textarea:focus,select:focus{border-color:var(--link);box-shadow:0 0 0 3px var(--ring);}
-.hero{border-radius:22px;padding:38px 28px;margin:12px 0;background:linear-gradient(135deg, var(--primary), var(--accent));color:var(--primary-contrast);}
-.hero .btn{filter:drop-shadow(0 10px 24px rgba(0,0,0,.18));}
-*{transition:background-color .18s, color .18s, border-color .18s;}
+input, select, textarea {
+  background:#fff;border:1px solid var(--border);border-radius:12px;padding:.6rem .7rem; outline: none;
+}
+input:focus, select:focus, textarea:focus { border-color:var(--ring); box-shadow: 0 0 0 3px var(--ring); }
+
+/* Navbars & headers */
+.navbar, header, .site-header {
+  background:linear-gradient(180deg, var(--surface), var(--bg-alt));
+  border-bottom:1px solid var(--border);padding:14px 18px;border-radius:12px; margin-bottom:18px;
+}
+
+/* Footer */
+footer { background:var(--bg-alt); border-top:1px solid var(--border); padding:16px; border-radius:12px; }
+
+/* Hero & CTA (many themes override via extras) */
+.hero { border-radius:18px; padding:48px 28px; margin: 18px 0; background: linear-gradient(135deg, var(--primary), var(--accent)); color: var(--primary-contrast); }
+.hero h1, .hero h2 { color: var(--primary-contrast); }
+
+/* Utilities */
+.tag, .badge { background:var(--bg-alt);border:1px solid var(--border);border-radius:999px;padding:.25rem .6rem;font-size:.75rem; }
+.kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:var(--bg-alt); border:1px solid var(--border); border-bottom-width:2px; padding:.2rem .4rem; border-radius:6px; }
 `;
 
+/* 20 distinctive, professional themes (color system + extras for morphology) */
 const THEMES = [
-  {name:"Corporate Blue", vars:{ "--bg":"#ffffff","--bg-alt":"#f3f6fb","--surface":"#ffffff","--text":"#0f172a","--muted":"#6b7280","--primary":"#0b5ed7","--primary-contrast":"#ffffff","--accent":"#60a5fa","--accent-contrast":"#0f172a","--border":"#e5e7eb","--ring":"#bfdbfe","--link":"#0b5ed7","--link-hover":"#0a58ca" }, extras:".navbar{background:linear-gradient(180deg,#ffffff,#e9f1ff);} .hero{background:linear-gradient(135deg,#0b5ed7,#60a5fa);}"},
-  {name:"Luxury Black & Gold", vars:{ "--bg":"#0a0a0a","--bg-alt":"#111111","--surface":"#0f0f0f","--text":"#f5f5f5","--muted":"#bdbdbd","--primary":"#c8a848","--primary-contrast":"#161616","--accent":"#f0d679","--accent-contrast":"#161616","--border":"#2a2a2a","--ring":"#e6d69a","--link":"#d6b451","--link-hover":"#edc864" }, extras:".navbar,header{background:linear-gradient(180deg,#0f0f0f,#151515);} .hero{background:linear-gradient(135deg,#c8a848,#f0d679);color:#161616;}"},
-  {name:"Ocean Breeze", vars:{ "--bg":"#e6f7fb","--bg-alt":"#def1f6","--surface":"#ffffff","--text":"#033d4e","--muted":"#4a7080","--primary":"#0096b6","--primary-contrast":"#ffffff","--accent":"#47c5e0","--accent-contrast":"#083344","--border":"#cbe7ef","--ring":"#b9ecff","--link":"#007c99","--link-hover":"#006a84" }, extras:".hero{background:linear-gradient(135deg,#0096b6,#47c5e0);}"},
-  {name:"Minimal Snow", vars:{ "--bg":"#ffffff","--bg-alt":"#f7f7f7","--surface":"#ffffff","--text":"#18181b","--muted":"#6b7280","--primary":"#111827","--primary-contrast":"#ffffff","--accent":"#9ca3af","--accent-contrast":"#111827","--border":"#e5e7eb","--ring":"#e5e7eb","--link":"#111827","--link-hover":"#0b1220" }, extras:".navbar .nav-link:hover{background:#efefef;} .hero{background:linear-gradient(135deg,#111827,#6b7280);}"},
-  {name:"Sunset Coral", vars:{ "--bg":"#fff6ef","--bg-alt":"#ffe7d7","--surface":"#ffffff","--text":"#5a382d","--muted":"#8d6e63","--primary":"#ff6a3d","--primary-contrast":"#ffffff","--accent":"#ffb199","--accent-contrast":"#4e342e","--border":"#ffd8c6","--ring":"#ffd0c4","--link":"#ff6a3d","--link-hover":"#ff4f1b" }, extras:".hero{background:linear-gradient(135deg,#ff6a3d,#ffb199);}"},
-  {name:"Royal Purple", vars:{ "--bg":"#f7f3ff","--bg-alt":"#efe8ff","--surface":"#ffffff","--text":"#2c1a6b","--muted":"#6c5aa6","--primary":"#6b46c1","--primary-contrast":"#ffffff","--accent":"#b794f4","--accent-contrast":"#1b103e","--border":"#e9defe","--ring":"#d8c8ff","--link":"#6b46c1","--link-hover":"#5a3aad" }, extras:".hero{background:linear-gradient(135deg,#6b46c1,#b794f4);}"},
-  {name:"Dark Neon", vars:{ "--bg":"#111114","--bg-alt":"#18181c","--surface":"#141419","--text":"#e9eef6","--muted":"#a0a3ad","--primary":"#00eaff","--primary-contrast":"#071018","--accent":"#ff3bf0","--accent-contrast":"#100414","--border":"#24262b","--ring":"#00eaff55","--link":"#31d7ff","--link-hover":"#14c6ff" }, extras:".navbar{background:linear-gradient(180deg,#141419,#18181c);} .hero{background:linear-gradient(135deg,#00eaff,#ff3bf0);}"},
-  {name:"Pastel Candy", vars:{ "--bg":"#fff7fb","--bg-alt":"#fbeeff","--surface":"#ffffff","--text":"#2f2f33","--muted":"#6d6d73","--primary":"#f48fb1","--primary-contrast":"#2b1a22","--accent":"#81d4fa","--accent-contrast":"#12202a","--border":"#f4dced","--ring":"#ffd7e7","--link":"#ec407a","--link-hover":"#d81b60" }, extras:".hero{background:linear-gradient(135deg,#f48fb1,#81d4fa);}"},
-  {name:"Vintage Sepia", vars:{ "--bg":"#fbf5ea","--bg-alt":"#f3e6d3","--surface":"#ffffff","--text":"#3e2d23","--muted":"#7b6458","--primary":"#8d6e63","--primary-contrast":"#ffffff","--accent":"#d7ccc8","--accent-contrast":"#3e2723","--border":"#e5d8c8","--ring":"#e5d8c8","--link":"#6d4c41","--link-hover":"#5d4037" }, extras:".hero{background:linear-gradient(135deg,#8d6e63,#d7ccc8);}"},
-  {name:"Elegant Navy", vars:{ "--bg":"#f7f8fc","--bg-alt":"#ebeffb","--surface":"#ffffff","--text":"#1a237e","--muted":"#5c6bc0","--primary":"#283593","--primary-contrast":"#ffffff","--accent":"#9fa8da","--accent-contrast":"#111827","--border":"#e2e8ff","--ring":"#c7d2fe","--link":"#283593","--link-hover":"#1e2d7a" }, extras:".hero{background:linear-gradient(135deg,#283593,#9fa8da);}"},
-  {name:"Energetic Orange", vars:{ "--bg":"#fff9f3","--bg-alt":"#ffe7d2","--surface":"#ffffff","--text":"#262626","--muted":"#8a6a55","--primary":"#ff6a1a","--primary-contrast":"#fffaf5","--accent":"#ff9f59","--accent-contrast":"#3a1e0b","--border":"#ffd2b1","--ring":"#ffd6bf","--link":"#ff6a1a","--link-hover":"#e85a0a" }, extras:".hero{background:linear-gradient(135deg,#ff6a1a,#ff9f59);}"},
-  {name:"Cyberpunk", vars:{ "--bg":"#0d0d12","--bg-alt":"#101017","--surface":"#12121a","--text":"#f0f2ff","--muted":"#b6b9c7","--primary":"#ff00ff","--primary-contrast":"#17001a","--accent":"#00ffff","--accent-contrast":"#001a1a","--border":"#222331","--ring":"#a600ff55","--link":"#ff55ff","--link-hover":"#ff22ff" }, extras:".hero{background:linear-gradient(135deg,#ff00ff,#00ffff);}"},
-  {name:"Gradient Sunrise", vars:{ "--bg":"#fff5f7","--bg-alt":"#ffe9ee","--surface":"#ffffff","--text":"#2f1d2a","--muted":"#7a5a67","--primary":"#ff7a69","--primary-contrast":"#2a0e10","--accent":"#ffd08a","--accent-contrast":"#33220e","--border":"#ffd7de","--ring":"#ffdbe4","--link":"#ff6b6b","--link-hover":"#ff4d4d" }, extras:".hero{background:linear-gradient(135deg,#ff7a69,#ffd08a);}"},
-  {name:"Fresh Mint", vars:{ "--bg":"#f2fffb","--bg-alt":"#e1fbf3","--surface":"#ffffff","--text":"#083b34","--muted":"#3f7b72","--primary":"#17c3b2","--primary-contrast":"#042724","--accent":"#7ae3d7","--accent-contrast":"#083b34","--border":"#ccefe7","--ring":"#b8f1e9","--link":"#17c3b2","--link-hover":"#11a99a" }, extras:".hero{background:linear-gradient(135deg,#17c3b2,#7ae3d7);}"},
-  {name:"Bold Red", vars:{ "--bg":"#ffffff","--bg-alt":"#fff1f1","--surface":"#ffffff","--text":"#1f2937","--muted":"#6b7280","--primary":"#e11d48","--primary-contrast":"#ffffff","--accent":"#fb7185","--accent-contrast":"#3b0a14","--border":"#fecdd3","--ring":"#fecaca","--link":"#e11d48","--link-hover":"#be123c" }, extras:".hero{background:linear-gradient(135deg,#e11d48,#fb7185);}"},
-  {name:"Newspaper Classic", vars:{ "--bg":"#f7f7f7","--bg-alt":"#efefef","--surface":"#ffffff","--text":"#121212","--muted":"#4b5563","--primary":"#111111","--primary-contrast":"#ffffff","--accent":"#6b7280","--accent-contrast":"#ffffff","--border":"#d1d5db","--ring":"#d1d5db","--link":"#111111","--link-hover":"#000000" }, extras:".hero{background:linear-gradient(135deg,#111111,#6b7280);}"},
-  {name:"Modern Teal", vars:{ "--bg":"#f7fffe","--bg-alt":"#e6fffb","--surface":"#ffffff","--text":"#0e2a2b","--muted":"#557a7b","--primary":"#0891b2","--primary-contrast":"#ffffff","--accent":"#5eead4","--accent-contrast":"#05201f","--border":"#cdecec","--ring":"#a7f3d0","--link":"#0e7490","--link-hover":"#155e75" }, extras:".hero{background:linear-gradient(135deg,#0891b2,#5eead4);}"},
-  {name:"Fashion Magenta", vars:{ "--bg":"#ffffff","--bg-alt":"#fff0f7","--surface":"#ffffff","--text":"#1a1220","--muted":"#6d516c","--primary":"#d946ef","--primary-contrast":"#2a0a2e","--accent":"#f0abfc","--accent-contrast":"#2a0a2e","--border":"#f3d7fb","--ring":"#f5d0fe","--link":"#c026d3","--link-hover":"#a21caf" }, extras:".hero{background:linear-gradient(135deg,#d946ef,#f0abfc);}"},
-  {name:"Golden Sunrise", vars:{ "--bg":"#fffceb","--bg-alt":"#fff3c7","--surface":"#ffffff","--text":"#4b2e07","--muted":"#7c5d26","--primary":"#f59e0b","--primary-contrast":"#231a09","--accent":"#fde68a","--accent-contrast":"#3a2c0f","--border":"#fde9b5","--ring":"#fde68a","--link":"#d97706","--link-hover":"#b45309" }, extras:".hero{background:linear-gradient(135deg,#f59e0b,#fde68a);}"},
-  {name:"Arctic Frost", vars:{ "--bg":"#f3faff","--bg-alt":"#e8f4ff","--surface":"#ffffff","--text":"#0b2a3b","--muted":"#4b6a7f","--primary":"#0284c7","--primary-contrast":"#ffffff","--accent":"#7dd3fc","--accent-contrast":"#062332","--border":"#cfe8fb","--ring":"#bae6fd","--link":"#0ea5e9","--link-hover":"#0284c7" }, extras:".hero{background:linear-gradient(135deg,#0284c7,#7dd3fc);}"},
-  {name:"Slate & Lime", vars:{ "--bg":"#0b1220","--bg-alt":"#0f172a","--surface":"#0f172a","--text":"#e5f2ff","--muted":"#9fb5cc","--primary":"#84cc16","--primary-contrast":"#0b1220","--accent":"#a3e635","--accent-contrast":"#0b1220","--border":"#1e293b","--ring":"#a3e63555","--link":"#bef264","--link-hover":"#a3e635" }, extras:".hero{background:linear-gradient(135deg,#84cc16,#22c55e);}"},
-  {name:"Rosewood", vars:{ "--bg":"#fcf2f2","--bg-alt":"#fde6e6","--surface":"#ffffff","--text":"#2a0f12","--muted":"#805157","--primary":"#b91c1c","--primary-contrast":"#fff5f5","--accent":"#fda4af","--accent-contrast":"#2a0f12","--border":"#f7c7cf","--ring":"#fecdd3","--link":"#991b1b","--link-hover":"#7f1d1d" }, extras:".hero{background:linear-gradient(135deg,#b91c1c,#fda4af);}"},
-  {name:"Jade Noir", vars:{ "--bg":"#0b1716","--bg-alt":"#0f201e","--surface":"#0f201e","--text":"#e6fffb","--muted":"#9ee3d8","--primary":"#10b981","--primary-contrast":"#031a14","--accent":"#34d399","--accent-contrast":"#042317","--border":"#1a2f2c","--ring":"#34d39955","--link":"#6ee7b7","--link-hover":"#34d399" }, extras:".hero{background:linear-gradient(135deg,#10b981,#34d399);}"},
+  { name: "Nordic Frost", vars: {"--bg":"#0b1220","--bg-alt":"#0e1628","--surface":"#111b2f","--text":"#e5f0ff","--muted":"#a0b4d0","--primary":"#5aa5ff","--primary-contrast":"#061226","--accent":"#7dd3fc","--accent-contrast":"#071422","--border":"#1e2a44","--ring":"#5aa5ff66","--link":"#93c5fd","--link-hover":"#60a5fa"}, extras:".hero{background:linear-gradient(135deg,#5aa5ff,#7dd3fc);} body{letter-spacing:.01em;}"},
+  { name: "Sunset Coral", vars: {"--bg":"#fff7f5","--bg-alt":"#fff1ee","--surface":"#ffffff","--text":"#2b2a2a","--muted":"#7c6f6f","--primary":"#ff6b6b","--primary-contrast":"#ffffff","--accent":"#ffd166","--accent-contrast":"#2b2a2a","--border":"#ffe1dc","--ring":"#ffb3b366","--link":"#ef4444","--link-hover":"#dc2626"}, extras:".hero{background:linear-gradient(135deg,#ff6b6b,#ffd166);} .btn-primary{border-radius:999px;}"},
+  { name: "Emerald Pro", vars: {"--bg":"#081511","--bg-alt":"#0c1c17","--surface":"#0f231d","--text":"#dff6ee","--muted":"#96c7b6","--primary":"#10b981","--primary-contrast":"#031a14","--accent":"#34d399","--accent-contrast":"#042317","--border":"#16352b","--ring":"#34d39955","--link":"#6ee7b7","--link-hover":"#34d399"}, extras:".hero{background:linear-gradient(135deg,#10b981,#34d399);}"},
+  { name: "Royal Indigo", vars: {"--bg":"#0f1023","--bg-alt":"#141433","--surface":"#1b1c4b","--text":"#e9e9ff","--muted":"#b2b2e8","--primary":"#6366f1","--primary-contrast":"#0b0c2a","--accent":"#a78bfa","--accent-contrast":"#0b0c2a","--border":"#282a66","--ring":"#818cf866","--link":"#a5b4fc","--link-hover":"#818cf8"}, extras:".hero{background:radial-gradient(circle at 20% 10%,#a78bfa,#6366f1);}"},
+  { name: "SaaS Light", vars: {"--bg":"#f8fafc","--bg-alt":"#eef2f7","--surface":"#ffffff","--text":"#0f172a","--muted":"#64748b","--primary":"#2563eb","--primary-contrast":"#ffffff","--accent":"#06b6d4","--accent-contrast":"#06252b","--border":"#e2e8f0","--ring":"#93c5fd88","--link":"#2563eb","--link-hover":"#1d4ed8"}, extras:".navbar{backdrop-filter:saturate(1.4) blur(6px);}"},
+  { name: "Grape Splash", vars: {"--bg":"#120616","--bg-alt":"#1a0a21","--surface":"#1e0b26","--text":"#f6e8ff","--muted":"#c2a8d6","--primary":"#a855f7","--primary-contrast":"#16022b","--accent":"#f472b6","--accent-contrast":"#2b0a1f","--border":"#2c1a37","--ring":"#c084fc66","--link":"#d8b4fe","--link-hover":"#c084fc"}, extras:".hero{background:linear-gradient(120deg,#a855f7,#f472b6);}"},
+  { name: "Carbon Matrix", vars: {"--bg":"#0b0c0e","--bg-alt":"#101214","--surface":"#14171a","--text":"#e5e7eb","--muted":"#9ca3af","--primary":"#22d3ee","--primary-contrast":"#071b1f","--accent":"#38bdf8","--accent-contrast":"#082036","--border":"#1f2327","--ring":"#38bdf866","--link":"#67e8f9","--link-hover":"#22d3ee"}, extras:".card{border-radius:18px;} .hero{background:linear-gradient(135deg,#22d3ee,#38bdf8);}"},
+  { name: "Desert Gold", vars: {"--bg":"#0d0904","--bg-alt":"#15100a","--surface":"#1b150e","--text":"#f7e9d0","--muted":"#d6c0a1","--primary":"#f59e0b","--primary-contrast":"#1b150e","--accent":"#fbbf24","--accent-contrast":"#1b150e","--border":"#2a231a","--ring":"#f59e0b66","--link":"#fbbf24","--link-hover":"#f59e0b"}, extras:".hero{background:linear-gradient(135deg,#f59e0b,#fbbf24);}"},
+  { name: "Minty Fresh", vars: {"--bg":"#f0fff8","--bg-alt":"#e7fff4","--surface":"#ffffff","--text":"#083b2b","--muted":"#3a7d67","--primary":"#0ea5a5","--primary-contrast":"#f0fff8","--accent":"#2dd4bf","--accent-contrast":"#05332a","--border":"#c8eee3","--ring":"#2dd4bf66","--link":"#0ea5a5","--link-hover":"#0d9488"}, extras:".btn{border-radius:10px;} .hero{background:linear-gradient(135deg,#0ea5a5,#2dd4bf);}"},
+  { name: "Crimson Edge", vars: {"--bg":"#0f0a0a","--bg-alt":"#160e0e","--surface":"#1e1111","--text":"#ffe5e5","--muted":"#d8a4a4","--primary":"#ef4444","--primary-contrast":"#1e1111","--accent":"#fb7185","--accent-contrast":"#1e1111","--border":"#2a1414","--ring":"#ef444466","--link":"#fca5a5","--link-hover":"#ef4444"}, extras:".hero{background:linear-gradient(135deg,#ef4444,#fb7185);}"},
+  { name: "Aqua Glass", vars: {"--bg":"#031a22","--bg-alt":"#07222b","--surface":"#0b2a35","--text":"#dff7ff","--muted":"#a5cbd6","--primary":"#06b6d4","--primary-contrast":"#031a22","--accent":"#38bdf8","--accent-contrast":"#051c2a","--border":"#133847","--ring":"#38bdf866","--link":"#67e8f9","--link-hover":"#38bdf8"}, extras:".hero{background:linear-gradient(135deg,#06b6d4,#38bdf8);}"},
+  { name: "Stone & Sage", vars: {"--bg":"#0e1110","--bg-alt":"#141816","--surface":"#171c1a","--text":"#e7eee9","--muted":"#a3b5ad","--primary":"#22c55e","--primary-contrast":"#0b120e","--accent":"#84cc16","--accent-contrast":"#0b120e","--border":"#233029","--ring":"#22c55e66","--link":"#86efac","--link-hover":"#22c55e"}, extras:".hero{background:linear-gradient(135deg,#22c55e,#84cc16);}"},
+  { name: "Rose Quartz", vars: {"--bg":"#fff7fb","--bg-alt":"#ffeef7","--surface":"#ffffff","--text":"#331b2b","--muted":"#7a4d66","--primary":"#e879f9","--primary-contrast":"#2c0f25","--accent":"#fb7185","--accent-contrast":"#2b0a1f","--border":"#f6d7ea","--ring":"#f0abfc66","--link":"#e879f9","--link-hover":"#d946ef"}, extras:".btn-primary{border-radius:999px;} .hero{background:linear-gradient(120deg,#e879f9,#fb7185);}"},
+  { name: "Ocean Night", vars: {"--bg":"#030b18","--bg-alt":"#071326","--surface":"#0c1930","--text":"#d8eaff","--muted":"#9bb4d6","--primary":"#2563eb","--primary-contrast":"#030b18","--accent":"#22d3ee","--accent-contrast":"#03141a","--border":"#152545","--ring":"#2563eb66","--link":"#93c5fd","--link-hover":"#60a5fa"}, extras:".hero{background:linear-gradient(135deg,#2563eb,#22d3ee);}"},
+  { name: "Lime Pop", vars: {"--bg":"#0f1407","--bg-alt":"#141a0a","--surface":"#181f0d","--text":"#eaffc8","--muted":"#bfd69e","--primary":"#84cc16","--primary-contrast":"#0f1407","--accent":"#a3e635","--accent-contrast":"#0f1407","--border":"#243012","--ring":"#a3e63566","--link":"#d9f99d","--link-hover":"#a3e635"}, extras:".hero{background:linear-gradient(135deg,#84cc16,#a3e635);}"},
+  { name: "Slate Minimal", vars: {"--bg":"#0b0d12","--bg-alt":"#0f1218","--surface":"#121722","--text":"#e5e7eb","--muted":"#9ca3af","--primary":"#94a3b8","--primary-contrast":"#0b0d12","--accent":"#22d3ee","--accent-contrast":"#071b1f","--border":"#1f2633","--ring":"#94a3b866","--link":"#cbd5e1","--link-hover":"#94a3b8"}, extras:".btn{border-radius:8px;}"},
+  { name: "Tangerine Bold", vars: {"--bg":"#1a0c05","--bg-alt":"#220f06","--surface":"#2a1308","--text":"#ffe8d9","--muted":"#e2b59a","--primary":"#fb923c","--primary-contrast":"#1a0c05","--accent":"#facc15","--accent-contrast":"#1a0c05","--border":"#3a1b0e","--ring":"#fb923c66","--link":"#fed7aa","--link-hover":"#fb923c"}, extras:".hero{background:linear-gradient(135deg,#fb923c,#facc15);}"},
+  { name: "Cerulean Studio", vars: {"--bg":"#07121c","--bg-alt":"#0b1a28","--surface":"#0f2135","--text":"#d9ecff","--muted":"#9ec3e0","--primary":"#38bdf8","--primary-contrast":"#07121c","--accent":"#0ea5e9","--accent-contrast":"#06121d","--border":"#173552","--ring":"#38bdf866","--link":"#93c5fd","--link-hover":"#60a5fa"}, extras:".navbar{backdrop-filter: blur(8px) saturate(1.2);}"},
+  { name: "Velvet Noir", vars: {"--bg":"#0b0b0b","--bg-alt":"#111111","--surface":"#141414","--text":"#f5f5f5","--muted":"#bdbdbd","--primary":"#bf1650","--primary-contrast":"#14040d","--accent":"#ec4899","--accent-contrast":"#1a0712","--border":"#242424","--ring":"#ec489966","--link":"#f472b6","--link-hover":"#ec4899"}, extras:".hero{background:radial-gradient(1200px 300px at 10% 0%,#bf1650,#111);}"},
+  { name: "Ivory & Ink", vars: {"--bg":"#fafaf7","--bg-alt":"#f2f2ec","--surface":"#ffffff","--text":"#1a1a1a","--muted":"#77756f","--primary":"#111111","--primary-contrast":"#ffffff","--accent":"#2563eb","--accent-contrast":"#ffffff","--border":"#e6e3db","--ring":"#11111133","--link":"#111111","--link-hover":"#000000"}, extras:".btn-primary{letter-spacing:.02em;} .hero{background:linear-gradient(180deg,#111,#333);}"},
+  { name: "Aurora Neon", vars: {"--bg":"#040810","--bg-alt":"#070d18","--surface":"#0a1020","--text":"#e6fbff","--muted":"#9bd8e6","--primary":"#06d6a0","--primary-contrast":"#031a10","--accent":"#60a5fa","--accent-contrast":"#041225","--border":"#16243d","--ring":"#06d6a066","--link":"#67e8f9","--link-hover":"#06d6a0"}, extras:".hero{background:conic-gradient(from 90deg at 20% 20%, #06d6a0, #60a5fa);}"},
+  { name: "Forest Dew", vars: {"--bg":"#0a1310","--bg-alt":"#0f201e","--surface":"#0f201e","--text":"#e6fffb","--muted":"#9ee3d8","--primary":"#10b981","--primary-contrast":"#031a14","--accent":"#34d399","--accent-contrast":"#042317","--border":"#1a2f2c","--ring":"#34d39955","--link":"#6ee7b7","--link-hover":"#34d399"}, extras:".hero{background:linear-gradient(135deg,#10b981,#34d399);}"},
 ];
 
-/* Build CSS string for a theme */
+/* Build CSS for a theme */
 function sgwmBuildCSS(theme){
   const varLines = Object.entries(theme.vars).map(([k,v])=>`${k}:${v}`).join(';');
   return `:root{${varLines}}` + THEME_BASE_CSS + (theme.extras || "");
 }
 
-/* ==================== UI RENDER ==================== */
+/* ===================== UI RENDERING ===================== */
 const grid = document.getElementById('sgwm-theme-grid');
 THEMES.forEach((t, idx) => {
   const card = document.createElement('div');
@@ -930,12 +959,12 @@ document.getElementById('sgwm-theme-toggle').addEventListener('click', () => {
   p.style.display = (p.style.display === 'block') ? 'none' : 'block';
 });
 
-/* ==================== APPLY: LIVE + ZIP ==================== */
+/* ===================== APPLY: LIVE + ZIP + EDITOR MODEL ===================== */
 async function sgwmApplyTheme(themeObj){
   const css = sgwmBuildCSS(themeObj);
   window.__SGWM_CURRENT_THEME_CSS = css;
 
-  // 1) Live preview (no 404s): inject <style> + blob <link> inside the iframe
+  // 1) Live preview inside the editor’s iframe
   if (!SGWM_PREVIEW) SGWM_PREVIEW = sgwmFindPreview();
   if (SGWM_PREVIEW) {
     sgwmInjectIntoFrame(SGWM_PREVIEW, css);
@@ -943,43 +972,39 @@ async function sgwmApplyTheme(themeObj){
     console.warn('[SGWM Theme] preview iframe not found — live preview skipped.');
   }
 
-  // 2) Persist into ZIP: write theme.css and link it from ALL pages with correct relative path
-  if (!window.ZIP_REF) {
-    console.warn('[SGWM Theme] window.ZIP_REF not found — ensure your uploader calls JSZip.loadAsync or SGWM_THEME.setZip(zip).');
-    return;
+  // 2) Write theme.css into the uploaded ZIP (if available)
+  if (window.ZIP_REF) {
+    window.ZIP_REF.file('theme.css', css);
   }
-  window.ZIP_REF.file('theme.css', css);
-  const ops = [];
-  window.ZIP_REF.forEach((path, file) => {
-    if (path.toLowerCase().endsWith('.html')) {
-      ops.push(
-        file.async('string').then(content => {
-          const relHref = sgwmRelativeToRoot(path, 'theme.css');
-          let out = content;
-          if (!/theme\.css/i.test(out)) {
-            out = sgwmInsertThemeLink(out, relHref);
-          } else {
-            out = sgwmNormalizeExistingThemeLink(out, relHref);
-          }
-          window.ZIP_REF.file(path, out);
-        })
-      );
+
+  // 3) Update ALL HTML files in your editor model so your Export button includes the theme
+  const pages = SGWM_MODEL.pages.slice(); // array of file paths (may include subfolders)
+  const edits = [];
+  for (const path of pages) {
+    if (!/\.html?$/i.test(path)) continue;
+    const current = (SGWM_MODEL.edited[path] || (window.pageContents ? window.pageContents[path] : "")) || "";
+    const relHref = sgwmRelativeToRoot(path, 'theme.css');
+    let out = current;
+    if (!/theme\.css/i.test(out)) {
+      out = sgwmInsertThemeLink(out, relHref);
+    } else {
+      out = sgwmNormalizeExistingThemeLink(out, relHref);
     }
-  });
-  await Promise.all(ops);
-  console.info('[SGWM Theme] theme.css written and linked in all HTML files.');
+    SGWM_MODEL.setEdited(path, out);
+  }
+  console.info('[SGWM Theme] theme.css linked across all pages. Ready to export.');
 }
 
 /* ===== Helpers for live preview injection ===== */
 function sgwmInjectIntoFrame(frame, css){
   const doc = frame.contentDocument || frame.contentWindow?.document;
   if (!doc) return;
-  // Immediate style
+  // <style> for instant change
   let styleEl = doc.getElementById('sgwm-theme-style');
   if (!styleEl) { styleEl = doc.createElement('style'); styleEl.id = 'sgwm-theme-style'; doc.head.appendChild(styleEl); }
   styleEl.textContent = css;
 
-  // Blob link so any <link href="theme.css"> inside the page won’t 404 in memory previews
+  // Blob <link> so any references to theme.css don’t 404 in-memory
   const blob = new Blob([css], {type:'text/css'});
   const url  = URL.createObjectURL(blob);
   let linkEl = doc.getElementById('sgwm-theme-link');
@@ -987,11 +1012,11 @@ function sgwmInjectIntoFrame(frame, css){
   linkEl.href = url;
 }
 
-/* ===== Helpers for ZIP HTML link injection ===== */
+/* ===== Helpers for HTML link injection into content/ZIP ===== */
 function sgwmInsertThemeLink(html, relHref){
   const tag = `<link rel="stylesheet" href="${relHref}?v=${Date.now()}">`;
   if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `${tag}\n</head>`);
-  return `${tag}\n${html}`;
+  return `${tag}\n${html}`; // fallback if <head> is missing
 }
 function sgwmNormalizeExistingThemeLink(html, relHref){
   return html.replace(
@@ -1007,7 +1032,6 @@ function sgwmRelativeToRoot(pagePath, fileAtRoot){
 }
 </script>
 <!-- ======================= SGWM THEME ENGINE — END ======================= -->
-
 
 </body>
 </html>
