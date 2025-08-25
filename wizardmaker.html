@@ -720,11 +720,9 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-<!-- 🎨 Theme Changer Toggle -->
+<!-- 🎨 Theme Changer -->
 <div id="theme-toggler">
-  <button id="theme-btn" title="Change Theme">
-    🎨
-  </button>
+  <button id="theme-btn" title="Change Theme">🎨</button>
   <div id="theme-panel" class="hidden">
     <h3>Choose Theme</h3>
     <div class="theme-grid" id="theme-options"></div>
@@ -732,10 +730,10 @@ renderLibraryAssets();
 </div>
 
 <style>
-  /* 🎨 Floating palette button */
+  /* Floating palette button above + */
   #theme-toggler {
     position: fixed;
-    bottom: 100px; /* ⬆ moved slightly above + button */
+    bottom: 100px; /* ⬆ above assets button */
     right: 20px;
     z-index: 9999;
   }
@@ -752,7 +750,7 @@ renderLibraryAssets();
   }
   #theme-btn:hover { transform: scale(1.1); }
 
-  /* 🎨 Theme panel */
+  /* Theme panel */
   #theme-panel {
     position: absolute;
     bottom: 60px;
@@ -761,7 +759,7 @@ renderLibraryAssets();
     border-radius: 12px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     padding: 12px;
-    width: 240px;
+    width: 250px;
     max-height: 380px;
     overflow-y: auto;
   }
@@ -780,76 +778,96 @@ renderLibraryAssets();
   .theme-card {
     border-radius: 8px;
     cursor: pointer;
-    height: 50px;
+    height: 55px;
     display: flex;
     overflow: hidden;
     border: 1px solid #ddd;
     box-shadow: 0 2px 5px rgba(0,0,0,0.15);
   }
-  .theme-swatch {
-    flex: 1;
-  }
+  .theme-swatch { flex: 1; }
 </style>
 
 <script>
-  // 🎨 20 Professional Theme Presets
+  // ===== 🎨 Professional 20 Unique Theme Presets =====
   const THEME_PRESETS = [
-    { name: "Corporate Blue", colors: { background: "#ffffff", text: "#222222", primary: "#0d47a1", accent: "#1976d2" } },
-    { name: "Creative Studio", colors: { background: "#f8f9fa", text: "#333333", primary: "#ff6f61", accent: "#009688" } },
-    { name: "Luxury Black & Gold", colors: { background: "#000000", text: "#f5f5f5", primary: "#d4af37", accent: "#9e9e9e" } },
-    { name: "Eco Green", colors: { background: "#faf7f0", text: "#2e382e", primary: "#2e7d32", accent: "#81c784" } },
-    { name: "Ocean Breeze", colors: { background: "#e0f7fa", text: "#004d60", primary: "#00bcd4", accent: "#4dd0e1" } },
-    { name: "Minimal White", colors: { background: "#ffffff", text: "#111111", primary: "#42a5f5", accent: "#90caf9" } },
-    { name: "Sunset Glow", colors: { background: "#fff3e0", text: "#5d4037", primary: "#ff7043", accent: "#ffab91" } },
-    { name: "Royal Purple", colors: { background: "#f8f5ff", text: "#311b92", primary: "#673ab7", accent: "#fbc02d" } },
-    { name: "Tech Dark Neon", colors: { background: "#121212", text: "#eeeeee", primary: "#00e5ff", accent: "#ff00ff" } },
-    { name: "Pastel Candy", colors: { background: "#fdf1f5", text: "#333333", primary: "#f48fb1", accent: "#81d4fa" } },
-    { name: "Vintage Sepia", colors: { background: "#f9f4ec", text: "#3e2723", primary: "#795548", accent: "#d7ccc8" } },
-    { name: "Elegant Navy", colors: { background: "#fafafa", text: "#1a237e", primary: "#283593", accent: "#9fa8da" } },
-    { name: "Energetic Orange", colors: { background: "#ffffff", text: "#222222", primary: "#ff5722", accent: "#ff9800" } },
-    { name: "Cyberpunk", colors: { background: "#0d0d0d", text: "#f0f0f0", primary: "#ff00ff", accent: "#00ffff" } },
-    { name: "Artistic Gradient", colors: { background: "linear-gradient(135deg,#6a11cb,#ff4b2b)", text: "#ffffff", primary: "#6a11cb", accent: "#ff4b2b" } },
-    { name: "Fresh Mint", colors: { background: "#f0fff4", text: "#004d40", primary: "#4db6ac", accent: "#a7ffeb" } },
-    { name: "Bold Red", colors: { background: "#ffffff", text: "#212121", primary: "#e53935", accent: "#c62828" } },
-    { name: "Newspaper Classic", colors: { background: "#f5f5f5", text: "#212121", primary: "#424242", accent: "#757575" } },
-    { name: "Modern Gradient", colors: { background: "#ffffff", text: "#1a1a1a", primary: "#2193b0", accent: "#6dd5ed" } },
-    { name: "Fashion Magenta", colors: { background: "#ffffff", text: "#111111", primary: "#e91e63", accent: "#880e4f" } },
+    { name:"Corporate Blue",colors:{background:"#ffffff",text:"#1a1a1a",primary:"#0052cc",accent:"#2684ff"} },
+    { name:"Luxury Black Gold",colors:{background:"#0d0d0d",text:"#f5f5f5",primary:"#c9a23f",accent:"#ffcc80"} },
+    { name:"Ocean Breeze",colors:{background:"#e0f7fa",text:"#004d60",primary:"#00796b",accent:"#26c6da"} },
+    { name:"Minimal White",colors:{background:"#ffffff",text:"#111111",primary:"#2196f3",accent:"#90caf9"} },
+    { name:"Sunset Coral",colors:{background:"#fff3e0",text:"#4e342e",primary:"#ff7043",accent:"#ff8a65"} },
+    { name:"Royal Purple",colors:{background:"#f8f5ff",text:"#311b92",primary:"#673ab7",accent:"#ba68c8"} },
+    { name:"Dark Neon",colors:{background:"#121212",text:"#e0e0e0",primary:"#00e5ff",accent:"#ff4081"} },
+    { name:"Pastel Candy",colors:{background:"#fdf1f5",text:"#2e2e2e",primary:"#f48fb1",accent:"#81d4fa"} },
+    { name:"Vintage Sepia",colors:{background:"#f9f4ec",text:"#3e2723",primary:"#8d6e63",accent:"#d7ccc8"} },
+    { name:"Elegant Navy",colors:{background:"#fafafa",text:"#1a237e",primary:"#283593",accent:"#5c6bc0"} },
+    { name:"Energetic Orange",colors:{background:"#fff",text:"#212121",primary:"#ff5722",accent:"#ff9800"} },
+    { name:"Cyberpunk",colors:{background:"#0d0d0d",text:"#f0f0f0",primary:"#ff00ff",accent:"#00ffff"} },
+    { name:"Gradient Sunset",colors:{background:"linear-gradient(135deg,#ff9a9e,#fad0c4)",text:"#212121",primary:"#f46b45",accent:"#eea849"} },
+    { name:"Fresh Mint",colors:{background:"#f0fff4",text:"#004d40",primary:"#4db6ac",accent:"#a7ffeb"} },
+    { name:"Bold Red",colors:{background:"#fff",text:"#1a1a1a",primary:"#d32f2f",accent:"#f44336"} },
+    { name:"Newspaper Classic",colors:{background:"#f5f5f5",text:"#212121",primary:"#424242",accent:"#757575"} },
+    { name:"Modern Teal",colors:{background:"#ffffff",text:"#1a1a1a",primary:"#009688",accent:"#4db6ac"} },
+    { name:"Fashion Magenta",colors:{background:"#ffffff",text:"#111111",primary:"#e91e63",accent:"#ad1457"} },
+    { name:"Golden Sunrise",colors:{background:"#fffde7",text:"#3e2723",primary:"#ffca28",accent:"#ff9800"} },
+    { name:"Arctic Frost",colors:{background:"#f0f8ff",text:"#1c313a",primary:"#0288d1",accent:"#4dd0e1"} }
   ];
 
-  // 🎨 Apply theme
+  // ===== 🎨 Apply theme live =====
   function applyTheme(theme) {
-    for (const [key, val] of Object.entries(theme.colors)) {
-      document.documentElement.style.setProperty(`--${key}`, val);
+    let css = `
+      body { background:${theme.colors.background}; color:${theme.colors.text}; }
+      a, button { color:${theme.colors.primary}; }
+      button, .btn-primary { background:${theme.colors.primary}; color:#fff; }
+      .highlight, .accent { color:${theme.colors.accent}; }
+    `;
+    // If existing preview stylesheet exists, replace it
+    let styleEl = document.getElementById("sgwm-theme-style");
+    if (!styleEl) {
+      styleEl = document.createElement("style");
+      styleEl.id = "sgwm-theme-style";
+      document.head.appendChild(styleEl);
     }
+    styleEl.innerHTML = css;
   }
 
-  // 🎨 Build theme cards
+  // ===== 🎨 Build theme cards =====
   const grid = document.getElementById("theme-options");
   THEME_PRESETS.forEach(theme => {
     const card = document.createElement("div");
     card.className = "theme-card";
-    const bg = document.createElement("div");
-    bg.className = "theme-swatch";
-    bg.style.background = theme.colors.background;
-    const pr = document.createElement("div");
-    pr.className = "theme-swatch";
-    pr.style.background = theme.colors.primary;
-    const ac = document.createElement("div");
-    ac.className = "theme-swatch";
-    ac.style.background = theme.colors.accent;
-    card.appendChild(bg);
-    card.appendChild(pr);
-    card.appendChild(ac);
+    ["background","primary","accent"].forEach(k => {
+      const sw = document.createElement("div");
+      sw.className = "theme-swatch";
+      sw.style.background = theme.colors[k];
+      card.appendChild(sw);
+    });
     card.title = theme.name;
-    card.addEventListener("click", () => applyTheme(theme));
+    card.addEventListener("click",()=>applyTheme(theme));
     grid.appendChild(card);
   });
 
-  // 🎨 Toggle panel
-  document.getElementById("theme-btn").addEventListener("click", () => {
+  // ===== 🎨 Toggle panel =====
+  document.getElementById("theme-btn").addEventListener("click",()=>{
     document.getElementById("theme-panel").classList.toggle("hidden");
   });
+
+  // ===== 🎨 Try to detect existing uploaded theme =====
+  function detectCurrentTheme() {
+    const cs = getComputedStyle(document.body);
+    return {
+      background: cs.backgroundColor,
+      text: cs.color,
+      primary: cs.getPropertyValue("--primary") || "#2196f3",
+      accent: cs.getPropertyValue("--accent") || "#ff4081"
+    };
+  }
+  // Auto-init when preview loads
+  window.addEventListener("load",()=>{
+    const existing = detectCurrentTheme();
+    applyTheme({colors:existing});
+  });
 </script>
+
 
 </body>
 </html>
