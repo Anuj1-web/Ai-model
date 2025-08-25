@@ -720,153 +720,162 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-<!-- 🎨 Theme Changer -->
-<div id="theme-toggler">
-  <button id="theme-btn" title="Change Theme">🎨</button>
-  <div id="theme-panel" class="hidden">
-    <h3>Choose Theme</h3>
-    <div class="theme-grid" id="theme-options"></div>
-  </div>
-</div>
-
+<!-- 🎨 Theme Switcher START -->
 <style>
-  /* Floating palette button above + */
-  #theme-toggler {
+  /* Floating button just above + icon */
+  #theme-toggle {
     position: fixed;
-    bottom: 100px; /* ⬆ above assets button */
+    bottom: 100px; /* slightly above + button */
     right: 20px;
-    z-index: 9999;
-  }
-  #theme-btn {
     background: #fff;
-    border: 2px solid #ccc;
     border-radius: 50%;
-    width: 46px;
-    height: 46px;
-    font-size: 22px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     cursor: pointer;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-    transition: all 0.2s ease;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-  #theme-btn:hover { transform: scale(1.1); }
+  #theme-toggle:hover { background: #f1f1f1; }
 
-  /* Theme panel */
   #theme-panel {
-    position: absolute;
-    bottom: 60px;
-    right: 0;
+    position: fixed;
+    bottom: 160px;
+    right: 20px;
+    width: 320px;
+    max-height: 400px;
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    padding: 12px;
-    width: 250px;
-    max-height: 380px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     overflow-y: auto;
+    display: none;
+    z-index: 9999;
+    padding: 12px;
   }
-  #theme-panel.hidden { display: none; }
   #theme-panel h3 {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 16px;
     margin-bottom: 10px;
+    font-weight: bold;
     text-align: center;
   }
-  .theme-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
   .theme-card {
+    display: flex;
+    align-items: center;
+    margin: 6px 0;
+    padding: 6px;
     border-radius: 8px;
     cursor: pointer;
-    height: 55px;
-    display: flex;
-    overflow: hidden;
     border: 1px solid #ddd;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
-  .theme-swatch { flex: 1; }
+  .theme-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 6px;
+    border: 1px solid #aaa;
+  }
 </style>
 
+<div id="theme-toggle" title="Change Theme">
+  🎨
+</div>
+<div id="theme-panel">
+  <h3>Choose Theme</h3>
+  <div id="theme-list"></div>
+</div>
+
 <script>
-  // ===== 🎨 Professional 20 Unique Theme Presets =====
-  const THEME_PRESETS = [
-    { name:"Corporate Blue",colors:{background:"#ffffff",text:"#1a1a1a",primary:"#0052cc",accent:"#2684ff"} },
-    { name:"Luxury Black Gold",colors:{background:"#0d0d0d",text:"#f5f5f5",primary:"#c9a23f",accent:"#ffcc80"} },
-    { name:"Ocean Breeze",colors:{background:"#e0f7fa",text:"#004d60",primary:"#00796b",accent:"#26c6da"} },
-    { name:"Minimal White",colors:{background:"#ffffff",text:"#111111",primary:"#2196f3",accent:"#90caf9"} },
-    { name:"Sunset Coral",colors:{background:"#fff3e0",text:"#4e342e",primary:"#ff7043",accent:"#ff8a65"} },
-    { name:"Royal Purple",colors:{background:"#f8f5ff",text:"#311b92",primary:"#673ab7",accent:"#ba68c8"} },
-    { name:"Dark Neon",colors:{background:"#121212",text:"#e0e0e0",primary:"#00e5ff",accent:"#ff4081"} },
-    { name:"Pastel Candy",colors:{background:"#fdf1f5",text:"#2e2e2e",primary:"#f48fb1",accent:"#81d4fa"} },
-    { name:"Vintage Sepia",colors:{background:"#f9f4ec",text:"#3e2723",primary:"#8d6e63",accent:"#d7ccc8"} },
-    { name:"Elegant Navy",colors:{background:"#fafafa",text:"#1a237e",primary:"#283593",accent:"#5c6bc0"} },
-    { name:"Energetic Orange",colors:{background:"#fff",text:"#212121",primary:"#ff5722",accent:"#ff9800"} },
-    { name:"Cyberpunk",colors:{background:"#0d0d0d",text:"#f0f0f0",primary:"#ff00ff",accent:"#00ffff"} },
-    { name:"Gradient Sunset",colors:{background:"linear-gradient(135deg,#ff9a9e,#fad0c4)",text:"#212121",primary:"#f46b45",accent:"#eea849"} },
-    { name:"Fresh Mint",colors:{background:"#f0fff4",text:"#004d40",primary:"#4db6ac",accent:"#a7ffeb"} },
-    { name:"Bold Red",colors:{background:"#fff",text:"#1a1a1a",primary:"#d32f2f",accent:"#f44336"} },
-    { name:"Newspaper Classic",colors:{background:"#f5f5f5",text:"#212121",primary:"#424242",accent:"#757575"} },
-    { name:"Modern Teal",colors:{background:"#ffffff",text:"#1a1a1a",primary:"#009688",accent:"#4db6ac"} },
-    { name:"Fashion Magenta",colors:{background:"#ffffff",text:"#111111",primary:"#e91e63",accent:"#ad1457"} },
-    { name:"Golden Sunrise",colors:{background:"#fffde7",text:"#3e2723",primary:"#ffca28",accent:"#ff9800"} },
-    { name:"Arctic Frost",colors:{background:"#f0f8ff",text:"#1c313a",primary:"#0288d1",accent:"#4dd0e1"} }
+  // =========================
+  // Theme Presets (20 Wix-like)
+  // =========================
+  const THEMES = [
+    { name: "Corporate Blue", css: ":root{--bg:#ffffff;--text:#222;--primary:#0d47a1;--accent:#1976d2;}body{background:var(--bg);color:var(--text);}a,button{color:var(--primary);}"},
+    { name: "Creative Studio", css: ":root{--bg:#f8f9fa;--text:#333;--primary:#ff6f61;--accent:#009688;}body{background:var(--bg);color:var(--text);}"},
+    { name: "Luxury Black & Gold", css: ":root{--bg:#000;--text:#f5f5f5;--primary:#d4af37;--accent:#9e9e9e;}body{background:var(--bg);color:var(--text);}"},
+    { name: "Eco Green", css: ":root{--bg:#faf7f0;--text:#2e382e;--primary:#2e7d32;--accent:#81c784;}body{background:var(--bg);color:var(--text);}"},
+    { name: "Ocean Breeze", css: ":root{--bg:#e0f7fa;--text:#004d60;--primary:#00bcd4;--accent:#4dd0e1;}body{background:var(--bg);color:var(--text);}"},
+    { name: "Minimal White", css: ":root{--bg:#ffffff;--text:#111;--primary:#42a5f5;--accent:#90caf9;}body{background:var(--bg);color:var(--text);}"},
+    { name: "Sunset Glow", css: ":root{--bg:#fff3e0;--text:#5d4037;--primary:#ff7043;--accent:#ffab91;}body{background:var(--bg);color:var(--text);}"},
+    { name: "Royal Purple", css: ":root{--bg:#f8f5ff;--text:#311b92;--primary:#673ab7;--accent:#fbc02d;}body{background:var(--bg);color:var(--text);}"},
+    { name: "Tech Dark Neon", css: ":root{--bg:#121212;--text:#eee;--primary:#00e5ff;--accent:#ff00ff;}body{background:var(--bg);color:var(--text);}"},
+    { name: "Pastel Candy", css: ":root{--bg:#fdf1f5;--text:#333;--primary:#f48fb1;--accent:#81d4fa;}body{background:var(--bg);color:var(--text);}"},
+    { name: "Vintage Sepia", css: ":root{--bg:#f9f4ec;--text:#3e2723;--primary:#795548;--accent:#d7ccc8;}body{background:var(--bg);color:var(--text);}"},
+    { name: "Elegant Navy", css: ":root{--bg:#fafafa;--text:#1a237e;--primary:#283593;--accent:#9fa8da;}body{background:var(--bg);color:var(--text);}"},
+    { name: "Energetic Orange", css: ":root{--bg:#ffffff;--text:#222;--primary:#ff5722;--accent:#ff9800;}body{background:var(--bg);color:var(--text);}"},
+    { name: "Cyberpunk", css: ":root{--bg:#0d0d0d;--text:#f0f0f0;--primary:#ff00ff;--accent:#00ffff;}body{background:var(--bg);color:var(--text);}"},
+    { name: "Artistic Gradient", css: "body{background:linear-gradient(135deg,#6a11cb,#ff4b2b);color:#fff;}a,button{color:#ffeb3b;}"},
+    { name: "Fresh Mint", css: ":root{--bg:#f0fff4;--text:#004d40;--primary:#4db6ac;--accent:#a7ffeb;}body{background:var(--bg);color:var(--text);}"},
+    { name: "Bold Red", css: ":root{--bg:#ffffff;--text:#212121;--primary:#e53935;--accent:#c62828;}body{background:var(--bg);color:var(--text);}"},
+    { name: "Newspaper Classic", css: ":root{--bg:#fdfdfd;--text:#111;--primary:#000;--accent:#555;}body{background:var(--bg);color:var(--text);font-family:serif;}"},
+    { name: "Modern Gradient", css: "body{background:#fff;color:#222;}header,footer{background:linear-gradient(90deg,#00c6ff,#0072ff);color:#fff;}"},
+    { name: "Fashion Magenta", css: ":root{--bg:#fff;--text:#000;--primary:#e91e63;--accent:#ff4081;}body{background:var(--bg);color:var(--text);}"},
   ];
 
-  // ===== 🎨 Apply theme live =====
-  function applyTheme(theme) {
-    let css = `
-      body { background:${theme.colors.background}; color:${theme.colors.text}; }
-      a, button { color:${theme.colors.primary}; }
-      button, .btn-primary { background:${theme.colors.primary}; color:#fff; }
-      .highlight, .accent { color:${theme.colors.accent}; }
+  let CURRENT_THEME = null;
+  let ZIP_REF = null; // must be set from your upload code
+
+  const toggleBtn = document.getElementById("theme-toggle");
+  const panel = document.getElementById("theme-panel");
+  const list = document.getElementById("theme-list");
+
+  toggleBtn.addEventListener("click", () => {
+    panel.style.display = panel.style.display === "block" ? "none" : "block";
+  });
+
+  // Render theme cards
+  THEMES.forEach((theme, i) => {
+    const div = document.createElement("div");
+    div.className = "theme-card";
+    div.innerHTML = `
+      <div class="swatch" style="background:${theme.css.match(/--primary:([^;]+)/)?.[1] || '#ccc'}"></div>
+      <span>${theme.name}</span>
     `;
-    // If existing preview stylesheet exists, replace it
-    let styleEl = document.getElementById("sgwm-theme-style");
-    if (!styleEl) {
-      styleEl = document.createElement("style");
-      styleEl.id = "sgwm-theme-style";
-      document.head.appendChild(styleEl);
+    div.onclick = () => applyTheme(theme);
+    list.appendChild(div);
+  });
+
+  function applyTheme(theme) {
+    CURRENT_THEME = theme;
+
+    // Live Preview
+    const frame = document.getElementById("previewFrame");
+    if (frame) {
+      const doc = frame.contentDocument || frame.contentWindow.document;
+      let styleEl = doc.getElementById("sgwm-theme-style");
+      if (!styleEl) {
+        styleEl = doc.createElement("style");
+        styleEl.id = "sgwm-theme-style";
+        doc.head.appendChild(styleEl);
+      }
+      styleEl.innerHTML = theme.css;
     }
-    styleEl.innerHTML = css;
+
+    // Update ZIP (overwrite theme.css + inject in all pages)
+    if (ZIP_REF) {
+      ZIP_REF.file("theme.css", theme.css);
+      ZIP_REF.forEach((path, file) => {
+        if (path.endsWith(".html")) {
+          file.async("string").then(content => {
+            if (!content.includes("theme.css")) {
+              content = content.replace(
+                /<\/head>/i,
+                `<link rel="stylesheet" href="theme.css">\n</head>`
+              );
+            }
+            ZIP_REF.file(path, content);
+          });
+        }
+      });
+    }
   }
-
-  // ===== 🎨 Build theme cards =====
-  const grid = document.getElementById("theme-options");
-  THEME_PRESETS.forEach(theme => {
-    const card = document.createElement("div");
-    card.className = "theme-card";
-    ["background","primary","accent"].forEach(k => {
-      const sw = document.createElement("div");
-      sw.className = "theme-swatch";
-      sw.style.background = theme.colors[k];
-      card.appendChild(sw);
-    });
-    card.title = theme.name;
-    card.addEventListener("click",()=>applyTheme(theme));
-    grid.appendChild(card);
-  });
-
-  // ===== 🎨 Toggle panel =====
-  document.getElementById("theme-btn").addEventListener("click",()=>{
-    document.getElementById("theme-panel").classList.toggle("hidden");
-  });
-
-  // ===== 🎨 Try to detect existing uploaded theme =====
-  function detectCurrentTheme() {
-    const cs = getComputedStyle(document.body);
-    return {
-      background: cs.backgroundColor,
-      text: cs.color,
-      primary: cs.getPropertyValue("--primary") || "#2196f3",
-      accent: cs.getPropertyValue("--accent") || "#ff4081"
-    };
-  }
-  // Auto-init when preview loads
-  window.addEventListener("load",()=>{
-    const existing = detectCurrentTheme();
-    applyTheme({colors:existing});
-  });
 </script>
+<!-- 🎨 Theme Switcher END -->
 
 
 </body>
