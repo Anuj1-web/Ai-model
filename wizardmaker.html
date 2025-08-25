@@ -720,379 +720,163 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-<!-- ====================== SGWM THEME ENGINE (ROBUST) — START ====================== -->
+<!-- ======================= SGWM THEME ENGINE (ROBUST) — START ======================= -->
 <style>
-  /* 🎨 Floating palette button just above your ➕ assets button (assumed bottom:20px) */
-  #sgwm-theme-toggle {
-    position: fixed; bottom: 76px; right: 20px;
-    width: 46px; height: 46px; border-radius: 50%;
-    background: #ffffff; border: 2px solid #d0d5dd;
-    box-shadow: 0 6px 18px rgba(0,0,0,.15);
-    cursor: pointer; z-index: 2500; display: grid; place-items: center;
-    font-size: 22px; transition: transform .18s, box-shadow .18s, background .18s;
+  #theme-toggle {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    background: #fff;
+    border-radius: 50%;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    cursor: pointer;
+    z-index: 9999;
   }
-  #sgwm-theme-toggle:hover { transform: translateY(-1px); background:#f8fafc; box-shadow: 0 10px 28px rgba(0,0,0,.18); }
-
-  #sgwm-theme-panel {
-    position: fixed; bottom: 132px; right: 20px; width: 380px; max-height: 560px; overflow: auto;
-    background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.18);
-    padding: 12px; z-index: 2500; display: none;
+  #theme-panel {
+    position: fixed;
+    bottom: 160px;
+    right: 20px;
+    width: 280px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    display: none;
+    z-index: 9999;
+    padding: 10px;
+    max-height: 350px;
+    overflow-y: auto;
   }
-  #sgwm-theme-panel h3 { margin: 6px 4px 10px; font-size: 13px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: #374151; }
-  .sgwm-theme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .sgwm-theme-card {
-    display: grid; grid-template-rows: 68px auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; cursor: pointer;
-    transition: transform .16s, box-shadow .16s, border-color .16s; background: #fff;
+  .theme-card {
+    display: flex;
+    align-items: center;
+    margin: 6px 0;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
   }
-  .sgwm-theme-card:hover { transform: translateY(-2px); box-shadow: 0 12px 22px rgba(0,0,0,.10); border-color:#cfd3d9; }
-  .sgwm-swatches { display: grid; grid-template-columns: 1fr 1fr 1fr; height: 68px; }
-  .sgwm-swatch { width: 100%; height: 100%; }
-  .sgwm-theme-name { font-size: 12.5px; font-weight: 700; color:#111827; padding: 8px 10px; border-top: 1px solid #eef2f7; background: #fff; }
-
-  /* small helper toast */
-  #sgwm-toast {
-    position: fixed; right: 20px; bottom: 190px; background:#111827; color:#fff; padding:10px 14px; border-radius:10px;
-    font-size:12.5px; box-shadow: 0 12px 26px rgba(0,0,0,.2); z-index: 2600; display: none;
+  .theme-card:hover { background:#f3f3f3; }
+  .swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 8px;
+    border: 1px solid #999;
   }
 </style>
 
-<div id="sgwm-theme-toggle" title="Change Theme">🎨</div>
-<div id="sgwm-theme-panel" role="dialog" aria-label="Theme Picker">
-  <h3>Choose a Theme</h3>
-  <div class="sgwm-theme-grid" id="sgwm-theme-grid"></div>
+<div id="theme-toggle" title="Change Theme">🎨</div>
+<div id="theme-panel">
+  <h3 style="text-align:center;font-size:15px;margin-bottom:8px;">Choose Theme</h3>
+  <div id="theme-list"></div>
 </div>
-<div id="sgwm-toast"></div>
 
 <script>
-/* ===================== ROBUST THEME ENGINE ===================== */
-/** CORE GOALS
- * 1) Live preview: inject CSS + convert theme.css to blob URL so iframe never 404s
- * 2) Export: write theme.css into ZIP and fix all HTML links in editedContents/pages
- * 3) Robust: repair broken asset references (styles.css vs style.css, case, folders)
- */
+(function(){
 
-/* ---------- Utility: toast ---------- */
-function sgwmToast(msg, ms=1800){ const t=document.getElementById('sgwm-toast'); t.textContent=msg; t.style.display='block'; clearTimeout(t.__h); t.__h=setTimeout(()=>t.style.display='none', ms); }
+  console.log("[SGWM Theme] Robust Theme Engine loaded.");
 
-/* ---------- 1) Find live preview iframe ---------- */
-let SGWM_PREVIEW = null;
-function sgwmFindPreview() {
-  const sels = ['#iframeContainer iframe','#previewFrame','#sitePreviewFrame','#editor-preview','#preview','iframe[name="preview"]','.preview iframe','#canvas iframe','iframe[srcdoc]','iframe'];
-  for (const s of sels) { const el = document.querySelector(s); if (el) return el; }
-  return null;
-}
-function sgwmAttachPreviewObserver() {
-  const tryAttach = () => {
-    const f = sgwmFindPreview();
-    if (f && f !== SGWM_PREVIEW) {
-      SGWM_PREVIEW = f;
-      SGWM_PREVIEW.addEventListener('load', async () => {
-        /* Re-apply theme + repair links on page switch */
-        if (window.__SGWM_CURRENT_THEME_CSS) await sgwmApplyThemeToFrame(SGWM_PREVIEW, window.__SGWM_CURRENT_THEME_CSS);
-      }, { passive: true });
-      if (window.__SGWM_CURRENT_THEME_CSS) sgwmApplyThemeToFrame(SGWM_PREVIEW, window.__SGWM_CURRENT_THEME_CSS);
+  // --------------------
+  // Helpers
+  // --------------------
+  function sgwmInsertThemeLink(html, relHref){
+    const tag = `<link rel="stylesheet" href="${relHref}?v=${Date.now()}">`;
+    if (/<\/head>/i.test(html)) {
+      return html.replace(/<\/head>/i, `${tag}\n</head>`);
     }
-  };
-  tryAttach();
-  const obs = new MutationObserver(tryAttach);
-  obs.observe(document.documentElement, { subtree: true, childList: true });
-}
-document.addEventListener('DOMContentLoaded', sgwmAttachPreviewObserver);
+    return `${tag}\n${html}`; // fallback
+  }
 
-/* ---------- 2) Hook JSZip to capture uploaded ZIP ---------- */
-(function sgwmHookZip(){
-  try {
-    if (window.JSZip && !window.JSZip.__sgwm_patched) {
-      const origStatic = window.JSZip.loadAsync;
-      if (typeof origStatic === 'function') {
-        window.JSZip.loadAsync = function(...args){
-          return origStatic.apply(this, args).then(zip => { window.ZIP_REF = zip; window.dispatchEvent(new CustomEvent('sgwm:zip-ready',{detail:{zip}})); return zip; });
-        };
+  function sgwmRepairBrokenRefs(html){
+    return html
+      .replace(/styles\.css/gi, "style.css")
+      .replace(/scripts\.js/gi, "script.js");
+  }
+
+  async function applyThemeToPreviewAndZip(theme){
+
+    // 1) Live preview iframe
+    const frame = document.getElementById("previewFrame");
+    if(frame){
+      const doc = frame.contentDocument || frame.contentWindow.document;
+      let styleEl = doc.getElementById("sgwm-theme-style");
+      if(!styleEl){
+        styleEl = doc.createElement("style");
+        styleEl.id = "sgwm-theme-style";
+        doc.head.appendChild(styleEl);
       }
-      const proto = window.JSZip.prototype || {};
-      const origProto = proto.loadAsync;
-      if (typeof origProto === 'function') {
-        proto.loadAsync = function(...args){
-          return origProto.apply(this, args).then(zip => { window.ZIP_REF = zip; window.dispatchEvent(new CustomEvent('sgwm:zip-ready',{detail:{zip}})); return zip; });
-        };
-      }
-      window.JSZip.__sgwm_patched = true;
+      styleEl.innerHTML = theme.css;
+    } else {
+      console.warn("[SGWM Theme] previewFrame not found — live preview skipped.");
     }
-  } catch(e){ console.warn('[SGWM Theme] JSZip hook failed', e); }
-})();
 
-/* Optional manual set */
-window.SGWM_THEME = window.SGWM_THEME || {};
-window.SGWM_THEME.setZip = function(zip){ window.ZIP_REF = zip; window.dispatchEvent(new CustomEvent('sgwm:zip-ready', { detail: { zip } })); };
-
-/* ---------- 3) Access your editor model ---------- */
-const SGWM_MODEL = {
-  get pages(){ try { return window.pages || []; } catch { return []; } },
-  get edited(){ try { return window.editedContents || {}; } catch { return {}; } },
-  raw(name){ return (this.edited[name] ?? (window.pageContents ? window.pageContents[name] : "")) || ""; },
-  setEdited(name, html){ if (window.editedContents) window.editedContents[name] = html; }
-};
-
-/* ---------- 4) Build a ZIP filename index for robust repairs ---------- */
-let SGWM_ZIP_INDEX = null;
-async function sgwmBuildZipIndex() {
-  if (!window.ZIP_REF) return null;
-  const idx = { files: new Set(), lower: new Map(), basenameMap: new Map() };
-  Object.keys(window.ZIP_REF.files).forEach(path => {
-    const norm = path.replace(/^\.\/+/,'');
-    idx.files.add(norm);
-    idx.lower.set(norm.toLowerCase(), norm);
-    const base = norm.split('/').pop();
-    const key = base.toLowerCase();
-    if (!idx.basenameMap.has(key)) idx.basenameMap.set(key, []);
-    idx.basenameMap.get(key).push(norm);
-  });
-  SGWM_ZIP_INDEX = idx;
-  return idx;
-}
-function sgwmGuessFileFromIndex(requestPath) {
-  if (!SGWM_ZIP_INDEX) return null;
-  const q = requestPath.replace(/^\.\/+/,'');
-  if (SGWM_ZIP_INDEX.files.has(q)) return q; // exact
-  const lower = SGWM_ZIP_INDEX.lower.get(q.toLowerCase());
-  if (lower) return lower; // case-insensitive exact
-
-  // Try basename match (handles folder differences)
-  const base = q.split('/').pop().toLowerCase();
-  const candidates = SGWM_ZIP_INDEX.basenameMap.get(base);
-  if (candidates && candidates.length) return candidates[0];
-
-  // Try singular/plural (styles.css <-> style.css)
-  if (base === 'styles.css') return SGWM_ZIP_INDEX.basenameMap.get('style.css')?.[0] || null;
-  if (base === 'style.css')  return SGWM_ZIP_INDEX.basenameMap.get('styles.css')?.[0] || null;
-  if (base === 'scripts.js') return SGWM_ZIP_INDEX.basenameMap.get('script.js')?.[0] || null;
-  if (base === 'script.js')  return SGWM_ZIP_INDEX.basenameMap.get('scripts.js')?.[0] || null;
-
-  return null;
-}
-
-/* ---------- 5) THEME BASE + 20 UNIQUE THEMES ---------- */
-const THEME_BASE_CSS = `
-:root{
-  --bg:#ffffff;--bg-alt:#f7f7fb;--surface:#ffffff;
-  --text:#111827;--muted:#6b7280;
-  --primary:#3b82f6;--primary-contrast:#ffffff;
-  --accent:#22d3ee;--accent-contrast:#0f172a;
-  --border:#e5e7eb;--ring:#93c5fd;--link:#2563eb;--link-hover:#1d4ed8;
-  --success:#16a34a;--warning:#f59e0b;--danger:#dc2626;
-  --radius:14px;--shadow:0 12px 30px rgba(0,0,0,.12);
-}
-html,body{background:var(--bg);color:var(--text);}
-section, .section, .panel, .container, .content, main {
-  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  padding:24px;box-shadow:var(--shadow);
-}
-a{color:var(--link);text-decoration:none;transition:color .2s;}
-a:hover{color:var(--link-hover);}
-button, .btn, input[type="submit"], .button {
-  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
-  padding:.65rem 1rem;border-radius:12px;border:1px solid var(--border);
-  background:var(--surface);color:var(--text);transition:all .18s;cursor:pointer;
-}
-button:hover, .btn:hover { transform:translateY(-1px); box-shadow:0 10px 18px rgba(0,0,0,.08); }
-.btn-primary, .button.primary { background:var(--primary); color:var(--primary-contrast); border-color:transparent; }
-.btn-outline { background:transparent; border-color:var(--primary); color:var(--primary); }
-.btn-accent  { background:var(--accent);  color:var(--accent-contrast); border-color:transparent; }
-.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);}
-.card .card-title{font-size:1.125rem;font-weight:700;margin-bottom:.35rem;}
-.card .card-sub{color:var(--muted);font-size:.9rem;margin-bottom:.75rem;}
-input, select, textarea { background:#fff;border:1px solid var(--border);border-radius:12px;padding:.6rem .7rem; outline: none; }
-input:focus, select:focus, textarea:focus { border-color:var(--ring); box-shadow: 0 0 0 3px var(--ring); }
-.navbar, header, .site-header { background:linear-gradient(180deg, var(--surface), var(--bg-alt)); border-bottom:1px solid var(--border);padding:14px 18px;border-radius:12px; margin-bottom:18px; }
-footer { background:var(--bg-alt); border-top:1px solid var(--border); padding:16px; border-radius:12px; }
-.hero { border-radius:18px; padding:48px 28px; margin: 18px 0; background: linear-gradient(135deg, var(--primary), var(--accent)); color: var(--primary-contrast); }
-.hero h1, .hero h2 { color: var(--primary-contrast); }
-.tag, .badge { background:var(--bg-alt);border:1px solid var(--border);border-radius:999px;padding:.25rem .6rem;font-size:.75rem; }
-.kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:var(--bg-alt); border:1px solid var(--border); border-bottom-width:2px; padding:.2rem .4rem; border-radius:6px; }
-`;
-const THEMES = [
-  { name: "Nordic Frost", vars: {"--bg":"#0b1220","--bg-alt":"#0e1628","--surface":"#111b2f","--text":"#e5f0ff","--muted":"#a0b4d0","--primary":"#5aa5ff","--primary-contrast":"#061226","--accent":"#7dd3fc","--accent-contrast":"#071422","--border":"#1e2a44","--ring":"#5aa5ff66","--link":"#93c5fd","--link-hover":"#60a5fa"}, extras:".hero{background:linear-gradient(135deg,#5aa5ff,#7dd3fc);} body{letter-spacing:.01em;}"},
-  { name: "Sunset Coral", vars: {"--bg":"#fff7f5","--bg-alt":"#fff1ee","--surface":"#ffffff","--text":"#2b2a2a","--muted":"#7c6f6f","--primary":"#ff6b6b","--primary-contrast":"#ffffff","--accent":"#ffd166","--accent-contrast":"#2b2a2a","--border":"#ffe1dc","--ring":"#ffb3b366","--link":"#ef4444","--link-hover":"#dc2626"}, extras:".hero{background:linear-gradient(135deg,#ff6b6b,#ffd166);} .btn-primary{border-radius:999px;}"},
-  { name: "Emerald Pro", vars: {"--bg":"#081511","--bg-alt":"#0c1c17","--surface":"#0f231d","--text":"#dff6ee","--muted":"#96c7b6","--primary":"#10b981","--primary-contrast":"#031a14","--accent":"#34d399","--accent-contrast":"#042317","--border":"#16352b","--ring":"#34d39955","--link":"#6ee7b7","--link-hover":"#34d399"}, extras:".hero{background:linear-gradient(135deg,#10b981,#34d399);}"},
-  { name: "Royal Indigo", vars: {"--bg":"#0f1023","--bg-alt":"#141433","--surface":"#1b1c4b","--text":"#e9e9ff","--muted":"#b2b2e8","--primary":"#6366f1","--primary-contrast":"#0b0c2a","--accent":"#a78bfa","--accent-contrast":"#0b0c2a","--border":"#282a66","--ring":"#818cf866","--link":"#a5b4fc","--link-hover":"#818cf8"}, extras:".hero{background:radial-gradient(circle at 20% 10%,#a78bfa,#6366f1);}"},
-  { name: "SaaS Light", vars: {"--bg":"#f8fafc","--bg-alt":"#eef2f7","--surface":"#ffffff","--text":"#0f172a","--muted":"#64748b","--primary":"#2563eb","--primary-contrast":"#ffffff","--accent":"#06b6d4","--accent-contrast":"#06252b","--border":"#e2e8f0","--ring":"#93c5fd88","--link":"#2563eb","--link-hover":"#1d4ed8"}, extras:".navbar{backdrop-filter:saturate(1.4) blur(6px);}"},
-  { name: "Grape Splash", vars: {"--bg":"#120616","--bg-alt":"#1a0a21","--surface":"#1e0b26","--text":"#f6e8ff","--muted":"#c2a8d6","--primary":"#a855f7","--primary-contrast":"#16022b","--accent":"#f472b6","--accent-contrast":"#2b0a1f","--border":"#2c1a37","--ring":"#c084fc66","--link":"#d8b4fe","--link-hover":"#c084fc"}, extras:".hero{background:linear-gradient(120deg,#a855f7,#f472b6);}"},
-  { name: "Carbon Matrix", vars: {"--bg":"#0b0c0e","--bg-alt":"#101214","--surface":"#14171a","--text":"#e5e7eb","--muted":"#9ca3af","--primary":"#22d3ee","--primary-contrast":"#071b1f","--accent":"#38bdf8","--accent-contrast":"#082036","--border":"#1f2327","--ring":"#38bdf866","--link":"#67e8f9","--link-hover":"#22d3ee"}, extras:".card{border-radius:18px;} .hero{background:linear-gradient(135deg,#22d3ee,#38bdf8);}"},
-  { name: "Desert Gold", vars: {"--bg":"#0d0904","--bg-alt":"#15100a","--surface":"#1b150e","--text":"#f7e9d0","--muted":"#d6c0a1","--primary":"#f59e0b","--primary-contrast":"#1b150e","--accent":"#fbbf24","--accent-contrast":"#1b150e","--border":"#2a231a","--ring":"#f59e0b66","--link":"#fbbf24","--link-hover":"#f59e0b"}, extras:".hero{background:linear-gradient(135deg,#f59e0b,#fbbf24);}"},
-  { name: "Minty Fresh", vars: {"--bg":"#f0fff8","--bg-alt":"#e7fff4","--surface":"#ffffff","--text":"#083b2b","--muted":"#3a7d67","--primary":"#0ea5a5","--primary-contrast":"#f0fff8","--accent":"#2dd4bf","--accent-contrast":"#05332a","--border":"#c8eee3","--ring":"#2dd4bf66","--link":"#0ea5a5","--link-hover":"#0d9488"}, extras:".btn{border-radius:10px;} .hero{background:linear-gradient(135deg,#0ea5a5,#2dd4bf);}"},
-  { name: "Crimson Edge", vars: {"--bg":"#0f0a0a","--bg-alt":"#160e0e","--surface":"#1e1111","--text":"#ffe5e5","--muted":"#d8a4a4","--primary":"#ef4444","--primary-contrast":"#1e1111","--accent":"#fb7185","--accent-contrast":"#1e1111","--border":"#2a1414","--ring":"#ef444466","--link":"#fca5a5","--link-hover":"#ef4444"}, extras:".hero{background:linear-gradient(135deg,#ef4444,#fb7185);}"},
-  { name: "Aqua Glass", vars: {"--bg":"#031a22","--bg-alt":"#07222b","--surface":"#0b2a35","--text":"#dff7ff","--muted":"#a5cbd6","--primary":"#06b6d4","--primary-contrast":"#031a22","--accent":"#38bdf8","--accent-contrast":"#051c2a","--border":"#133847","--ring":"#38bdf866","--link":"#67e8f9","--link-hover":"#38bdf8"}, extras:".hero{background:linear-gradient(135deg,#06b6d4,#38bdf8);}"},
-  { name: "Stone & Sage", vars: {"--bg":"#0e1110","--bg-alt":"#141816","--surface":"#171c1a","--text":"#e7eee9","--muted":"#a3b5ad","--primary":"#22c55e","--primary-contrast":"#0b120e","--accent":"#84cc16","--accent-contrast":"#0b120e","--border":"#233029","--ring":"#22c55e66","--link":"#86efac","--link-hover":"#22c55e"}, extras:".hero{background:linear-gradient(135deg,#22c55e,#84cc16);}"},
-  { name: "Rose Quartz", vars: {"--bg":"#fff7fb","--bg-alt":"#ffeef7","--surface":"#ffffff","--text":"#331b2b","--muted":"#7a4d66","--primary":"#e879f9","--primary-contrast":"#2c0f25","--accent":"#fb7185","--accent-contrast":"#2b0a1f","--border":"#f6d7ea","--ring":"#f0abfc66","--link":"#e879f9","--link-hover":"#d946ef"}, extras:".btn-primary{border-radius:999px;} .hero{background:linear-gradient(120deg,#e879f9,#fb7185);}"},
-  { name: "Ocean Night", vars: {"--bg":"#030b18","--bg-alt":"#071326","--surface":"#0c1930","--text":"#d8eaff","--muted":"#9bb4d6","--primary":"#2563eb","--primary-contrast":"#030b18","--accent":"#22d3ee","--accent-contrast":"#03141a","--border":"#152545","--ring":"#2563eb66","--link":"#93c5fd","--link-hover":"#60a5fa"}, extras:".hero{background:linear-gradient(135deg,#2563eb,#22d3ee);}"},
-  { name: "Lime Pop", vars: {"--bg":"#0f1407","--bg-alt":"#141a0a","--surface":"#181f0d","--text":"#eaffc8","--muted":"#bfd69e","--primary":"#84cc16","--primary-contrast":"#0f1407","--accent":"#a3e635","--accent-contrast":"#0f1407","--border":"#243012","--ring":"#a3e63566","--link":"#d9f99d","--link-hover":"#a3e635"}, extras:".hero{background:linear-gradient(135deg,#84cc16,#a3e635);}"},
-  { name: "Slate Minimal", vars: {"--bg":"#0b0d12","--bg-alt":"#0f1218","--surface":"#121722","--text":"#e5e7eb","--muted":"#9ca3af","--primary":"#94a3b8","--primary-contrast":"#0b0d12","--accent":"#22d3ee","--accent-contrast":"#071b1f","--border":"#1f2633","--ring":"#94a3b866","--link":"#cbd5e1","--link-hover":"#94a3b8"}, extras:".btn{border-radius:8px;}"},
-  { name: "Tangerine Bold", vars: {"--bg":"#1a0c05","--bg-alt":"#220f06","--surface":"#2a1308","--text":"#ffe8d9","--muted":"#e2b59a","--primary":"#fb923c","--primary-contrast":"#1a0c05","--accent":"#facc15","--accent-contrast":"#1a0c05","--border":"#3a1b0e","--ring":"#fb923c66","--link":"#fed7aa","--link-hover":"#fb923c"}, extras:".hero{background:linear-gradient(135deg,#fb923c,#facc15);}"},
-  { name: "Cerulean Studio", vars: {"--bg":"#07121c","--bg-alt":"#0b1a28","--surface":"#0f2135","--text":"#d9ecff","--muted":"#9ec3e0","--primary":"#38bdf8","--primary-contrast":"#07121c","--accent":"#0ea5e9","--accent-contrast":"#06121d","--border":"#173552","--ring":"#38bdf866","--link":"#93c5fd","--link-hover":"#60a5fa"}, extras:".navbar{backdrop-filter: blur(8px) saturate(1.2);}"},
-  { name: "Velvet Noir", vars: {"--bg":"#0b0b0b","--bg-alt":"#111111","--surface":"#141414","--text":"#f5f5f5","--muted":"#bdbdbd","--primary":"#bf1650","--primary-contrast":"#14040d","--accent":"#ec4899","--accent-contrast":"#1a0712","--border":"#242424","--ring":"#ec489966","--link":"#f472b6","--link-hover":"#ec4899"}, extras:".hero{background:radial-gradient(1200px 300px at 10% 0%,#bf1650,#111);}"},
-  { name: "Ivory & Ink", vars: {"--bg":"#fafaf7","--bg-alt":"#f2f2ec","--surface":"#ffffff","--text":"#1a1a1a","--muted":"#77756f","--primary":"#111111","--primary-contrast":"#ffffff","--accent":"#2563eb","--accent-contrast":"#ffffff","--border":"#e6e3db","--ring":"#11111133","--link":"#111111","--link-hover":"#000000"}, extras:".btn-primary{letter-spacing:.02em;} .hero{background:linear-gradient(180deg,#111,#333);}"},
-  { name: "Aurora Neon", vars: {"--bg":"#040810","--bg-alt":"#070d18","--surface":"#0a1020","--text":"#e6fbff","--muted":"#9bd8e6","--primary":"#06d6a0","--primary-contrast":"#031a10","--accent":"#60a5fa","--accent-contrast":"#041225","--border":"#16243d","--ring":"#06d6a066","--link":"#67e8f9","--link-hover":"#06d6a0"}, extras:".hero{background:conic-gradient(from 90deg at 20% 20%, #06d6a0, #60a5fa);}"},
-  { name: "Forest Dew", vars: {"--bg":"#0a1310","--bg-alt":"#0f201e","--surface":"#0f201e","--text":"#e6fffb","--muted":"#9ee3d8","--primary":"#10b981","--primary-contrast":"#031a14","--accent":"#34d399","--accent-contrast":"#042317","--border":"#1a2f2c","--ring":"#34d39955","--link":"#6ee7b7","--link-hover":"#34d399"}, extras:".hero{background:linear-gradient(135deg,#10b981,#34d399);}"},
-];
-function sgwmBuildCSS(theme){ const varLines = Object.entries(theme.vars).map(([k,v])=>`${k}:${v}`).join(';'); return `:root{${varLines}}` + THEME_BASE_CSS + (theme.extras || ""); }
-
-/* ---------- 6) UI render ---------- */
-const grid = document.getElementById('sgwm-theme-grid');
-THEMES.forEach((t, idx) => {
-  const card = document.createElement('div');
-  card.className = 'sgwm-theme-card';
-  const s1 = t.vars["--primary"] || "#ccc", s2 = t.vars["--accent"]||"#ddd", s3 = t.vars["--bg-alt"]||"#eee";
-  card.innerHTML = `<div class="sgwm-swatches"><div class="sgwm-swatch" style="background:${s1}"></div><div class="sgwm-swatch" style="background:${s2}"></div><div class="sgwm-swatch" style="background:${s3}"></div></div><div class="sgwm-theme-name">${idx+1}. ${t.name}</div>`;
-  card.addEventListener('click', () => sgwmApplyTheme(t));
-  grid.appendChild(card);
-});
-document.getElementById('sgwm-theme-toggle').addEventListener('click', () => {
-  const p = document.getElementById('sgwm-theme-panel');
-  p.style.display = (p.style.display === 'block') ? 'none' : 'block';
-});
-
-/* ---------- 7) Apply theme (preview + export + repairs) ---------- */
-async function sgwmApplyTheme(themeObj){
-  const css = sgwmBuildCSS(themeObj);
-  window.__SGWM_CURRENT_THEME_CSS = css;
-
-  // Ensure ZIP index
-  if (window.ZIP_REF && !SGWM_ZIP_INDEX) await sgwmBuildZipIndex();
-
-  // Live preview
-  if (!SGWM_PREVIEW) SGWM_PREVIEW = sgwmFindPreview();
-  if (SGWM_PREVIEW) await sgwmApplyThemeToFrame(SGWM_PREVIEW, css);
-  else console.warn('[SGWM Theme] preview iframe not found — live preview skipped.');
-
-  // Write theme.css into ZIP (for export)
-  if (window.ZIP_REF) { window.ZIP_REF.file('theme.css', css); }
-
-  // Repair + link theme.css in editor model (so Export uses fixed/corrected HTML)
-  await sgwmRepairAndLinkAll(css);
-
-  sgwmToast('Theme applied. Preview updated • Export will include theme.css and repaired links.');
-}
-
-/* ---------- 8) Live preview: inject CSS & prevent 404s by using blobs ---------- */
-async function sgwmApplyThemeToFrame(frame, css){
-  const doc = frame.contentDocument || frame.contentWindow?.document;
-  if (!doc) return;
-
-  // <style> for immediate visual theme
-  let styleEl = doc.getElementById('sgwm-theme-style');
-  if (!styleEl) { styleEl = doc.createElement('style'); styleEl.id = 'sgwm-theme-style'; doc.head.appendChild(styleEl); }
-  styleEl.textContent = css;
-
-  // Ensure any <link href="theme.css"> points to a blob (no 404)
-  const blob = new Blob([css], {type:'text/css'});
-  const url  = URL.createObjectURL(blob);
-
-  // Update or add link just for preview
-  let linkEl = doc.getElementById('sgwm-theme-link');
-  if (!linkEl) { linkEl = doc.createElement('link'); linkEl.id='sgwm-theme-link'; linkEl.rel='stylesheet'; doc.head.appendChild(linkEl); }
-  linkEl.href = url;
-
-  // REPAIR known-bad asset refs inside the iframe (styles.css/scripts.js mismatches etc.)
-  if (window.ZIP_REF) {
-    await sgwmBuildZipIndex();
-    const nodes = [...doc.querySelectorAll('link[rel="stylesheet"][href], script[src]')];
-    for (const n of nodes) {
-      const attr = n.tagName.toLowerCase()==='link' ? 'href' : 'src';
-      const href = n.getAttribute(attr);
-      if (!href || href.startsWith('blob:') || href.startsWith('data:')) continue;
-      // Skip absolute URLs (CDNs)
-      try { const u = new URL(href, location.origin); if (u.origin !== location.origin) continue; } catch {}
-
-      const guess = sgwmGuessFileFromIndex(href);
-      if (guess) {
-        // Load from ZIP and convert to blob URL
-        const file = window.ZIP_REF.file(guess);
-        if (file) {
-          try {
-            const blob = await file.async('blob');
-            const url = URL.createObjectURL(blob);
-            n.setAttribute(attr, url);
-            n.setAttribute('data-sgwm-fixed','1');
-          } catch(e){}
+    // 2) Inject into ZIP
+    if(window.ZIP_REF){
+      window.ZIP_REF.file("theme.css", theme.css);
+      window.ZIP_REF.forEach((path,file)=>{
+        if(path.endsWith(".html")){
+          file.async("string").then(content=>{
+            content = sgwmRepairBrokenRefs(content);
+            if(!/theme\.css/i.test(content)){
+              content = sgwmInsertThemeLink(content,"theme.css");
+            }
+            window.ZIP_REF.file(path, content);
+          });
         }
-      }
+      });
+      console.log("[SGWM Theme] theme.css linked across all pages. Ready to export.");
+    } else {
+      console.warn("[SGWM Theme] window.ZIP_REF not found — cannot write theme.css into uploaded ZIP.");
     }
   }
-}
 
-/* ---------- 9) Repair + link theme.css across ALL pages in model ---------- */
-async function sgwmRepairAndLinkAll(themeCss){
-  const pages = SGWM_MODEL.pages.slice();
-  if (window.ZIP_REF && !SGWM_ZIP_INDEX) await sgwmBuildZipIndex();
+  // --------------------
+  // Themes (20 distinct professional looks)
+  // --------------------
+  const THEMES = [
+    { name:"Corporate Blue", css:`body{background:#fff;color:#1a237e;font-family:Arial, sans-serif;}header,footer{background:#0d47a1;color:#fff;}a,button{color:#1565c0;}h1,h2,h3{font-weight:700;}` },
+    { name:"Luxury Black & Gold", css:`body{background:#000;color:#f5f5f5;font-family:'Times New Roman', serif;}header,footer{background:#111;color:#d4af37;}a,button{color:#d4af37;}h1,h2,h3{color:#d4af37;}` },
+    { name:"Ocean Breeze", css:`body{background:#e0f7fa;color:#004d60;font-family:Verdana;}header,footer{background:#006064;color:#fff;}a,button{color:#00acc1;}h1,h2,h3{color:#00796b;}` },
+    { name:"Tech Dark Neon", css:`body{background:#121212;color:#eee;font-family:'Roboto', sans-serif;}header,footer{background:#1f1f1f;color:#00e5ff;}a,button{color:#00e5ff;}h1,h2,h3{color:#00bcd4;}` },
+    { name:"Pastel Candy", css:`body{background:#fdf1f5;color:#333;font-family:'Comic Sans MS', cursive;}header,footer{background:#f48fb1;color:#fff;}a,button{color:#ec407a;}h1,h2,h3{color:#d81b60;}` },
+    { name:"Nature Green", css:`body{background:#f1f8e9;color:#2e7d32;}header,footer{background:#1b5e20;color:#fff;}a,button{color:#388e3c;}h1,h2,h3{color:#1b5e20;}` },
+    { name:"Minimal White", css:`body{background:#fff;color:#111;font-family:Helvetica, sans-serif;}header,footer{background:#fafafa;border-top:1px solid #eee;}a,button{color:#111;}h1,h2,h3{font-weight:300;}` },
+    { name:"Royal Purple", css:`body{background:#f3e5f5;color:#4a148c;}header,footer{background:#4a148c;color:#fff;}a,button{color:#7b1fa2;}h1,h2,h3{color:#6a1b9a;}` },
+    { name:"Sunset Orange", css:`body{background:#fff3e0;color:#e65100;}header,footer{background:#ef6c00;color:#fff;}a,button{color:#f57c00;}h1,h2,h3{color:#e65100;}` },
+    { name:"Elegant Gray", css:`body{background:#f5f5f5;color:#212121;}header,footer{background:#9e9e9e;color:#fff;}a,button{color:#424242;}h1,h2,h3{color:#212121;}` },
+    { name:"Aqua Fresh", css:`body{background:#e0f2f1;color:#004d40;}header,footer{background:#00695c;color:#fff;}a,button{color:#009688;}h1,h2,h3{color:#004d40;}` },
+    { name:"Fiery Red", css:`body{background:#ffebee;color:#b71c1c;}header,footer{background:#c62828;color:#fff;}a,button{color:#d32f2f;}h1,h2,h3{color:#b71c1c;}` },
+    { name:"Golden Sunrise", css:`body{background:#fffde7;color:#f57f17;}header,footer{background:#f9a825;color:#fff;}a,button{color:#fbc02d;}h1,h2,h3{color:#f57f17;}` },
+    { name:"Cool Slate", css:`body{background:#eceff1;color:#263238;}header,footer{background:#455a64;color:#fff;}a,button{color:#37474f;}h1,h2,h3{color:#263238;}` },
+    { name:"Vibrant Pink", css:`body{background:#fce4ec;color:#880e4f;}header,footer{background:#c2185b;color:#fff;}a,button{color:#ad1457;}h1,h2,h3{color:#880e4f;}` },
+    { name:"Cyber Lime", css:`body{background:#f9fbe7;color:#33691e;}header,footer{background:#827717;color:#fff;}a,button{color:#689f38;}h1,h2,h3{color:#33691e;}` },
+    { name:"Deep Indigo", css:`body{background:#e8eaf6;color:#1a237e;}header,footer{background:#303f9f;color:#fff;}a,button{color:#283593;}h1,h2,h3{color:#1a237e;}` },
+    { name:"Rustic Brown", css:`body{background:#efebe9;color:#4e342e;}header,footer{background:#3e2723;color:#fff;}a,button{color:#6d4c41;}h1,h2,h3{color:#4e342e;}` },
+    { name:"Silver & Teal", css:`body{background:#fafafa;color:#004d40;}header,footer{background:#00897b;color:#fff;}a,button{color:#00695c;}h1,h2,h3{color:#004d40;}` },
+    { name:"Warm Beige", css:`body{background:#fff8e1;color:#5d4037;}header,footer{background:#795548;color:#fff;}a,button{color:#8d6e63;}h1,h2,h3{color:#5d4037;}` }
+  ];
 
-  for (const path of pages) {
-    if (!/\.html?$/i.test(path)) continue;
-    let html = SGWM_MODEL.raw(path);
-    if (!html) continue;
+  // --------------------
+  // Build UI
+  // --------------------
+  const toggleBtn = document.getElementById("theme-toggle");
+  const panel = document.getElementById("theme-panel");
+  const list = document.getElementById("theme-list");
 
-    // Repair broken styles/scripts references inside HTML based on ZIP index
-    html = await sgwmRepairHtmlAssetRefs(html);
+  toggleBtn.addEventListener("click",()=> {
+    panel.style.display = panel.style.display==="block"?"none":"block";
+  });
 
-    // Link theme.css (relative)
-    const relHref = sgwmRelativeToRoot(path, 'theme.css');
-    if (!/theme\.css/i.test(html)) html = sgwmInsertThemeLink(html, relHref);
-    else html = sgwmNormalizeExistingThemeLink(html, relHref);
+  THEMES.forEach(theme=>{
+    const card=document.createElement("div");
+    card.className="theme-card";
+    card.innerHTML=`<div class="swatch" style="background:${theme.css.match(/#[0-9a-fA-F]{3,6}/)?.[0]||'#ccc'}"></div><span>${theme.name}</span>`;
+    card.onclick=()=>applyThemeToPreviewAndZip(theme);
+    list.appendChild(card);
+  });
 
-    SGWM_MODEL.setEdited(path, html);
-  }
-}
-
-/* ----- Asset repair helpers ----- */
-async function sgwmRepairHtmlAssetRefs(html){
-  if (!SGWM_ZIP_INDEX) return html;
-
-  // Replace in <link rel="stylesheet">
-  html = html.replace(/<link([^>]*?)rel=(['"])stylesheet\2([^>]*?)href=(['"])([^'"]+)\4([^>]*)>/ig,
-    (m, pre, q1, mid, q2, href, post) => {
-      const fixed = sgwmGuessFileFromIndex(href);
-      if (fixed) return `<link${pre}rel=${q1}stylesheet${q1}${mid}href=${q2}${fixed}${q2}${post}>`;
-      // try simple plural/singular fix if no ZIP match (common case for external uploads)
-      if (/\/?styles\.css$/i.test(href)) return m.replace(/styles\.css/i,'style.css');
-      if (/\/?scripts\.js$/i.test(href)) return m.replace(/scripts\.js/i,'script.js');
-      return m;
-    });
-
-  // Replace in <script src="...">
-  html = html.replace(/<script([^>]*?)src=(['"])([^'"]+)\2([^>]*)>\s*<\/script>/ig,
-    (m, pre, q, src, post) => {
-      const fixed = sgwmGuessFileFromIndex(src);
-      if (fixed) return `<script${pre}src=${q}${fixed}${q}${post}></script>`;
-      if (/\/?scripts\.js$/i.test(src)) return m.replace(/scripts\.js/i,'script.js');
-      return m;
-    });
-
-  return html;
-}
-
-/* ----- HTML link injection helpers ----- */
-function sgwmInsertThemeLink(html, relHref){
-  const tag = `<link rel="stylesheet" href="${relHref}?v=${Date.now()}">`;
-  if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `${tag}\n</head>`);
-  return `${tag}\n${html}`; // fallback if <head> missing
-}
-function sgwmNormalizeExistingThemeLink(html, relHref){
-  return html.replace(
-    /<link([^>]*?)href=(['"])([^'"]*theme\.css[^'"]*)\2([^>]*)>/ig,
-    (_m, pre, q, _old, post) => `<link${pre}href=${q}${relHref}?v=${Date.now()}${q}${post}>`
-  );
-}
-function sgwmRelativeToRoot(pagePath, fileAtRoot){
-  if (!pagePath.includes('/')) return fileAtRoot;
-  const depth = pagePath.split('/').length - 1;
-  const up = Array(depth).fill('..').join('/');
-  return `${up}/${fileAtRoot}`;
-}
-
-/* ---------- 10) Build the picker UI ---------- */
-(function buildPicker(){
-  const grid = document.getElementById('sgwm-theme-grid');
-  if (!grid) return;
-  // cards are already appended above — this IIFE is kept if you want to add filters later
 })();
 </script>
 <!-- ======================= SGWM THEME ENGINE (ROBUST) — END ======================= -->
