@@ -31,20 +31,12 @@
     }
 
     .header-container {
-      max-width: 1200px;
-      margin: 0 auto;
+      width: 100%;
       padding: 0.75rem 1rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
 
     .site-title {
       font-size: 1.25rem;
@@ -74,26 +66,6 @@
     .nav-links a:hover {
       background: #333;
       transform: translateY(-2px);
-    }
-
-    .nav-links a.active {
-      background: #111;
-      font-weight: 600;
-      border: 2px solid #000;
-    }
-
-    .nav-links .btn.small {
-      background: #000;
-      color: #fff;
-      border: none;
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .nav-links .btn.small:hover {
-      background: #333;
     }
 
     /* =======================
@@ -139,7 +111,6 @@
       outline: none;
     }
 
-    /* Buttons */
     .btn {
       display: inline-block;
       background: #000;
@@ -155,7 +126,6 @@
       background: #333;
     }
 
-    /* Divider */
     .or-divider {
       margin: 1rem 0;
       position: relative;
@@ -173,15 +143,9 @@
       background: #ddd;
     }
 
-    .or-divider::before {
-      left: 0;
-    }
+    .or-divider::before { left: 0; }
+    .or-divider::after { right: 0; }
 
-    .or-divider::after {
-      right: 0;
-    }
-
-    /* Auth links */
     .auth-links {
       margin-top: 1rem;
       font-size: 0.9rem;
@@ -196,9 +160,6 @@
       color: #333;
     }
 
-    /* =======================
-       TOAST
-       ======================= */
     .toast-container {
       position: fixed;
       top: 1rem;
@@ -206,9 +167,6 @@
       z-index: 9999;
     }
 
-    /* =======================
-       ANIMATIONS
-       ======================= */
     .animate-fade-in {
       animation: fadeIn 0.6s ease-in-out;
     }
@@ -220,12 +178,10 @@
   </style>
 </head>
 <body>
-  <!-- ✅ Compact Site Header -->
+  <!-- ✅ Header -->
   <header class="site-header">
     <div class="header-container">
-      <div class="brand">
-        <span class="site-title">Sitegen</span>
-      </div>
+      <span class="site-title">Sitegen</span>
       <nav class="nav-links">
         <a href="index.html">Home</a>
         <a href="library.html">Dashboard</a>
@@ -246,7 +202,6 @@
 
       <div class="or-divider">OR</div>
 
-      <!-- ✅ Auth Links -->
       <div class="auth-links mt-4">
         <a href="#" id="forgotPasswordLink">Forgot Password?</a>
         <p>Don’t have an account? <a href="signup.html">Sign up</a></p>
