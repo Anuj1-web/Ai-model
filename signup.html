@@ -6,16 +6,16 @@
   <title>Sitegen – Signup</title>
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Page-scoped minimal styles to keep it professional & consistent -->
+  <!-- Minimal, consistent styles -->
   <style>
     :root { --sg-black:#000; --sg-white:#fff; --sg-border:#e5e7eb; --sg-text:#111827; --sg-muted:#6b7280; }
-    body { margin:0; color:var(--sg-text); background:#f7f7f7; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji"; }
+    body { margin:0; color:var(--sg-text); background:#f7f7f7; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
 
     /* Header */
     .sg-header { background:var(--sg-white); border-bottom:1px solid var(--sg-border); position:sticky; top:0; z-index:50; }
-    .sg-header__inner { max-width:1100px; margin:0 auto; padding:12px 24px; display:flex; align-items:center; justify-content:space-between; }
-    .sg-brand { margin:0; font-size:1.25rem; font-weight:700; color:var(--sg-black); }
-    .sg-nav { display:flex; gap:12px; align-items:center; }
+    .sg-header__inner { max-width:1200px; margin:0 auto; padding:12px 24px; display:flex; align-items:center; justify-content:space-between; }
+    .sg-brand { margin:0; font-size:1.5rem; font-weight:700; color:var(--sg-black); }
+    .sg-nav { display:flex; gap:12px; align-items:center; margin-left:auto; }
     .sg-nav a { display:inline-block; padding:8px 14px; background:var(--sg-black); color:var(--sg-white); text-decoration:none; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,.08); transition:opacity .2s ease, transform .15s ease; }
     .sg-nav a:hover { opacity:.9; transform:translateY(-1px); }
 
@@ -105,7 +105,7 @@
         </button>
       </section>
 
-      <!-- Verify Email Card (optional/secondary) -->
+      <!-- Verify Email Card -->
       <section class="sg-card">
         <h3 class="sg-subtitle">Verify Your Email</h3>
         <div class="sg-field">
