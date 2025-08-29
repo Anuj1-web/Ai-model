@@ -5,84 +5,122 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sitegen – Signup</title>
   <link rel="stylesheet" href="style.css" />
+
+  <!-- Page-scoped minimal styles to keep it professional & consistent -->
+  <style>
+    :root { --sg-black:#000; --sg-white:#fff; --sg-border:#e5e7eb; --sg-text:#111827; --sg-muted:#6b7280; }
+    body { margin:0; color:var(--sg-text); background:#f7f7f7; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji"; }
+
+    /* Header */
+    .sg-header { background:var(--sg-white); border-bottom:1px solid var(--sg-border); position:sticky; top:0; z-index:50; }
+    .sg-header__inner { max-width:1100px; margin:0 auto; padding:12px 24px; display:flex; align-items:center; justify-content:space-between; }
+    .sg-brand { margin:0; font-size:1.25rem; font-weight:700; color:var(--sg-black); }
+    .sg-nav { display:flex; gap:12px; align-items:center; }
+    .sg-nav a { display:inline-block; padding:8px 14px; background:var(--sg-black); color:var(--sg-white); text-decoration:none; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,.08); transition:opacity .2s ease, transform .15s ease; }
+    .sg-nav a:hover { opacity:.9; transform:translateY(-1px); }
+
+    /* Layout */
+    .sg-main { min-height:calc(100vh - 64px); display:flex; align-items:center; justify-content:center; padding:24px; }
+    .sg-stack { width:100%; max-width:440px; display:flex; flex-direction:column; gap:16px; }
+
+    /* Card */
+    .sg-card { background:var(--sg-white); border:1px solid var(--sg-border); border-radius:16px; padding:28px; box-shadow:0 10px 24px rgba(0,0,0,.06); transition:transform .18s ease, box-shadow .18s ease; }
+    .sg-card:hover { transform:translateY(-2px); box-shadow:0 18px 40px rgba(0,0,0,.12); }
+
+    /* Typography */
+    .sg-title { margin:0 0 18px; font-size:1.75rem; font-weight:800; color:var(--sg-black); text-align:center; }
+    .sg-subtitle { margin:0 0 10px; font-size:1.05rem; font-weight:700; color:var(--sg-black); }
+
+    /* Form */
+    .sg-field { width:100%; margin-bottom:12px; }
+    .sg-input { width:100%; padding:12px 14px; border:1px solid #d1d5db; border-radius:10px; outline:none; font-size:0.95rem; }
+    .sg-input:focus { border-color:var(--sg-black); box-shadow:0 0 0 3px rgba(0,0,0,.06); }
+
+    .sg-btn { width:100%; padding:12px 16px; border:none; border-radius:10px; font-weight:600; cursor:pointer; transition:opacity .2s ease, transform .15s ease; }
+    .sg-btn--black { background:var(--sg-black); color:var(--sg-white); }
+    .sg-btn--black:hover { opacity:.9; transform:translateY(-1px); }
+    .sg-btn--muted { background:#e5e7eb; color:#111827; }
+    .sg-btn--muted[disabled] { opacity:.6; cursor:not-allowed; }
+    .sg-btn--ghost { background:transparent; color:#374151; border:1px solid #d1d5db; }
+    .sg-btn--ghost:hover { background:#f3f4f6; }
+
+    /* Divider */
+    .sg-divider { display:flex; align-items:center; gap:10px; margin:16px 0; color:#9ca3af; font-size:.85rem; }
+    .sg-divider > span { flex:1; height:1px; background:var(--sg-border); }
+
+    /* Toast container */
+    #toastContainer { position:fixed; top:16px; right:16px; display:flex; flex-direction:column; gap:8px; z-index:100; }
+  </style>
 </head>
-<body class="bg-gray-50 text-gray-900">
+<body>
 
-  <!-- ✅ Sitegen Header -->
-  <header class="site-header shadow-sm bg-white">
-    <div class="header-container flex items-center justify-between px-6 py-3">
-      <!-- Left side: Brand -->
-      <h1 class="text-xl font-bold text-black">Sitegen</h1>
-
-      <!-- Right side: Navigation -->
-      <nav class="flex space-x-4">
-        <a href="index.html" class="px-4 py-2 bg-black text-white rounded-lg shadow hover:opacity-80">Home</a>
-        <a href="library.html" class="px-4 py-2 bg-black text-white rounded-lg shadow hover:opacity-80">Dashboard</a>
-        <a href="login.html" class="px-4 py-2 bg-black text-white rounded-lg shadow hover:opacity-80">Login</a>
-        <a href="signup.html" class="px-4 py-2 bg-black text-white rounded-lg shadow hover:opacity-80">Signup</a>
+  <!-- Header -->
+  <header class="sg-header">
+    <div class="sg-header__inner">
+      <h1 class="sg-brand">Sitegen</h1>
+      <nav class="sg-nav">
+        <a href="index.html">Home</a>
+        <a href="library.html">Dashboard</a>
+        <a href="login.html">Login</a>
+        <a href="signup.html" aria-current="page">Signup</a>
       </nav>
     </div>
   </header>
 
-  <!-- ✅ Signup Form -->
-  <main class="flex justify-center items-center min-h-screen px-4">
-    <div class="auth-form-box bg-white rounded-2xl shadow-md p-8 w-full max-w-md animate-fade-in">
+  <!-- Main -->
+  <main class="sg-main">
+    <div class="sg-stack">
 
-      <h2 class="text-2xl font-bold text-center text-black mb-6">Create Your Account</h2>
-      
-      <form id="signupForm2" class="space-y-4">
-        <input type="text" id="name" placeholder="Full Name" required class="w-full p-3 border rounded-lg"/>
-        <input type="email" id="email" placeholder="Email" required class="w-full p-3 border rounded-lg"/>
-        <input type="password" id="password" placeholder="Password" required class="w-full p-3 border rounded-lg"/>
-        
-        <button type="submit" class="w-full bg-black text-white py-3 rounded-lg hover:opacity-90">
-          Sign Up
+      <!-- Signup Card -->
+      <section class="sg-card">
+        <h2 class="sg-title">Create Your Account</h2>
+
+        <form id="signupForm2" novalidate>
+          <div class="sg-field">
+            <input type="text" id="name" class="sg-input" placeholder="Full Name" required />
+          </div>
+          <div class="sg-field">
+            <input type="email" id="email" class="sg-input" placeholder="Email" required />
+          </div>
+          <div class="sg-field">
+            <input type="password" id="password" class="sg-input" placeholder="Password" required />
+          </div>
+
+          <button type="submit" class="sg-btn sg-btn--black">Sign Up</button>
+          <button type="button" id="resendVerificationBtn" class="sg-btn sg-btn--muted" disabled>
+            Resend Verification
+          </button>
+          <button type="button" id="goToLoginBtn" class="sg-btn sg-btn--ghost">
+            Already have an account? Login
+          </button>
+        </form>
+
+        <div class="sg-divider">
+          <span></span> OR <span></span>
+        </div>
+
+        <button type="button" id="googleSignupBtn" class="sg-btn sg-btn--ghost" style="display:flex; align-items:center; justify-content:center; gap:8px;">
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width="18" height="18"/>
+          Continue with Google
         </button>
+      </section>
 
-        <button type="button" id="resendVerificationBtn" 
-          class="w-full bg-gray-200 text-gray-800 py-2 rounded-lg mt-2" disabled>
-          Resend Verification
-        </button>
+      <!-- Verify Email Card (optional/secondary) -->
+      <section class="sg-card">
+        <h3 class="sg-subtitle">Verify Your Email</h3>
+        <div class="sg-field">
+          <input type="email" id="verifyEmailInput" class="sg-input" placeholder="Enter your email"/>
+        </div>
+        <button id="verifyEmailBtn" class="sg-btn sg-btn--black">Send Verification Email</button>
+      </section>
 
-        <button type="button" id="goToLoginBtn" 
-          class="w-full border border-gray-300 text-gray-700 py-2 rounded-lg mt-2 hover:bg-gray-100">
-          Already have an account? Login
-        </button>
-      </form>
-
-      <!-- OR Divider -->
-      <div class="or-divider my-6 flex items-center">
-        <hr class="flex-grow border-gray-300"/>
-        <span class="px-3 text-gray-500 text-sm">OR</span>
-        <hr class="flex-grow border-gray-300"/>
-      </div>
-
-      <!-- ✅ Google Signup -->
-      <button type="button" id="googleSignupBtn" 
-        class="w-full flex items-center justify-center bg-white border border-gray-300 py-2 rounded-lg shadow-sm hover:bg-gray-50">
-        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5 mr-2"/>
-        Continue with Google
-      </button>
     </div>
   </main>
 
-  <!-- ✅ Verify Email Box -->
-  <section class="flex justify-center mt-6 px-4">
-    <div class="auth-form-box bg-white rounded-xl shadow p-6 w-full max-w-md animate-fade-in">
-      <h3 class="text-lg font-semibold mb-3 text-black">Verify Your Email</h3>
-      <input type="email" id="verifyEmailInput" placeholder="Enter your email" 
-        class="w-full p-3 border rounded-lg mb-2"/>
-      <button id="verifyEmailBtn" 
-        class="w-full bg-black text-white py-2 rounded-lg hover:opacity-90">
-        Send Verification Email
-      </button>
-    </div>
-  </section>
+  <!-- Toasts -->
+  <div id="toastContainer"></div>
 
-  <!-- ✅ Toast Notification -->
-  <div id="toastContainer" class="toast-container fixed top-5 right-5 space-y-2 z-50"></div>
-
-  <!-- ✅ Scripts -->
+  <!-- Scripts -->
   <script type="module" src="firebase-login.js"></script>
   <script type="module" src="signup2.js"></script>
 </body>
