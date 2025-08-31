@@ -720,778 +720,438 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
- <!-- SGWM Theme Changer — full untrimmed (paste before </body>) -->
-<style id="sgwm-theme-host-styles">
-  :root { --sgwm-z: 999999; }
-  #sgwm-theme-root { all: initial; font-family: system-ui,-apple-system, "Segoe UI", Roboto, Inter, Arial, sans-serif; }
-  #sgwm-theme-fab {
-    position: fixed; right: 20px; bottom: 70px; z-index: var(--sgwm-z);
-    width:56px;height:56px;border-radius:9999px;border:1px solid rgba(0,0,0,.08); background:#fff;
-    box-shadow:0 10px 25px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06); display:grid;place-items:center;cursor:pointer;
-    transition:transform .15s ease, box-shadow .15s ease;
-  }
-  #sgwm-theme-fab:hover { transform:scale(1.05); box-shadow:0 12px 28px rgba(0,0,0,.12),0 3px 10px rgba(0,0,0,.08); }
-  #sgwm-theme-panel {
-    position: fixed; right:20px; bottom:138px; z-index: calc(var(--sgwm-z)+1);
-    width:420px; max-height:78vh; overflow:auto; background:#fff; color:#111; border:1px solid rgba(0,0,0,.08);
-    border-radius:14px; box-shadow:0 24px 48px rgba(0,0,0,.12); display:none; padding-bottom:14px;
-  }
-  #sgwm-theme-panel.open { display:block; }
-  .sgwm-hdr { position:sticky; top:0; background:#fff; padding:12px 14px; border-bottom:1px solid rgba(0,0,0,.06); z-index:2; }
-  .sgwm-title{ font-weight:800; font-size:14px }
-  .sgwm-sub{ font-size:12px; color:#666; margin-top:4px }
-  .sgwm-sec{ padding:12px 14px }
-  .sgwm-swatch{ height:18px; border-radius:6px; border:1px solid rgba(0,0,0,.08) }
-  .sgwm-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px }
-  .sgwm-card{ border:1px solid rgba(0,0,0,.06); border-radius:10px; padding:10px; cursor:pointer; background:#fff }
-  .sgwm-card:hover{ box-shadow:0 8px 18px rgba(0,0,0,.06); transform:translateY(-2px) }
-  .sgwm-card-name{ font-size:13px; font-weight:700; margin-bottom:8px }
-  .sgwm-band{ display:grid; grid-template-columns:repeat(6,1fr); gap:4px }
-  .sgwm-row{ display:flex; gap:8px; align-items:center }
-  .sgwm-pill{ padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid rgba(0,0,0,.08); background:#fafafa; cursor:pointer }
-  .sgwm-muted{ color:#777; font-size:11px }
-  .sgwm-color-input{ width:44px; height:28px; border-radius:6px; border:1px solid rgba(0,0,0,.08); padding:2px }
-  .sgwm-footer{ padding:10px 14px; border-top:1px solid rgba(0,0,0,.06); display:flex; justify-content:space-between; align-items:center }
-  .sgwm-btn-primary{ background:#6b46c1; color:#fff; border-radius:8px; padding:8px 12px; border:none; cursor:pointer }
-  @media(max-width:520px){ #sgwm-theme-panel{ right:10px; left:10px; width:auto; bottom:120px } #sgwm-theme-fab{ right:12px; bottom:62px } }
+<!--
+Universal Theme Engine (SGWM Pro)
+Version: 1.0.0
+Single-file drop-in script + UI panel (Shadow DOM isolated)
+Paste this whole block right before </body> in WizardMaker (or any builder preview page).
+It auto-detects site structure (nav/hero/cards/sections/buttons/forms/tables/footer/etc),
+provides 24+ professional themes, ensures WCAG contrast, and supports per-section mapping.
 
-  /* Minimal reset to avoid leaking the panel UI into the host previews */
-  #sgwm-theme-root * { box-sizing:border-box; }
+Notes:
+- The UI is fully sandboxed in a Shadow DOM so it won't break host CSS.
+- The theming CSS is injected to the detected preview document using a single <style id="sgwm-theme-override-pro"> tag.
+- Everything runs in an IIFE to avoid globals (one global namespace only: window.SGWM_PRO_THEME for state/export).
+- If your builder uses an iframe preview, the engine finds the largest visible iframe automatically.
+-->
+
+<style id="sgwm-pro-initial" media="all">
+  /* Only minimal CSS to show the floating button host; panel CSS lives in Shadow DOM */
+  :root { --sgwm-pro-z: 2147480000; }
+  #sgwm-pro-host { all: initial; position: fixed; right: 20px; bottom: 70px; z-index: var(--sgwm-pro-z); }
 </style>
 
-<div id="sgwm-theme-root" aria-live="polite">
-  <button id="sgwm-theme-fab" title="Theme (colors only)" aria-label="Theme editor">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 3C7.03 3 3 7.03 3 12c0 3.31 2.69 6 6 6h1.25a1.75 1.75 0 0 1 0 3.5H10c-4.97 0-9-4.03-9-9S5.03 3 10 3s9 4.03 9 9c0 1.66-1.34 3-3 3h-1.25a1.75 1.75 0 0 1 0-3.5H16c.83 0 1.5-.67 1.5-1.5C17.5 7.47 15.03 5 12 5" stroke="#6b46c1" stroke-width="1.8" stroke-linecap="round"/>
-      <circle cx="8" cy="10" r="1.25" fill="#6b46c1"/><circle cx="11.5" cy="8.5" r="1.25" fill="#22d3ee"/><circle cx="14.5" cy="11" r="1.25" fill="#f472b6"/><circle cx="10" cy="13.5" r="1.25" fill="#f59e0b"/>
-    </svg>
-  </button>
-
-  <div id="sgwm-theme-panel" role="dialog" aria-modal="false" aria-label="Theme Changer">
-    <div class="sgwm-hdr">
-      <div class="sgwm-title">SGWM Theme — Advanced</div>
-      <div class="sgwm-sub">Auto-map, contrast-safe, inline-map fallback — reliable for Tailwind & custom layouts</div>
-    </div>
-
-    <div class="sgwm-sec">
-      <div class="sgwm-row" style="justify-content:space-between">
-        <div>
-          <div class="sgwm-muted">Detected base</div>
-          <div class="sgwm-row" style="margin-top:6px">
-            <div style="width:120px"><div class="sgwm-muted">Primary</div><div class="sgwm-swatch" id="sgwm-b-primary"></div></div>
-            <div style="width:120px"><div class="sgwm-muted">Background</div><div class="sgwm-swatch" id="sgwm-b-bg"></div></div>
-            <div style="width:120px"><div class="sgwm-muted">Text</div><div class="sgwm-swatch" id="sgwm-b-text"></div></div>
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
-          <button class="sgwm-pill" id="sgwm-refresh">Refresh</button>
-          <button class="sgwm-pill" id="sgwm-clear">Reset</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="sgwm-sec">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-weight:700;font-size:13px">Professional Themes</div>
-        <div class="sgwm-muted sgwm-small">Pick a starting palette</div>
-      </div>
-      <div class="sgwm-grid" id="sgwm-theme-grid"></div>
-    </div>
-
-    <div class="sgwm-sec">
-      <div style="font-weight:700;font-size:13px;margin-bottom:8px">Manual Tweaks</div>
-      <div class="sgwm-row" style="justify-content:space-between;align-items:center;">
-        <div><div class="sgwm-muted">Primary</div><input type="color" id="sgwm-pick-primary" class="sgwm-color-input"></div>
-        <div><div class="sgwm-muted">Background</div><input type="color" id="sgwm-pick-bg" class="sgwm-color-input"></div>
-        <div><div class="sgwm-muted">Text</div><input type="color" id="sgwm-pick-text" class="sgwm-color-input"></div>
-        <div><div class="sgwm-muted">Surface</div><input type="color" id="sgwm-pick-surface" class="sgwm-color-input"></div>
-      </div>
-
-      <div style="margin-top:10px">
-        <label class="sgwm-muted">Advanced: apply to</label>
-        <div style="margin-top:6px" class="sgwm-controls">
-          <button id="sgwm-apply-global" class="sgwm-pill">Apply</button>
-          <button id="sgwm-save-custom" class="sgwm-pill">Save Custom</button>
-          <button id="sgwm-export-css" class="sgwm-pill">Get CSS</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="sgwm-sec">
-      <div style="font-weight:700;font-size:13px;margin-bottom:8px">Single-element quick map</div>
-      <div class="sgwm-row" style="gap:6px;flex-wrap:wrap">
-        <button class="sgwm-pill" data-map="nav">Map Nav</button>
-        <button class="sgwm-pill" data-map="hero">Map Hero</button>
-        <button class="sgwm-pill" data-map="card">Map Cards</button>
-        <button class="sgwm-pill" data-map="btn">Map Buttons</button>
-        <button class="sgwm-pill" data-map="section">Map Sections</button>
-      </div>
-    </div>
-
-    <div class="sgwm-footer">
-      <div class="sgwm-muted">Theme state saved to window.SGWM_THEME and localStorage</div>
-      <div style="display:flex;gap:8px">
-        <button id="sgwm-toggle-apply" class="sgwm-btn-primary">Apply Now</button>
-      </div>
-    </div>
-  </div>
-</div>
+<div id="sgwm-pro-host" aria-live="polite"></div>
 
 <script>
-/* SGWM Theme Changer — robust full version
-   Paste this block into host HTML (before </body>). Works by:
-   1) building a palette + CSS text override in a style tag inside preview doc (if same-origin iframe)
-   2) applying inline style fallbacks to many elements (ensures precedence)
-   3) auto-contrast for readability
-   4) mutation observer to reapply when preview DOM mutates
-*/
-
 (function(){
+  // ========================= Utilities =========================
+  const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+  const toHex = (n) => Math.round(clamp(n,0,255)).toString(16).padStart(2,'0');
+  const isDef = (v)=> v!==undefined && v!==null && v!=='';
 
-// ----------------- Utilities -----------------
-const clamp = (n,min,max) => Math.min(max, Math.max(min, n));
-const toHex = (n) => Math.round(clamp(n,0,255)).toString(16).padStart(2,'0');
+  function parseColor(input){ if(!input) return null; const s=String(input).trim().toLowerCase(); let m;
+    if((m=s.match(/^#([0-9a-f]{3,8})$/i))){ let h=m[1]; if(h.length===3) h=h.split('').map(ch=>ch+ch).join('');
+      const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16); return {r,g,b}; }
+    if((m=s.match(/^rgba?\(([^)]+)\)$/i))){ const [r,g,b]=m[1].split(',').map(v=>parseFloat(v)); return {r,g,b}; }
+    if((m=s.match(/^hsla?\(([^)]+)\)$/i))){ const [H,S,L]=m[1].split(',').map(v=>v.trim()); return hslToRgb({h:parseFloat(H), s:parseFloat(S)/100, l:parseFloat(L)/100}); }
+    return null; }
+  function rgbToHex({r,g,b}){ return `#${toHex(r)}${toHex(g)}${toHex(b)}`; }
+  function rgbToHsl({r,g,b}){ r/=255; g/=255; b/=255; const max=Math.max(r,g,b), min=Math.min(r,g,b); let h,s,l=(max+min)/2;
+    if(max===min){ h=s=0; } else { const d=max-min; s = l>0.5 ? d/(2-max-min) : d/(max+min);
+      switch(max){ case r: h=(g-b)/d+(g<b?6:0); break; case g: h=(b-r)/d+2; break; case b: h=(r-g)/d+4; break; } h/=6; }
+    return {h:h*360, s, l}; }
+  function hslToRgb({h,s,l}){ h=((h%360)+360)%360; const C=(1-Math.abs(2*l-1))*s, X=C*(1-Math.abs(((h/60)%2)-1)), m=l-C/2; let r1=0,g1=0,b1=0;
+    if(h<60) [r1,g1,b1]=[C,X,0]; else if(h<120) [r1,g1,b1]=[X,C,0]; else if(h<180) [r1,g1,b1]=[0,C,X]; else if(h<240) [r1,g1,b1]=[0,X,C]; else if(h<300) [r1,g1,b1]=[X,0,C]; else [r1,g1,b1]=[C,0,X];
+    return { r:(r1+m)*255, g:(g1+m)*255, b:(b1+m)*255 }; }
+  const hex = (v)=>{ const c=parseColor(v); return c?rgbToHex(c).toLowerCase():null; };
 
-function parseColor(input){
-  if(!input) return null;
-  const s = String(input).trim().toLowerCase();
-  let m;
-  if((m=s.match(/^#([0-9a-f]{3,8})$/i))){
-    let h=m[1]; if(h.length===3) h=h.split('').map(ch=>ch+ch).join('');
-    const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
-    return {r,g,b};
+  // Contrast helpers
+  const luminance = (c)=>{ const a=[c.r,c.g,c.b].map(v=>{ v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); }); return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2]; };
+  const contrastRatio = (a,b)=>{ const la=luminance(a)+0.05, lb=luminance(b)+0.05; return la>lb?la/lb:lb/la; };
+  function ensureReadableTextColor(bgHex, preferredText){
+    const bg = parseColor(bgHex)||{r:255,g:255,b:255};
+    const black = {r:17,g:17,b:17}, white={r:255,g:255,b:255};
+    const pref = parseColor(preferredText||'#111')||black;
+    const best = [pref, black, white].map(c=>({c, cr:contrastRatio(c,bg)})).sort((a,b)=>b.cr-a.cr)[0].c;
+    return rgbToHex(best);
   }
-  if((m=s.match(/^rgba?\(([^)]+)\)$/i))){
-    const parts = m[1].split(',').map(v=>parseFloat(v));
-    return { r:parts[0], g:parts[1], b:parts[2] };
+  function lighten(h,a=0.08){ try{ const base=parseColor(h)||{r:0,g:0,b:0}; const t=rgbToHsl(base); t.l=clamp(t.l+a,0,1); return rgbToHex(hslToRgb(t)); }catch(e){return h} }
+  function darken(h,a=0.08){ try{ const base=parseColor(h)||{r:0,g:0,b:0}; const t=rgbToHsl(base); t.l=clamp(t.l-a,0,1); return rgbToHex(hslToRgb(t)); }catch(e){return h} }
+
+  // ========================= Target Document Discovery =========================
+  function findPreviewFrame(){
+    const hints=['#site-preview','#wizardPreview','#preview','#editor-preview','iframe[title*="Preview" i]'];
+    for(const sel of hints){ const el=document.querySelector(sel); if(el && el.tagName==='IFRAME') return el; }
+    const iframes=[...document.querySelectorAll('iframe')].filter(f=>{ try{ const r=f.getBoundingClientRect(); return r.width*r.height>30000 && r.top<window.innerHeight; }catch{ return false; } }).sort((a,b)=>(b.clientWidth*b.clientHeight)-(a.clientWidth*a.clientHeight));
+    return iframes[0]||null;
   }
-  if((m=s.match(/^hsla?\(([^)]+)\)$/i))){
-    const [H,S,L] = m[1].split(',').map(v=>v.trim());
-    return hslToRgb({ h: parseFloat(H), s: parseFloat(S)/100, l: parseFloat(L)/100 });
+  function getPreviewDocument(){ const f=findPreviewFrame(); try{ return f?(f.contentDocument||f.contentWindow?.document):document; }catch{ return null; } }
+
+  // ========================= Structure Detection Engine =========================
+  // Heuristic selector pools (extend/override at runtime if needed)
+  const POOL = {
+    nav: ['nav','.navbar','.nav-bar','.site-nav','.topbar','.top-bar','[role="navigation"]','header .nav','header .menu','.menu-primary','.main-menu','.header-nav'],
+    header: ['header','.site-header','.appbar','.masthead','.global-header'],
+    hero: ['.hero','.hero-section','.jumbotron','.page-hero','header .hero','.banner','.page-banner','.masthead-hero'],
+    footer: ['footer','.site-footer','.page-footer','[role="contentinfo"]','.footbar'],
+    section: ['section','.section','.content-section','.block','.feature','.features','.module','.panel','.container .section'],
+    card: ['.card','.panel','.tile','.box','.well','.portlet','.card-body','.card-inner','.feature-card','.service-card'],
+    text: ['h1','h2','h3','h4','h5','h6','p','.lead','.text','.content','.copy'],
+    button: ['button','.btn','a.button','a.btn','[role="button"]','input[type="button"]','input[type="submit"]','.badge','.chip','.tag','.cta'],
+    form: ['form','.form','.form-group','input','textarea','select','label','.input','.form-control'],
+    table: ['table','.table','thead','tbody','tfoot','th','td'],
+    alert: ['.alert','.notice','.callout','.toast','.message','.notification'],
+  };
+
+  function rankElements(doc, selectors){
+    const out = new Set();
+    const push = (el)=>{ if(el && el instanceof doc.defaultView.HTMLElement) out.add(el); };
+    for(const sel of selectors){ try{ doc.querySelectorAll(sel).forEach(push); }catch{} }
+    // Heuristics: keep only visible & sizable
+    return [...out].filter(el=>{
+      const r=el.getBoundingClientRect();
+      const isVisible = r.width>1 && r.height>1 && getComputedStyle(el).visibility!=='hidden';
+      return isVisible;
+    });
   }
-  return null;
-}
-function rgbToHex({r,g,b}){ return '#'+toHex(r)+toHex(g)+toHex(b); }
-function rgbToHsl({r,g,b}){ r/=255; g/=255; b/=255; const max=Math.max(r,g,b), min=Math.min(r,g,b); let h=0,s=0,l=(max+min)/2; if(max!==min){ const d=max-min; s = l>0.5 ? d/(2-max-min) : d/(max+min); switch(max){ case r: h=(g-b)/d + (g<b?6:0); break; case g: h=(b-r)/d + 2; break; case b: h=(r-g)/d + 4; break; } h/=6; } return { h:h*360, s, l };}
-function hslToRgb({h,s,l}){ h=((h%360)+360)%360; const C=(1-Math.abs(2*l-1))*s, X=C*(1-Math.abs(((h/60)%2)-1)), m=l-C/2; let r1=0,g1=0,b1=0; if(h<60) [r1,g1,b1]=[C,X,0]; else if(h<120) [r1,g1,b1]=[X,C,0]; else if(h<180) [r1,g1,b1]=[0,C,X]; else if(h<240) [r1,g1,b1]=[0,X,C]; else if(h<300) [r1,g1,b1]=[X,0,C]; else [r1,g1,b1]=[C,0,X]; return { r:(r1+m)*255, g:(g1+m)*255, b:(b1+m)*255 }; }
 
-function hex(input){ const v=parseColor(input); return v ? rgbToHex(v).toLowerCase() : null; }
-
-// contrast helpers
-function luminance(c){ const a=[c.r,c.g,c.b].map(v=>{ v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); }); return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2]; }
-function contrastRatio(a,b){ const la=luminance(a)+0.05, lb=luminance(b)+0.05; return la>lb ? la/lb : lb/la; }
-function ensureReadable(fgHex, bgHex){
-  const fg=parseColor(fgHex), bg=parseColor(bgHex);
-  if(!fg||!bg) return fgHex||'#000000';
-  if(contrastRatio(fg,bg)>=4.5) return rgbToHex(fg);
-  // nudge fg lightness
-  let {h,s,l} = rgbToHsl(fg);
-  const bgHsl = rgbToHsl(bg);
-  const bgIsLight = bgHsl.l > 0.5;
-  let attempts=0;
-  while(attempts++<30){
-    l = clamp(l + (bgIsLight ? -0.06 : 0.06), 0, 1);
-    const cand = hslToRgb({h,s,l});
-    if(contrastRatio(cand,bg)>=4.5) return rgbToHex(cand);
-  }
-  // fallback: return black or white depending on bg
-  return bgHsl.l > 0.5 ? '#000000' : '#ffffff';
-}
-
-// ----------------- Semantic map -----------------
-// Extended, includes many Tailwind-ish helpers and common naming patterns
-const SEMANTIC = {
-  header: ['header','nav','[role="banner"]','.site-header','.topbar','.top-bar','.navbar','.nav-bar','.appbar','.app-bar','.masthead','.site-nav','.global-nav','#header','#top'],
-  footer: ['footer','[role="contentinfo"]','.site-footer','.app-footer','.page-footer','.footbar','.foot-bar','#footer'],
-  hero: ['.hero','.hero-section','.jumbotron','.page-hero','.header-hero','.lead-hero','#hero'],
-  sections: ['section','.section','.content-section','.content-block','.block','.feature','.features','.module','.panel','.widget','.container','.page','[role="region"]'],
-  cards: ['.card','.panel','.tile','.box','.well','.portlet','.image-card','.card-inner','.card-body','.panel-card','.card','[class*="card"]'],
-  text: ['h1','h2','h3','h4','h5','h6','p','span','li','dt','dd','blockquote','.text','.muted','.lead'],
-  buttons: ['button','.btn','.button','[role="button"]','input[type="button"]','input[type="submit"]','a.button','a.btn','.badge','.chip','.tag','.cta','.action','[class*="btn"]','[class*="button"]'],
-  forms: ['input','textarea','select','label','fieldset','legend','.form','.form-control','.input'],
-  tables: ['table','th','td','thead','tbody','tfoot','.table','.table-striped','.table-bordered'],
-  alerts: ['.alert','.notice','.callout','.toast','.message','.notification'],
-  misc: ['hr','.divider','.breadcrumb','.pagination','.tabs','.tab','.modal','.dialog','[role="dialog"]','.dropdown-menu','.dropdown','.toolbar','.sidebar','.aside']
-};
-
-// ----------------- Theme definitions -----------------
-const THEMES = [
-  { id:'clean-corporate', name:'Clean Corporate', fn:b=>({ primary:'#0052cc', secondary:'#2684ff', accent:'#36b37e', bg:'#f9fafc', surface:'#ffffff', text:'#172b4d', muted:'#dfe1e6', navbar:'#ffffff', hero:'#ebf2ff', footer:'#091e42', card:'#ffffff', block:'#f4f5f7' }) },
-  { id:'modern-indigo', name:'Modern Indigo', fn:b=>({ primary:'#4f46e5', secondary:'#6366f1', accent:'#a78bfa', bg:'#f8fafc', surface:'#eef2ff', text:'#0f172a', muted:'#c7c9ff', navbar:'#ffffff', hero:'#eef2ff', footer:'#0b1020', card:'#ffffff', block:'#f4f6ff' }) },
-  { id:'fresh-green', name:'Fresh Green', fn:b=>({ primary:'#16a34a', secondary:'#4ade80', accent:'#22c55e', bg:'#f0fdf4', surface:'#ecfdf5', text:'#064e3b', muted:'#bbf7d0', navbar:'#bbf7d0', hero:'#bbf7d0', footer:'#064e3b', card:'#ffffff', block:'#f1fbf6' }) },
-  { id:'sunset-glow', name:'Sunset Glow', fn:b=>({ primary:'#f97316', secondary:'#fb923c', accent:'#f59e0b', bg:'#fff7ed', surface:'#ffedd5', text:'#431407', muted:'#fed7aa', navbar:'#fff', hero:'#ffedd5', footer:'#7c2d12', card:'#fff7ed', block:'#fff3ea' }) },
-  { id:'dark-pro', name:'Dark Pro', fn:b=>({ primary:'#0d6efd', secondary:'#6c757d', accent:'#20c997', bg:'#0b0b0f', surface:'#111216', text:'#f8f9fa', muted:'#6c757d', navbar:'#0f1724', hero:'#0b0f16', footer:'#040506', card:'#111216', block:'#0f1318' }) },
-  { id:'vivid-royal', name:'Vivid Royal', fn:b=>({ primary:'#7c3aed', secondary:'#22d3ee', accent:'#f59e0b', bg:'#071029', surface:'#0b1220', text:'#e6eefb', muted:'#3a3f55', navbar:'#071029', hero:'#16213a', footer:'#071029', card:'#0b1220', block:'#051028' }) }
-];
-
-// ----------------- Target helper to find preview document -----------------
-function findPreviewFrame(){
-  const hints = ['#site-preview','#wizardPreview','#preview','#editor-preview','iframe[title*="Preview" i]'];
-  for(const sel of hints){ const el=document.querySelector(sel); if(el && el.tagName==='IFRAME') return el; }
-  const iframes=[...document.querySelectorAll('iframe')].filter(f=>{
-    try{ const r = f.getBoundingClientRect(); return r.width*r.height>30000 && r.top < window.innerHeight; }catch(e){ return false; }
-  }).sort((a,b)=> (b.clientWidth*b.clientHeight)-(a.clientWidth*a.clientHeight));
-  return iframes[0] || null;
-}
-function getPreviewDocument(){
-  const f = findPreviewFrame();
-  try{ return f ? (f.contentDocument || f.contentWindow.document) : document; }catch(e){ return document; } // fallback to host if cross-origin
-}
-
-// ----------------- Generate CSS override text -----------------
-function paletteCss(p){
-  const safe = v => v || 'transparent';
-  const primaryReadable = ensureReadable('#ffffff', safe(p.primary));
-  // Use CSS variables and decent defaults. This CSS helps but is intentionally complemented by inline mapping.
-  return `
-:root {
-  --theme-primary: ${safe(p.primary)};
-  --theme-secondary: ${safe(p.secondary)};
-  --theme-accent: ${safe(p.accent)};
-  --theme-bg: ${safe(p.bg)};
-  --theme-surface: ${safe(p.surface)};
-  --theme-text: ${safe(p.text)};
-  --theme-muted: ${safe(p.muted)};
-  --theme-card: ${safe(p.card || p.surface)};
-  --theme-block: ${safe(p.block || p.surface)};
-  --theme-hero: ${safe(p.hero || p.surface)};
-  --theme-footer: ${safe(p.footer || p.surface)};
-}
-
-/* global page */
-html, body { background: var(--theme-bg) !important; color: var(--theme-text) !important; }
-
-/* links */
-a, a:visited { color: var(--theme-primary) !important; }
-a:hover { filter: brightness(.95) !important; }
-
-/* semantic groups (broad, non-exhaustive) */
-${SEMANTIC.header.join(', ')} { background: var(--theme-primary) !important; color: ${primaryReadable} !important; }
-${SEMANTIC.footer.join(', ')} { background: var(--theme-footer) !important; color: var(--theme-text) !important; }
-${SEMANTIC.hero.join(', ')} { background: var(--theme-hero) !important; color: var(--theme-text) !important; }
-${SEMANTIC.cards.join(', ')} { background: var(--theme-card) !important; color: var(--theme-text) !important; border: 1px solid var(--theme-muted) !important; }
-${SEMANTIC.buttons.join(', ')} { background: var(--theme-primary) !important; color: ${primaryReadable} !important; border-color: var(--theme-primary) !important; }
-${SEMANTIC.forms.join(', ')} { background: var(--theme-surface) !important; color: var(--theme-text) !important; border-color: var(--theme-muted) !important; }
-`;
-}
-
-// ----------------- Apply strategy -----------------
-
-// 1) Set a style tag in the preview doc with paletteCss (fast global override)
-// 2) ALSO apply inline styles to many elements (ensures precedence over Tailwind utilities)
-// 3) Keep a whitelist/blacklist to avoid touching SGWM UI itself (elements under #sgwm-theme-root)
-
-/**
- * applyPaletteToDoc(document, palette, opts)
- * - palette: { primary, secondary, accent, bg, surface, text, muted, card, block, hero, footer }
- */
-function applyPaletteToDoc(doc, palette){
-  if(!doc) return;
-  try{
-    // 1. create or update an override style tag
-    let style = doc.getElementById('sgwm-theme-override');
-    if(!style){
-      style = doc.createElement('style'); style.id = 'sgwm-theme-override';
-      (doc.head || doc.documentElement).appendChild(style);
+  function detectStructure(doc){
+    const map = {};
+    for(const key of Object.keys(POOL)){
+      map[key] = rankElements(doc, POOL[key]);
     }
-    style.textContent = paletteCss(palette);
-
-    // 2. set :root CSS variables for inline styles that use var(...)
-    try{
-      const root = doc.documentElement;
-      root.style.setProperty('--theme-primary', palette.primary || '');
-      root.style.setProperty('--theme-secondary', palette.secondary || '');
-      root.style.setProperty('--theme-accent', palette.accent || '');
-      root.style.setProperty('--theme-bg', palette.bg || '');
-      root.style.setProperty('--theme-surface', palette.surface || '');
-      root.style.setProperty('--theme-text', palette.text || '');
-      root.style.setProperty('--theme-muted', palette.muted || '');
-      root.style.setProperty('--theme-card', palette.card || palette.surface || '');
-      root.style.setProperty('--theme-block', palette.block || palette.surface || '');
-      root.style.setProperty('--theme-hero', palette.hero || palette.surface || '');
-      root.style.setProperty('--theme-footer', palette.footer || palette.surface || '');
-    }catch(e){/*ignore*/}
-
-    // 3. Inline mapping fallback (apply inline styles to ensure precedence)
-    // We'll target common groups and apply inline styles. Respect elements that have data-sgwm-ignore.
-    const safeText = ensureReadable(palette.text || '#111', palette.bg || '#fff');
-    const safePrimaryText = ensureReadable(palette.primary || '#000', palette.surface || palette.bg || '#fff');
-    const safePrimary = palette.primary || '#3366ff';
-    const safeSurface = palette.surface || palette.bg || '#fff';
-    const safeCard = palette.card || safeSurface;
-    const safeMuted = palette.muted || '#e6e6e6';
-    const safeBlock = palette.block || safeSurface;
-    const safeHero = palette.hero || safeSurface;
-    const safeFooter = palette.footer || safeSurface;
-
-    // helper to skip SGWM UI inside host (if script runs in host)
-    function skip(el){
-      if(!el) return false;
-      if(el.closest && el.closest('#sgwm-theme-root')) return true;
-      if(el.hasAttribute && el.hasAttribute('data-sgwm-ignore')) return true;
-      return false;
+    // Fallbacks: if no hero but large header with background-image → use it
+    if(map.hero.length===0){
+      const heads = rankElements(doc, POOL.header);
+      const big = heads.find(h=>{
+        const r=h.getBoundingClientRect();
+        const bg=getComputedStyle(h).backgroundImage;
+        return r.height>240 || (bg && bg!=='none');
+      });
+      if(big) map.hero=[big];
     }
-
-    // a. Header / nav
-    try{
-      const headerSelectors = SEMANTIC.header;
-      headerSelectors.forEach(sel=>{
-        try{
-          const nodes = doc.querySelectorAll(sel);
-          nodes.forEach(el=>{
-            if(skip(el)) return;
-            el.style.background = safePrimary;
-            el.style.color = safePrimaryText;
-            // Buttons/links inside header: ensure visible
-            const innerBtns = el.querySelectorAll('a, button, [role="button"], input[type="button"], input[type="submit"]');
-            innerBtns.forEach(b=>{
-              if(skip(b)) return;
-              b.style.background = safePrimary;
-              b.style.color = safePrimaryText;
-              b.style.borderColor = safePrimary;
-            });
-          });
-        }catch(e){}
-      });
-    }catch(e){}
-
-    // b. Footer
-    try{
-      const footerSelectors = SEMANTIC.footer;
-      footerSelectors.forEach(sel=>{
-        try{
-          const nodes = doc.querySelectorAll(sel);
-          nodes.forEach(el=>{
-            if(skip(el)) return;
-            el.style.background = safeFooter;
-            el.style.color = safeText;
-          });
-        }catch(e){}
-      });
-    }catch(e){}
-
-    // c. Hero
-    try{
-      SEMANTIC.hero.forEach(sel=>{
-        try{
-          const nodes = doc.querySelectorAll(sel);
-          nodes.forEach(el=>{
-            if(skip(el)) return;
-            el.style.background = safeHero;
-            el.style.color = safeText;
-          });
-        }catch(e){}
-      });
-    }catch(e){}
-
-    // d. Cards
-    try{
-      SEMANTIC.cards.forEach(sel=>{
-        try{
-          const nodes = doc.querySelectorAll(sel);
-          nodes.forEach(el=>{
-            if(skip(el)) return;
-            el.style.background = safeCard;
-            el.style.color = safeText;
-            el.style.borderColor = safeMuted;
-            // if card has .image-card with bg-image, don't override background-image
-            if(el.className && /image|img|media/i.test(el.className)) {
-              // only set overlay background color if no background-image inline style
-              if(!el.style.backgroundImage) { el.style.background = safeCard; }
-            }
-          });
-        }catch(e){}
-      });
-    }catch(e){}
-
-    // e. Sections / blocks
-    try{
-      SEMANTIC.sections.forEach(sel=>{
-        try{
-          const nodes = doc.querySelectorAll(sel);
-          nodes.forEach(el=>{
-            if(skip(el)) return;
-            // don't touch very small helper elements
-            const rect = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
-            if(rect && rect.width < 30 && rect.height < 10) return;
-            el.style.background = safeBlock;
-            el.style.color = safeText;
-          });
-        }catch(e){}
-      });
-    }catch(e){}
-
-    // f. Buttons (global)
-    try{
-      const btnSelectors = SEMANTIC.buttons;
-      btnSelectors.forEach(sel=>{
-        try{
-          const nodes = doc.querySelectorAll(sel);
-          nodes.forEach(el=>{
-            if(skip(el)) return;
-            // a and button elements that are purely textual should get background color only if they already had a clickable look
-            el.style.background = safePrimary;
-            el.style.color = ensureReadable(safePrimaryText, safePrimary);
-            el.style.borderColor = safePrimary;
-          });
-        }catch(e){}
-      });
-    }catch(e){}
-
-    // g. Links and emphasis
-    try{
-      const links = doc.querySelectorAll('a, a *');
-      links.forEach(el=>{
-        if(skip(el)) return;
-        // ensure anchor text uses primary unless inside code/list where preserving color might be desired
-        const parentTag = el.tagName ? el.tagName.toLowerCase() : '';
-        if(parentTag === 'a' || el.closest('a')) {
-          const anchor = el.closest('a');
-          if(anchor) { anchor.style.color = palette.primary || '#3366ff'; }
-        }
-      });
-    }catch(e){}
-
-    // h. Forms
-    try{
-      const forms = doc.querySelectorAll('input, select, textarea, .form-control, .input');
-      forms.forEach(el=>{
-        if(skip(el)) return;
-        el.style.background = safeSurface;
-        el.style.color = safeText;
-        el.style.borderColor = safeMuted;
-      });
-    }catch(e){}
-
-    // i. Tables
-    try{
-      const tables = doc.querySelectorAll('table, thead, tbody, th, td');
-      tables.forEach(el=>{
-        if(skip(el)) return;
-        el.style.color = safeText;
-        el.style.borderColor = safeMuted;
-      });
-    }catch(e){}
-
-    // j. Ensure floating text is readable: scan any element with background but no explicit color and set readable color
-    try{
-      const all = doc.querySelectorAll('body *');
-      all.forEach(el=>{
-        if(skip(el)) return;
-        try{
-          const cs = doc.defaultView.getComputedStyle(el);
-          if(!cs) return;
-          const bg = cs.backgroundColor;
-          const fg = cs.color;
-          // only act when background is non-transparent
-          if(bg && !/transparent|rgba\(0, 0, 0, 0\)/i.test(bg)){
-            const hexBg = hex(bg) || palette.bg;
-            const desired = ensureReadable(fg || palette.text, hexBg);
-            el.style.color = desired;
-          }
-        }catch(e){}
-      });
-    }catch(e){}
-
-  }catch(e){
-    console.error('applyPaletteToDoc error', e);
+    return map;
   }
-}
 
-// remove theme from doc
-function clearThemeInDoc(doc){
-  try{
-    const style = doc.getElementById('sgwm-theme-override');
-    if(style) style.remove();
-    // NOTE: we do not attempt to remove inline styling applied earlier (could be invasive).
-    // If you want full revert, reload the preview or keep a snapshot before applying.
-  }catch(e){}
-}
+  // ========================= Theme Presets (24+) =========================
+  const THEMES = [
+    { id:'ocean-breeze', name:'Ocean Breeze', palette:(b)=>({ primary:'#0ea5e9', secondary:'#38bdf8', accent:'#06b6d4', bg:'#f0f9ff', surface:'#e0f2fe', text:'#0f172a', muted:'#94a3b8', hero:'#e6f6ff', footer:'#062b3a', card:'#ffffff', block:'#f8fdff' }) },
+    { id:'modern-indigo', name:'Modern Indigo', palette:(b)=>({ primary:'#4f46e5', secondary:'#6366f1', accent:'#a78bfa', bg:'#f8fafc', surface:'#eef2ff', text:'#0f172a', muted:'#c7c9ff', hero:'#eef2ff', footer:'#0b1020', card:'#ffffff', block:'#f4f6ff' }) },
+    { id:'clean-corporate', name:'Clean Corporate', palette:(b)=>({ primary:'#0052cc', secondary:'#2684ff', accent:'#36b37e', bg:'#f9fafc', surface:'#ffffff', text:'#172b4d', muted:'#dfe1e6', hero:'#ebf2ff', footer:'#091e42', card:'#ffffff', block:'#f4f5f7' }) },
+    { id:'forest-mist', name:'Forest Mist', palette:(b)=>({ primary:'#166534', secondary:'#4ade80', accent:'#22c55e', bg:'#f0fdf4', surface:'#ecfdf5', text:'#064e3b', muted:'#bbf7d0', hero:'#ddfbe8', footer:'#052e16', card:'#ffffff', block:'#eefbf2' }) },
+    { id:'space-nebula', name:'Space Nebula', palette:(b)=>({ primary:'#7c3aed', secondary:'#2563eb', accent:'#f472b6', bg:'#0f172a', surface:'#111827', text:'#f1f5f9', muted:'#94a3b8', hero:'#312e81', footer:'#0b1020', card:'#0f172a', block:'#1f2937' }) },
+    { id:'luxury-black-gold', name:'Luxury Black & Gold', palette:(b)=>({ primary:'#d4af37', secondary:'#b8860b', accent:'#ffcc00', bg:'#0a0a0a', surface:'#111111', text:'#f8f5ef', muted:'#666666', hero:'#151515', footer:'#000000', card:'#121212', block:'#101010' }) },
+    { id:'pastel-dream', name:'Pastel Dream', palette:(b)=>({ primary:'#a78bfa', secondary:'#f9a8d4', accent:'#6ee7b7', bg:'#faf5ff', surface:'#fce7f3', text:'#374151', muted:'#e9d5ff', hero:'#fdf4ff', footer:'#a78bfa', card:'#fce7f3', block:'#ede9fe' }) },
+    { id:'warm-coffee', name:'Warm Coffee', palette:(b)=>({ primary:'#6b4226', secondary:'#d6a36c', accent:'#a16207', bg:'#fefae0', surface:'#faedcd', text:'#3b2f2f', muted:'#d6ccc2', hero:'#fef3d4', footer:'#4a342e', card:'#faedcd', block:'#f1e6d9' }) },
+    { id:'retro-vintage', name:'Retro Vintage', palette:(b)=>({ primary:'#b45309', secondary:'#f59e0b', accent:'#78350f', bg:'#fffbeb', surface:'#fff7ed', text:'#3b2f2f', muted:'#d6d3d1', hero:'#fff8e6', footer:'#5a2d08', card:'#fff7ed', block:'#fff6e8' }) },
+    { id:'cyberpunk', name:'Cyberpunk', palette:(b)=>({ primary:'#ff00cc', secondary:'#00ffff', accent:'#ff8a00', bg:'#0b0b12', surface:'#12121a', text:'#e6e6e6', muted:'#707070', hero:'#151525', footer:'#000000', card:'#12121a', block:'#0f0f14' }) },
+    { id:'minimal-white', name:'Minimal White', palette:(b)=>({ primary:'#111827', secondary:'#4b5563', accent:'#2563eb', bg:'#ffffff', surface:'#f8fafc', text:'#111827', muted:'#e5e7eb', hero:'#f1f5f9', footer:'#e5e7eb', card:'#ffffff', block:'#f9fafb' }) },
+    { id:'sunset-glow', name:'Sunset Glow', palette:(b)=>({ primary:'#f97316', secondary:'#fb923c', accent:'#f59e0b', bg:'#fff7ed', surface:'#ffedd5', text:'#431407', muted:'#fed7aa', hero:'#ffedd5', footer:'#7c2d12', card:'#fff7ed', block:'#fff3ea' }) },
+    { id:'royal-elegance', name:'Royal Elegance', palette:(b)=>({ primary:'#6d28d9', secondary:'#8b5cf6', accent:'#f472b6', bg:'#f5f3ff', surface:'#ede9fe', text:'#1e1b4b', muted:'#c7b3ff', hero:'#ede9fe', footer:'#2e1065', card:'#ffffff', block:'#efeaff' }) },
+    { id:'aqua-tech', name:'Aqua Tech', palette:(b)=>({ primary:'#06b6d4', secondary:'#67e8f9', accent:'#3b82f6', bg:'#ecfeff', surface:'#cffafe', text:'#054e5b', muted:'#bae6fd', hero:'#e6fcff', footer:'#08303a', card:'#ffffff', block:'#f0fbfd' }) },
+    { id:'earthy-tones', name:'Earthy Tones', palette:(b)=>({ primary:'#92400e', secondary:'#d97706', accent:'#a16207', bg:'#fffbeb', surface:'#fff7ed', text:'#3b2f2f', muted:'#d6cdbb', hero:'#fff7ed', footer:'#3a1d04', card:'#fff7ed', block:'#fdf6e8' }) },
+    { id:'vivid-royal', name:'Vivid Royal', palette:(b)=>({ primary:'#7c3aed', secondary:'#22d3ee', accent:'#f59e0b', bg:'#071029', surface:'#0b1220', text:'#e6eefb', muted:'#3a3f55', hero:'#16213a', footer:'#071029', card:'#0b1220', block:'#051028' }) },
+    { id:'slate-sky', name:'Slate Sky', palette:(b)=>({ primary:'#2563eb', secondary:'#94a3b8', accent:'#14b8a6', bg:'#f8fafc', surface:'#f1f5f9', text:'#0f172a', muted:'#cbd5e1', hero:'#e2e8f0', footer:'#0f172a', card:'#ffffff', block:'#f6f8fb' }) },
+    { id:'rose-garden', name:'Rose Garden', palette:(b)=>({ primary:'#be123c', secondary:'#fb7185', accent:'#f472b6', bg:'#fff1f2', surface:'#ffe4e6', text:'#3f0a1a', muted:'#fecdd3', hero:'#ffe4e6', footer:'#7f1d1d', card:'#ffffff', block:'#fff5f7' }) },
+    { id:'emerald-city', name:'Emerald City', palette:(b)=>({ primary:'#059669', secondary:'#10b981', accent:'#34d399', bg:'#ecfdf5', surface:'#d1fae5', text:'#053e37', muted:'#a7f3d0', hero:'#d1fae5', footer:'#064e3b', card:'#ffffff', block:'#e7f8f1' }) },
+    { id:'amber-classic', name:'Amber Classic', palette:(b)=>({ primary:'#b45309', secondary:'#f59e0b', accent:'#d97706', bg:'#fffbeb', surface:'#fef3c7', text:'#3f2d1c', muted:'#f5d08a', hero:'#fde68a', footer:'#5b3412', card:'#ffffff', block:'#fff7d6' }) },
+    { id:'midnight-blue', name:'Midnight Blue', palette:(b)=>({ primary:'#1e3a8a', secondary:'#3b82f6', accent:'#22d3ee', bg:'#0b1220', surface:'#0f172a', text:'#e2e8f0', muted:'#475569', hero:'#0f1f3a', footer:'#0b1220', card:'#111827', block:'#101827' }) },
+    { id:'graphite', name:'Graphite', palette:(b)=>({ primary:'#111827', secondary:'#374151', accent:'#6b7280', bg:'#0f1115', surface:'#171923', text:'#e5e7eb', muted:'#4b5563', hero:'#10131c', footer:'#0b0d12', card:'#191c24', block:'#141720' }) },
+    { id:'minty-fresh', name:'Minty Fresh', palette:(b)=>({ primary:'#22c55e', secondary:'#a7f3d0', accent:'#06b6d4', bg:'#ecfeff', surface:'#d1fae5', text:'#043b2c', muted:'#99f6e4', hero:'#d1fae5', footer:'#064e3b', card:'#ffffff', block:'#e8fbf4' }) },
+    { id:'steel-modern', name:'Steel Modern', palette:(b)=>({ primary:'#3b82f6', secondary:'#64748b', accent:'#06b6d4', bg:'#f3f4f6', surface:'#e5e7eb', text:'#111827', muted:'#cbd5e1', hero:'#e2e8f0', footer:'#0f172a', card:'#ffffff', block:'#eef2f6' }) },
+    { id:'peach-sorbet', name:'Peach Sorbet', palette:(b)=>({ primary:'#fb923c', secondary:'#fdba74', accent:'#f472b6', bg:'#fff7ed', surface:'#ffedd5', text:'#3a1d0b', muted:'#fed7aa', hero:'#ffe9d0', footer:'#6b2d12', card:'#ffffff', block:'#fff2e6' }) },
+  ];
 
-// ----------------- Inline mapping utilities (user actions) -----------------
-function quickMap(kind){
-  const doc = getPreviewDocument();
-  if(!doc) return;
-  if(!window.SGWM_THEME || !window.SGWM_THEME.palette) { alert('Pick or build a theme first'); return; }
-  const p = window.SGWM_THEME.palette;
-  const candidates = SEMANTIC[kind] || [];
-  candidates.forEach(sel=>{
-    try{
-      const list = doc.querySelectorAll(sel);
-      list.forEach(el=>{
-        if(el.closest && el.closest('#sgwm-theme-root')) return;
-        if(kind==='nav'){
-          el.style.background = p.primary; el.style.color = ensureReadable(p.text, p.primary);
-        } else if(kind==='card'){
-          el.style.background = p.card || p.surface; el.style.color = p.text; el.style.borderColor = p.muted;
-        } else if(kind==='btn'){
-          el.style.background = p.primary; el.style.color = ensureReadable(p.text, p.primary);
-          el.style.borderColor = p.primary;
-        } else if(kind==='hero'){
-          el.style.background = p.hero || p.surface; el.style.color = p.text;
-        } else if(kind==='section'){
-          el.style.background = p.bg; el.style.color = p.text;
-        }
-      });
-    }catch(e){}
-  });
-}
+  // ========================= CSS Generator =========================
+  function paletteCss(p){
+    const safe = (v, fb='transparent')=> isDef(v)?v:fb;
+    const textOnPrimary = ensureReadableTextColor(p.primary, p.text);
+    const textOnSecondary = ensureReadableTextColor(p.secondary, p.text);
+    const textOnAccent = ensureReadableTextColor(p.accent, p.text);
+    const placeholder = darken(ensureReadableTextColor(p.surface||'#fff','#666'), .4);
 
-// ----------------- Persistence and exporter -----------------
-function attachThemeToFiles(files, cssText, cssPath='css/sgwm-theme.css'){
-  const out=[];
-  for(const f of files){
-    const isHtml = /\.html?$/i.test(f.path);
-    if(isHtml){
-      const html = typeof f.content === 'string' ? f.content : new TextDecoder('utf-8').decode(f.content);
-      out.push({ path:f.path, content: injectLinkIntoHtml(html, cssPath) });
-    } else {
-      out.push(f);
-    }
+    return `:root{ --theme-primary:${safe(p.primary)}; --theme-secondary:${safe(p.secondary)}; --theme-accent:${safe(p.accent)}; --theme-bg:${safe(p.bg,'#ffffff')}; --theme-surface:${safe(p.surface,p.bg)}; --theme-text:${safe(p.text,'#111111')}; --theme-muted:${safe(p.muted, darken(p.surface||p.bg||'#fff', .12))}; --theme-card:${safe(p.card, p.surface||p.bg)}; --theme-block:${safe(p.block, p.surface||p.bg)}; --theme-hero:${safe(p.hero, p.surface||p.bg)}; --theme-footer:${safe(p.footer, p.surface||p.bg)}; }
+
+    html, body { background: var(--theme-bg) !important; color: var(--theme-text) !important; }
+
+    /* Links */
+    a, a:visited { color: var(--theme-primary) !important; }
+    a:hover { filter: brightness(0.95); }
+
+    /* Headings & text */
+    h1,h2,h3,h4,h5,h6, p, span, li, blockquote { color: var(--theme-text) !important; }
+
+    /* Header & Nav */
+    header, .site-header, .navbar, .nav-bar, .topbar, [role="navigation"], .global-header { background: var(--theme-primary) !important; color: ${textOnPrimary} !important; border-bottom:1px solid var(--theme-muted) !important; }
+    header a, .navbar a, .nav-bar a, .topbar a, [role="navigation"] a { color: ${textOnPrimary} !important; }
+    header .btn, .navbar .btn, .nav-bar .btn { background: var(--theme-secondary) !important; color:${textOnSecondary} !important; }
+
+    /* Hero */
+    .hero, .hero-section, .jumbotron, .page-hero, .banner, .page-banner, .masthead-hero { background: var(--theme-hero) !important; color: var(--theme-text) !important; }
+
+    /* Sections & Blocks */
+    section, .section, .content-section, .block, .feature, .features, .module, .panel { background: var(--theme-block) !important; color: var(--theme-text) !important; }
+
+    /* Cards */
+    .card, .panel, .tile, .box, .well, .portlet, .card-body, .card-inner, .feature-card, .service-card { background: var(--theme-card) !important; color: var(--theme-text) !important; border:1px solid var(--theme-muted) !important; border-radius: 10px; }
+
+    /* Buttons */
+    button, .btn, a.button, a.btn, [role="button"], input[type="button"], input[type="submit"], .badge, .chip, .tag, .cta { background: var(--theme-primary) !important; color: ${textOnPrimary} !important; border:1px solid var(--theme-primary) !important; }
+    button:hover, .btn:hover, a.button:hover, a.btn:hover { filter: brightness(0.95); }
+    .btn-secondary, .button.secondary { background: var(--theme-secondary) !important; color:${textOnSecondary} !important; border-color: var(--theme-secondary) !important; }
+    .btn-accent, .button.accent { background: var(--theme-accent) !important; color:${textOnAccent} !important; border-color: var(--theme-accent) !important; }
+
+    /* Forms */
+    input, textarea, select, label, fieldset, legend, .form, .form-control, .input { background: var(--theme-surface) !important; color: var(--theme-text) !important; border:1px solid var(--theme-muted) !important; }
+    input::placeholder, textarea::placeholder { color: ${placeholder} !important; }
+    input:focus, textarea:focus, select:focus { border-color: var(--theme-primary) !important; outline: 2px solid ${lighten(p.primary||'#000',.2)} !important; outline-offset: 1px; }
+
+    /* Tables */
+    table, .table, th, td, thead, tbody, tfoot { color: var(--theme-text) !important; border-color: var(--theme-muted) !important; }
+    thead, th { background: ${lighten(p.surface||p.bg||'#fff', .06)} !important; }
+    .table-striped tr:nth-child(odd) { background: ${lighten(p.surface||p.bg||'#fff', .04)} !important; }
+
+    /* Alerts */
+    .alert, .notice, .callout, .toast, .message, .notification { background: ${lighten(p.accent||'#eee', .45)} !important; border:1px solid var(--theme-accent) !important; color: ${ensureReadableTextColor(lighten(p.accent||'#eee', .45), p.text)} !important; }
+
+    /* Footer */
+    footer, .site-footer, .page-footer, [role="contentinfo"], .footbar { background: var(--theme-footer) !important; color: ${ensureReadableTextColor(p.footer||p.surface||p.bg||'#fff', p.text)} !important; border-top:1px solid var(--theme-muted) !important; }
+
+    /* Dropdowns & Modals */
+    .dropdown, .dropdown-menu, .modal, .dialog, [role="dialog"], .toolbar, .sidebar, .aside { background: var(--theme-surface) !important; color: var(--theme-text) !important; border:1px solid var(--theme-muted) !important; }
+
+    /* Pagination */
+    .pagination a, .pagination button { background: var(--theme-surface) !important; color: var(--theme-text) !important; border:1px solid var(--theme-muted) !important; }
+    .pagination .active a, .pagination .active button { background: var(--theme-primary) !important; color:${textOnPrimary} !important; border-color: var(--theme-primary) !important; }
+    `;
   }
-  out.push({ path: cssPath, content: cssText });
-  return out;
-}
-function injectLinkIntoHtml(html, href){
-  if(!html || typeof html !== 'string') return html;
-  if(new RegExp(`href=["']${href}["']`).test(html)) return html;
-  const link = `<link rel="stylesheet" href="${href}">`;
-  if(/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `  ${link}\n</head>`);
-  if(/<html[^>]*>/i.test(html)) return html.replace(/<html[^>]*>/i, m => `${m}\n<head>\n  ${link}\n</head>`);
-  if(/<body[^>]*>/i.test(html)) return html.replace(/<body[^>]*>/i, m => `<head>\n  ${link}\n</head>\n${m}`);
-  return `${link}\n${html}`;
-}
 
-// ----------------- UI wiring & state -----------------
-const $fab = document.getElementById('sgwm-theme-fab');
-const $panel = document.getElementById('sgwm-theme-panel');
-const $grid = document.getElementById('sgwm-theme-grid');
-const $bPrimary = document.getElementById('sgwm-b-primary');
-const $bBg = document.getElementById('sgwm-b-bg');
-const $bText = document.getElementById('sgwm-b-text');
-const $refresh = document.getElementById('sgwm-refresh');
-const $clear = document.getElementById('sgwm-clear');
-const $pickPrimary = document.getElementById('sgwm-pick-primary');
-const $pickBg = document.getElementById('sgwm-pick-bg');
-const $pickText = document.getElementById('sgwm-pick-text');
-const $pickSurface = document.getElementById('sgwm-pick-surface');
-const $applyGlobal = document.getElementById('sgwm-apply-global');
-const $saveCustom = document.getElementById('sgwm-save-custom');
-const $exportCss = document.getElementById('sgwm-export-css');
-const $toggleApply = document.getElementById('sgwm-toggle-apply');
+  // ========================= Apply & Clear =========================
+  function applyPaletteToDoc(doc, palette){ if(!doc) return; try{
+    let tag = doc.getElementById('sgwm-theme-override-pro');
+    if(!tag){ tag = doc.createElement('style'); tag.id='sgwm-theme-override-pro'; (doc.head||doc.documentElement).appendChild(tag); }
+    tag.textContent = paletteCss(palette);
+    // also set variables directly for inline CSS usage
+    const root = doc.documentElement; const entries=[['--theme-primary',palette.primary],['--theme-secondary',palette.secondary],['--theme-accent',palette.accent],['--theme-bg',palette.bg],['--theme-surface',palette.surface],['--theme-text',palette.text],['--theme-muted',palette.muted],['--theme-card',palette.card||palette.surface],['--theme-block',palette.block||palette.surface],['--theme-hero',palette.hero||palette.surface],['--theme-footer',palette.footer||palette.surface]];
+    entries.forEach(([k,v])=>{ try{ root.style.setProperty(k, v); }catch{} });
+  }catch(e){ console.error('applyPaletteToDoc error', e); } }
+  function clearThemeInDoc(doc){ if(!doc) return; const s=doc.getElementById('sgwm-theme-override-pro'); if(s) s.remove(); }
 
-let BASE = { primary:'#3366ff', bg:'#ffffff', text:'#111111' };
-let CURRENT = null;
-
-// populate theme grid
-function buildGrid(){
-  $grid.innerHTML = '';
-  THEMES.forEach(def=>{
-    const p = def.fn(BASE);
-    const card = document.createElement('div'); card.className='sgwm-card'; card.setAttribute('role','button');
-    card.innerHTML = `<div class="sgwm-card-name">${def.name}</div>
-      <div class="sgwm-band">
-        <div class="sgwm-swatch" style="background:${p.primary}"></div>
-        <div class="sgwm-swatch" style="background:${p.secondary}"></div>
-        <div class="sgwm-swatch" style="background:${p.accent}"></div>
-        <div class="sgwm-swatch" style="background:${p.bg}"></div>
-        <div class="sgwm-swatch" style="background:${p.surface}"></div>
-        <div class="sgwm-swatch" style="background:${p.text}"></div>
-      </div>`;
-    card.addEventListener('click', ()=> onPickTheme(def));
-    $grid.appendChild(card);
-  });
-}
-
-// read base palette from preview doc (honors CSS vars if present)
-function readBasePalette(doc){
-  try{
-    if(!doc) return BASE;
-    const RS = el => el ? (doc.defaultView.getComputedStyle(el)) : null;
+  // ========================= Base Palette Detection =========================
+  function readBasePalette(doc){ try{
+    const RS = (el)=> el ? doc.defaultView.getComputedStyle(el) : null;
     const root = RS(doc.documentElement), body = RS(doc.body);
     const tryVars = ['--color-primary','--primary','--brand','--accent','--theme-primary','--color-main'];
-    let primary=null;
-    if(root){
-      for(const v of tryVars){ const val = root.getPropertyValue(v).trim(); if(val) { primary = hex(val); break; } }
-    }
-    if(!primary){
-      const a = doc.querySelector('a'); const c = RS(a||doc.body)?.color; primary = hex(c) || BASE.primary;
-    }
-    const bg = hex(body?.backgroundColor || root?.backgroundColor) || BASE.bg;
-    const text = hex(body?.color) || BASE.text;
+    let primary = null; if(root) for(const v of tryVars){ const val=root.getPropertyValue(v).trim(); if(val){ primary = hex(val); if(primary) break; } }
+    if(!primary){ const a=doc.querySelector('a'); const c=RS(a||doc.body)?.color; primary = hex(c)||'#3366ff'; }
+    const bg = hex(body?.backgroundColor||root?.backgroundColor)||'#ffffff';
+    const text = hex(body?.color||'#111')||'#111111';
     return { primary, bg, text };
-  }catch(e){ return BASE; }
-}
+  }catch{ return { primary:'#3366ff', bg:'#ffffff', text:'#111111' }; } }
 
-function refreshBase(){
-  const doc = getPreviewDocument();
-  BASE = readBasePalette(doc) || BASE;
-  if($bPrimary) $bPrimary.style.background = BASE.primary;
-  if($bBg) $bBg.style.background = BASE.bg;
-  if($bText) $bText.style.background = BASE.text;
-}
+  // ========================= State =========================
+  let BASE = { primary:'#3366ff', bg:'#ffffff', text:'#111111' };
+  let CURRENT = null; // { id, name, palette, cssText }
+  let STRUCTURE = null; // detected nodes map
 
-// pick and apply theme
-function onPickTheme(themeDef){
-  const doc = getPreviewDocument();
-  const palette = themeDef.fn(BASE);
-  palette.primary = palette.primary || BASE.primary;
-  palette.secondary = palette.secondary || palette.primary;
-  palette.surface = palette.surface || palette.bg || '#fff';
-  palette.text = palette.text || '#111';
-  palette.muted = palette.muted || lighten(palette.surface, 0.06);
-  // ensure readable combos
-  palette.text = ensureReadable(palette.text, palette.bg);
-  palette.primary = ensureReadable(palette.primary, palette.surface);
-  CURRENT = { name: themeDef.name, id: themeDef.id, palette, cssText: paletteCss(palette) };
-  applyPaletteToDoc(doc, palette);
-  window.SGWM_THEME = CURRENT;
-  localStorage.setItem('sgwm_theme', JSON.stringify(CURRENT));
-  document.dispatchEvent(new CustomEvent('sgwm:themeChanged', { detail: CURRENT }));
-  // populate pickers
-  try{ $pickPrimary.value = rgbToHex(parseColor(CURRENT.palette.primary)); }catch(e){}
-  try{ $pickBg.value = rgbToHex(parseColor(CURRENT.palette.bg)); }catch(e){}
-  try{ $pickText.value = rgbToHex(parseColor(CURRENT.palette.text)); }catch(e){}
-  try{ $pickSurface.value = rgbToHex(parseColor(CURRENT.palette.surface)); }catch(e){}
-}
+  // ========================= UI (Shadow DOM) =========================
+  function mountUi(){
+    const host = document.getElementById('sgwm-pro-host'); if(!host) return;
+    const root = host.attachShadow({mode:'open'});
+    root.innerHTML = `
+      <style>
+        :host{ all: initial; }
+        .fab{ position:fixed; right:0; bottom:0; transform: translate(-20px,-70px); z-index:1; width:56px; height:56px; border-radius:9999px; border:1px solid rgba(0,0,0,.08); background:#fff; box-shadow: 0 10px 25px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06); display:grid; place-items:center; cursor:pointer; transition: transform .15s ease, box-shadow .15s ease; }
+        .fab:hover{ transform: translate(-20px,-70px) scale(1.05); box-shadow: 0 12px 28px rgba(0,0,0,.12), 0 3px 10px rgba(0,0,0,.08); }
+        .panel{ position:fixed; right:0; bottom:0; transform: translate(-20px,-138px); width: 460px; max-height: 78vh; overflow:auto; background:#fff; color:#111; border:1px solid rgba(0,0,0,.08); border-radius:14px; box-shadow: 0 24px 48px rgba(0,0,0,.12); display:none; padding-bottom: 14px; }
+        .panel.open{ display:block; }
+        .hdr{ position:sticky; top:0; background:#fff; padding:12px 14px; border-bottom:1px solid rgba(0,0,0,.06); z-index:2 }
+        .title{ font-weight:800; font-size:14px; }
+        .sub{ font-size:12px; color:#666; margin-top:2px; }
+        .sec{ padding:12px 14px; }
+        .grid{ display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:10px; }
+        .card{ border:1px solid rgba(0,0,0,.06); border-radius:10px; padding:10px; cursor:pointer; background:#fff; }
+        .card:hover{ box-shadow:0 8px 18px rgba(0,0,0,.06); transform: translateY(-2px); }
+        .card-name{ font-size:13px; font-weight:700; margin-bottom:8px; }
+        .band{ display:grid; grid-template-columns: repeat(6, 1fr); gap:4px; }
+        .sw{ height:18px; border-radius:6px; border:1px solid rgba(0,0,0,.08); }
+        .row{ display:flex; gap:8px; align-items:center; }
+        .pill{ padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid rgba(0,0,0,.08); background:#fafafa; cursor:pointer; }
+        .muted{ color:#777; font-size:11px; }
+        .divider{ height:1px; background:rgba(0,0,0,.06); margin:10px -14px; }
+        .controls{ display:flex; gap:8px; flex-wrap:wrap; }
+        .color{ width:44px; height:28px; border-radius:6px; border:1px solid rgba(0,0,0,.08); padding:2px; }
+        .sec-title{ font-weight:700; font-size:13px; margin-bottom:8px }
+        .footer{ padding: 10px 14px; border-top:1px solid rgba(0,0,0,.06); display:flex; gap:8px; align-items:center; justify-content:space-between }
+        .btn-primary{ background:#6b46c1; color:#fff; border-radius:8px; padding:8px 12px; border:none; cursor:pointer }
+        .small{ font-size:12px }
+        @media (max-width: 520px) { .panel{ width:auto; right:0; left:0; transform: translate(0, -120px); margin: 0 10px; } .fab{ transform: translate(-12px,-62px); } }
+      </style>
+      <button class="fab" id="fab" title="Theme (colors)">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3C7.03 3 3 7.03 3 12c0 3.31 2.69 6 6 6h1.25a1.75 1.75 0 0 1 0 3.5H10c-4.97 0-9-4.03-9-9S5.03 3 10 3s9 4.03 9 9c0 1.66-1.34 3-3 3h-1.25a1.75 1.75 0 0 1 0-3.5H16c.83 0 1.5-.67 1.5-1.5C17.5 7.47 15.03 5 12 5" stroke="#6b46c1" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="8" cy="10" r="1.25" fill="#6b46c1"/>
+          <circle cx="11.5" cy="8.5" r="1.25" fill="#22d3ee"/>
+          <circle cx="14.5" cy="11" r="1.25" fill="#f472b6"/>
+          <circle cx="10" cy="13.5" r="1.25" fill="#f59e0b"/>
+        </svg>
+      </button>
+      <div class="panel" id="panel" role="dialog" aria-modal="false" aria-label="SGWM Pro Theme">
+        <div class="hdr">
+          <div class="title">SGWM Pro — Universal Theme Engine</div>
+          <div class="sub">Semantic auto-map • 24+ themes • per-section overrides • WCAG contrast</div>
+        </div>
 
-// clear theme (removes override style; inline styles remain — reload preview to fully revert)
-function clearTheme(){
-  const doc = getPreviewDocument();
-  clearThemeInDoc(doc);
-  CURRENT = null;
-  window.SGWM_THEME = null;
-  localStorage.removeItem('sgwm_theme');
-  document.dispatchEvent(new CustomEvent('sgwm:themeCleared'));
-  // advise reload if you want pristine state
-  alert('Theme cleared. Reload preview if you want to fully revert inline style changes.');
-}
+        <div class="sec">
+          <div class="row" style="justify-content:space-between;">
+            <div>
+              <div class="muted">Detected base</div>
+              <div class="row" style="margin-top:6px">
+                <div style="width:120px"><div class="muted">Primary</div><div class="sw" id="b-primary"></div></div>
+                <div style="width:120px"><div class="muted">Background</div><div class="sw" id="b-bg"></div></div>
+                <div style="width:120px"><div class="muted">Text</div><div class="sw" id="b-text"></div></div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+              <button class="pill" id="refresh">Refresh</button>
+              <button class="pill" id="clear">Reset</button>
+            </div>
+          </div>
+        </div>
 
-// apply manual picks
-function applyManual(){
-  const doc = getPreviewDocument();
-  if(!CURRENT) CURRENT = { name:'custom', id:'custom', palette:{} };
-  const p = CURRENT.palette;
-  if($pickPrimary && $pickPrimary.value) p.primary = $pickPrimary.value;
-  if($pickBg && $pickBg.value) p.bg = $pickBg.value;
-  if($pickText && $pickText.value) p.text = $pickText.value;
-  if($pickSurface && $pickSurface.value) p.surface = $pickSurface.value;
-  p.muted = p.muted || lighten(p.surface || p.bg, .07);
-  p.card = p.card || p.surface;
-  CURRENT.cssText = paletteCss(p);
-  applyPaletteToDoc(getPreviewDocument(), p);
-  window.SGWM_THEME = CURRENT;
-  localStorage.setItem('sgwm_theme', JSON.stringify(CURRENT));
-}
+        <div class="sec">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div class="sec-title">Professional Themes</div>
+            <div class="muted small">Pick a starting palette</div>
+          </div>
+          <div class="grid" id="theme-grid"></div>
+        </div>
 
-// quickMap wrapper
-function handleQuickMap(kind){
-  if(!CURRENT) { alert('Pick a theme first'); return; }
-  quickMap(kind);
-}
+        <div class="sec">
+          <div class="sec-title">Manual Tweaks</div>
+          <div class="row" style="justify-content:space-between;align-items:center;">
+            <div><div class="muted">Primary</div><input type="color" id="pick-primary" class="color"></div>
+            <div><div class="muted">Background</div><input type="color" id="pick-bg" class="color"></div>
+            <div><div class="muted">Text</div><input type="color" id="pick-text" class="color"></div>
+            <div><div class="muted">Surface</div><input type="color" id="pick-surface" class="color"></div>
+          </div>
+          <div style="margin-top:10px;" class="controls">
+            <button id="apply" class="pill">Apply</button>
+            <button id="save" class="pill">Save Preset</button>
+            <button id="exportCss" class="pill">Get CSS</button>
+          </div>
+        </div>
 
-// save custom presets (keeps last 12)
-function saveCustom(){
-  if(!CURRENT) return;
-  const key = 'sgwm_custom_presets';
-  const arr = JSON.parse(localStorage.getItem(key) || '[]');
-  arr.unshift(CURRENT);
-  localStorage.setItem(key, JSON.stringify(arr.slice(0,12)));
-  alert('Custom saved');
-}
+        <div class="sec">
+          <div class="sec-title">Per-Section Quick Map</div>
+          <div class="row" style="gap:6px;flex-wrap:wrap">
+            <button class="pill" data-map="nav">Map Nav</button>
+            <button class="pill" data-map="hero">Map Hero</button>
+            <button class="pill" data-map="card">Map Cards</button>
+            <button class="pill" data-map="button">Map Buttons</button>
+            <button class="pill" data-map="section">Map Sections</button>
+            <button class="pill" data-map="footer">Map Footer</button>
+          </div>
+          <div class="muted" style="margin-top:8px">Detected live on this template. If a category doesn't respond, click Refresh first.</div>
+        </div>
 
-// export css action
-function getActiveCss(){ return window.SGWM_THEME?.cssText || ''; }
+        <div class="footer">
+          <div class="muted">State persists in window.SGWM_PRO_THEME & localStorage</div>
+          <div style="display:flex;gap:8px"><button id="applyNow" class="btn-primary">Apply Now</button></div>
+        </div>
+      </div>
+    `;
 
-// ----------------- UI event wiring -----------------
-$fab.addEventListener('click', ()=>{
-  if(!$panel.classList.contains('open')){ refreshBase(); buildGrid(); }
-  $panel.classList.toggle('open');
-});
-$refresh.addEventListener('click', ()=>{ refreshBase(); buildGrid(); });
-$clear.addEventListener('click', clearTheme);
-$applyGlobal.addEventListener('click', ()=>{ applyManual(); alert('Applied to preview'); });
-$saveCustom.addEventListener('click', saveCustom);
-$exportCss.addEventListener('click', ()=>{ const css = getActiveCss(); prompt('Copy CSS below (save as css/sgwm-theme.css in your export):', css); });
-$toggleApply.addEventListener('click', ()=>{ applyManual(); alert('Theme applied'); });
+    // Wire UI
+    const $ = (sel)=> root.querySelector(sel);
+    const $panel = $('#panel');
+    $('#fab').addEventListener('click', ()=>{ if(!$panel.classList.contains('open')) refreshBaseAndGrid(); $panel.classList.toggle('open'); });
+    $('#refresh').addEventListener('click', refreshBaseAndGrid);
+    $('#clear').addEventListener('click', ()=>{ clearTheme(); alert('Theme cleared'); });
+    $('#apply').addEventListener('click', ()=>{ applyManual(); alert('Applied'); });
+    $('#save').addEventListener('click', savePreset);
+    $('#exportCss').addEventListener('click', ()=>{ const css=getActiveCss(); prompt('Copy CSS below (save as css/sgwm-theme.css in your export):', css); });
+    $('#applyNow').addEventListener('click', ()=>{ applyManual(); alert('Theme applied'); });
+    root.querySelectorAll('[data-map]').forEach(btn=> btn.addEventListener('click', (e)=>{ const k=e.currentTarget.getAttribute('data-map'); quickMap(k); }));
 
-// quick map buttons
-document.querySelectorAll('[data-map]').forEach(btn => btn.addEventListener('click', e=>{
-  const map = e.currentTarget.getAttribute('data-map');
-  handleQuickMap(map);
-}));
+    // Populate grid
+    function buildGrid(){ const grid = $('#theme-grid'); grid.innerHTML=''; THEMES.forEach(def=>{
+      const p = def.palette(BASE);
+      const card = document.createElement('div'); card.className='card'; card.setAttribute('role','button');
+      card.innerHTML = `<div class="card-name">${def.name}</div><div class="band">`
+        + [`primary`,`secondary`,`accent`,`bg`,`surface`,`text`].map(k=>`<div class="sw" style="background:${p[k]}"></div>`).join('')
+        + `</div>`;
+      card.addEventListener('click', ()=> onPickTheme(def));
+      grid.appendChild(card);
+    }); }
 
-// pickers live update
-[$pickPrimary,$pickBg,$pickText,$pickSurface].forEach(el=>{
-  if(!el) return;
-  el.addEventListener('input', ()=>{
-    if(!CURRENT) CURRENT = { name:'custom', id:'custom', palette:{} };
-    if($pickPrimary) CURRENT.palette.primary = $pickPrimary.value;
-    if($pickBg) CURRENT.palette.bg = $pickBg.value;
-    if($pickText) CURRENT.palette.text = $pickText.value;
-    if($pickSurface) CURRENT.palette.surface = $pickSurface.value;
-    CURRENT.cssText = paletteCss(CURRENT.palette);
-    applyPaletteToDoc(getPreviewDocument(), CURRENT.palette);
-    window.SGWM_THEME = CURRENT;
-    localStorage.setItem('sgwm_theme', JSON.stringify(CURRENT));
-  });
-});
+    function refreshBaseAndGrid(){ BASE = readBasePalette(getPreviewDocument())||BASE; $('#b-primary').style.background=BASE.primary; $('#b-bg').style.background=BASE.bg; $('#b-text').style.background=BASE.text; STRUCTURE = detectStructure(getPreviewDocument()); buildGrid(); presetPickersFromCurrent(); }
 
-// load saved
-try{
-  const saved = JSON.parse(localStorage.getItem('sgwm_theme'));
-  if(saved){ CURRENT = saved; window.SGWM_THEME = CURRENT; }
-}catch(e){}
+    function presetPickersFromCurrent(){ try{ if(!CURRENT) return; $('#pick-primary').value = rgbToHex(parseColor(CURRENT.palette.primary)); $('#pick-bg').value = rgbToHex(parseColor(CURRENT.palette.bg)); $('#pick-text').value = rgbToHex(parseColor(CURRENT.palette.text)); $('#pick-surface').value = rgbToHex(parseColor(CURRENT.palette.surface)); }catch{} }
 
-// observe preview DOM and reapply (debounced)
-let reapplyTimeout = null;
-function scheduleReapply(){
-  if(reapplyTimeout) clearTimeout(reapplyTimeout);
-  reapplyTimeout = setTimeout(()=>{
-    if(CURRENT && CURRENT.palette) applyPaletteToDoc(getPreviewDocument(), CURRENT.palette);
-  }, 180);
-}
+    function onPickTheme(def){ const doc=getPreviewDocument(); const palette=normalizePalette(def.palette(BASE)); CURRENT={ id:def.id, name:def.name, palette, cssText: paletteCss(palette) }; applyPaletteToDoc(doc, palette); saveState(); presetPickersFromCurrent(); }
 
-function observePreview(){
-  const f = findPreviewFrame();
-  const doc = f ? (f.contentDocument || f.contentWindow.document) : document;
-  if(!doc) return;
-  try{
-    const observer = new MutationObserver(muts => {
-      scheduleReapply();
-    });
-    observer.observe(doc.documentElement || doc, { attributes:true, childList:true, subtree:true });
-  }catch(e){}
-}
-setTimeout(observePreview, 700);
+    // manual pickers live-update
+    ['pick-primary','pick-bg','pick-text','pick-surface'].forEach(id=>{ const el=$("#"+id); el.addEventListener('input', ()=>{ if(!CURRENT) CURRENT={id:'custom',name:'Custom',palette:{}}; const p=CURRENT.palette; p.primary=($('#pick-primary').value)||p.primary; p.bg=($('#pick-bg').value)||p.bg; p.text=($('#pick-text').value)||p.text; p.surface=($('#pick-surface').value)||p.surface; p.muted=p.muted||lighten(p.surface||p.bg||'#fff', .07); p.card=p.card||p.surface; CURRENT.cssText=paletteCss(p); applyPaletteToDoc(getPreviewDocument(), p); saveState(); }); });
 
-// expose exporter API
-window.SGWM_THEME = CURRENT;
-window.SGWM_THEME_EXPORTER = {
-  ensureThemeInFiles(files, cssPath='css/sgwm-theme.css'){ const theme = window.SGWM_THEME; if(!theme||!theme.cssText) return files; return attachThemeToFiles(files, theme.cssText, cssPath); },
-  async ensureThemeInZip(zip, files, cssPath='css/sgwm-theme.css'){ const theme = window.SGWM_THEME; if(!theme||!theme.cssText){ await writeToZip(zip, files); return; } const updated = attachThemeToFiles(files, theme.cssText, cssPath); await writeToZip(zip, updated); },
-  getActiveCss(){ return window.SGWM_THEME?.cssText || ''; }
-};
+    function applyManual(){ if(!CURRENT) CURRENT={id:'custom',name:'Custom',palette:{}}; const p=CURRENT.palette; p.primary=$('#pick-primary').value||p.primary||BASE.primary; p.bg=$('#pick-bg').value||p.bg||BASE.bg; p.text=$('#pick-text').value||p.text||BASE.text; p.surface=$('#pick-surface').value||p.surface||(p.bg||BASE.bg); p.muted=p.muted||lighten(p.surface||p.bg||'#fff', .07); CURRENT.cssText=paletteCss(p); applyPaletteToDoc(getPreviewDocument(), p); saveState(); }
 
-// helper writeToZip (used by exporter)
-async function writeToZip(zip, files){
-  for(const f of files) zip.file(f.path, typeof f.content === 'string' ? f.content : f.content );
-}
+    function quickMap(kind){ const doc=getPreviewDocument(); if(!doc){ alert('Preview not found'); return; } if(!CURRENT){ alert('Pick a theme first'); return; } if(!STRUCTURE) STRUCTURE = detectStructure(doc);
+      const list = (STRUCTURE[kind]||[]); if(list.length===0){ alert('No elements detected for "'+kind+'". Click Refresh and try again.'); return; }
+      const p=CURRENT.palette; const textOnPrimary=ensureReadableTextColor(p.primary,p.text);
+      list.forEach(el=>{ try{
+        if(kind==='nav' || kind==='header') { el.style.background=p.primary; el.style.color=textOnPrimary; el.querySelectorAll('a,button,.btn').forEach(x=>{ x.style.color=textOnPrimary; }); }
+        else if(kind==='hero') { el.style.background=p.hero||p.surface||p.bg; el.style.color=p.text; }
+        else if(kind==='card') { el.style.background=p.card||p.surface; el.style.borderColor=p.muted; el.style.color=p.text; }
+        else if(kind==='button') { (el.matches('button,.btn,a.button,a.btn,[role="button"],input[type="button"],input[type="submit"]')?[el]:el.querySelectorAll('button,.btn,a.button,a.btn,[role="button"],input[type="button"],input[type="submit"]').forEach(btn=>{ btn.style.background=p.primary; btn.style.borderColor=p.primary; btn.style.color=textOnPrimary; })) }
+        else if(kind==='section') { el.style.background=p.block||p.surface; el.style.color=p.text; }
+        else if(kind==='footer') { el.style.background=p.footer||p.surface||p.bg; el.style.color=ensureReadableTextColor(p.footer||p.surface||p.bg, p.text); }
+      }catch(e){} });
+    }
 
-// helpers used earlier
-function varOr(a,b){ try{return a||b}catch(e){return b} }
-function lighten(h,a=0.08){ try{ const base=parseColor(h)||{r:0,g:0,b:0}; const t=rgbToHsl(base); t.l=clamp(t.l+a,0,1); return rgbToHex(hslToRgb(t)); }catch(e){return h||''} }
-function darken(h,a=0.08){ try{ const base=parseColor(h)||{r:0,g:0,b:0}; const t=rgbToHsl(base); t.l=clamp(t.l-a,0,1); return rgbToHex(hslToRgb(t)); }catch(e){return h||''} }
+    function savePreset(){ if(!CURRENT) return; const key='sgwm_pro_custom_presets'; const arr=JSON.parse(localStorage.getItem(key)||'[]'); arr.unshift(CURRENT); localStorage.setItem(key, JSON.stringify(arr.slice(0,20))); alert('Preset saved'); }
 
-// init UI state
-refreshBase(); buildGrid();
+    function saveState(){ window.SGWM_PRO_THEME=CURRENT; try{ localStorage.setItem('sgwm_pro_theme', JSON.stringify(CURRENT)); }catch{} }
 
-// helpful diagnostic notice
-console.info('SGWM Theme Changer initialized — use the FAB (bottom-right). If preview is cross-origin, the tool will apply to host only due to browser restrictions.');
+    // load previous
+    try{ const saved=JSON.parse(localStorage.getItem('sgwm_pro_theme')); if(saved){ CURRENT=saved; window.SGWM_PRO_THEME=CURRENT; } }catch{}
 
-})(); // end IIFE
+    // initial
+    (function init(){ BASE = readBasePalette(getPreviewDocument()); STRUCTURE = detectStructure(getPreviewDocument()); buildGrid(); $('#b-primary').style.background=BASE.primary; $('#b-bg').style.background=BASE.bg; $('#b-text').style.background=BASE.text; if(CURRENT) { applyPaletteToDoc(getPreviewDocument(), CURRENT.palette); presetPickersFromCurrent(); }
+      // Observe preview for changes and re-inject theme
+      try{ const doc=getPreviewDocument(); const observer = new MutationObserver(()=>{ if(CURRENT) applyPaletteToDoc(doc, CURRENT.palette); }); observer.observe(doc.documentElement||doc, { attributes:true, childList:true, subtree:true }); }catch{}
+    })();
+  }
+
+  // Normalize palette (ensure keys + safe contrast)
+  function normalizePalette(p){ const out={...p}; out.primary=out.primary||'#3366ff'; out.secondary=out.secondary||out.primary; out.bg=out.bg||'#ffffff'; out.surface=out.surface||out.bg; out.text=ensureReadableTextColor(out.bg, out.text||'#111'); out.muted=out.muted||darken(out.surface||out.bg,.12); out.card=out.card||out.surface; out.block=out.block||out.surface; out.hero=out.hero||out.surface; out.footer=out.footer||out.surface; return out; }
+
+  // Clear theme (both doc & state)
+  function clearTheme(){ const doc=getPreviewDocument(); clearThemeInDoc(doc); CURRENT=null; window.SGWM_PRO_THEME=null; try{ localStorage.removeItem('sgwm_pro_theme'); }catch{} }
+
+  // Expose exporter helper
+  window.SGWM_PRO_THEME = CURRENT;
+  window.SGWM_PRO_THEME_EXPORTER = {
+    getActiveCss(){ return window.SGWM_PRO_THEME?.cssText || ''; },
+    ensureThemeInFiles(files, cssPath='css/sgwm-theme.css'){
+      const theme = window.SGWM_PRO_THEME; if(!theme||!theme.cssText) return files;
+      const out=[]; let hadHtml=false;
+      const injectLink=(html, href)=>{ if(!html||typeof html!=='string') return html; if(new RegExp(`href=["']${href}["']`).test(html)) return html; const link=`<link rel="stylesheet" href="${href}">`;
+        if(/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `  ${link}\n</head>`);
+        if(/<html[^>]*>/i.test(html)) return html.replace(/<html[^>]*>/i, m=>`${m}\n<head>\n  ${link}\n</head>`);
+        if(/<body[^>]*>/i.test(html)) return html.replace(/<body[^>]*>/i, m=>`<head>\n  ${link}\n</head>\n${m}`);
+        return `${link}\n${html}`; };
+      for(const f of files){ const isHtml=/\.html?$/i.test(f.path); if(isHtml) hadHtml=true; if(isHtml){ const html=typeof f.content==='string'?f.content:(new TextDecoder('utf-8').decode(f.content)); const updated=injectLink(html, cssPath); out.push({ path:f.path, content:updated }); } else { out.push(f); } }
+      out.push({ path: cssPath, content: theme.cssText });
+      return out;
+    }
+  };
+
+  // Mount UI now
+  mountUi();
+})();
 </script>
-<!-- /SGWM Theme Changer -->
 
 
  
