@@ -720,286 +720,283 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
- /* ========= Host UI (FAB + Panel) ========= */
-    :root { --sgwm-z: 99999; }
-    #sgwm-theme-root { all: initial; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Inter, Arial, sans-serif; }
-    #sgwm-theme-fab {
-      position: fixed; right: 20px; bottom: 70px; z-index: var(--sgwm-z);
-      width: 56px; height: 56px; border-radius: 9999px; border: 1px solid rgba(0,0,0,.08);
-      background:#fff; box-shadow: 0 10px 25px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06);
-      display: grid; place-items: center; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease;
-    }
-    #sgwm-theme-fab:hover { transform: scale(1.05); box-shadow: 0 12px 28px rgba(0,0,0,.12), 0 3px 10px rgba(0,0,0,.08); }
-    #sgwm-theme-panel {
-      position: fixed; right: 20px; bottom: 138px; z-index: calc(var(--sgwm-z) + 1);
-      width: 420px; max-height: 78vh; overflow: auto; background:#fff; color:#111; border: 1px solid rgba(0,0,0,.08); border-radius: 14px; box-shadow: 0 24px 48px rgba(0,0,0,.12);
-      display: none; padding-bottom: 14px;
-    }
-    #sgwm-theme-panel.open { display: block; }
-    .sgwm-hdr { position: sticky; top: 0; background: #fff; padding: 12px 14px; border-bottom: 1px solid rgba(0,0,0,.06); z-index:2 }
-    .sgwm-title { font-weight: 800; font-size: 14px; }
-    .sgwm-sub { font-size: 12px; color:#666; margin-top: 2px; }
-    .sgwm-sec { padding: 12px 14px; }
-    .sgwm-swatch { height: 18px; border-radius: 6px; border: 1px solid rgba(0,0,0,.08); }
-    .sgwm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .sgwm-card { border: 1px solid rgba(0,0,0,.06); border-radius: 10px; padding: 10px; cursor: pointer; background:#fff; }
-    .sgwm-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.06); transform: translateY(-2px); }
-    .sgwm-card-name { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
-    .sgwm-band { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
-    .sgwm-row { display:flex; gap:8px; align-items:center; }
-    .sgwm-pill { padding: 6px 10px; border-radius: 999px; font-size: 12px; border: 1px solid rgba(0,0,0,.08); background:#fafafa; cursor:pointer; }
-    .sgwm-muted { color:#777; font-size:11px; }
-    .sgwm-divider { height:1px; background:rgba(0,0,0,.06); margin: 10px -14px; }
-    .sgwm-controls { display:flex; gap:8px; flex-wrap:wrap; }
-    .sgwm-color-input { width: 44px; height: 28px; border-radius:6px; border:1px solid rgba(0,0,0,.08); padding:2px; }
-    .sgwm-section-title { font-weight:700; font-size:13px; margin-bottom:8px }
-    .sgwm-footer { padding: 10px 14px; border-top:1px solid rgba(0,0,0,.06); display:flex; gap:8px; align-items:center; justify-content:space-between }
-    .sgwm-btn-primary { background:#6b46c1; color:#fff; border-radius:8px; padding:8px 12px; border:none; cursor:pointer }
-    .sgwm-small { font-size:12px }
-    @media (max-width: 520px) { #sgwm-theme-panel { right:10px; left:10px; width:auto; bottom:120px } #sgwm-theme-fab{ right:12px; bottom:62px } }
+ <!-- 🎨 SGWM Theme Changer — Full Untrimmed (Paste before </body> in wizardmaker.html) -->
+<style id="sgwm-theme-styles">
+  :root { --sgwm-z: 99999; }
+  #sgwm-theme-root { all: initial; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Inter, Arial, sans-serif; }
+  #sgwm-theme-fab {
+    position: fixed; right: 20px; bottom: 70px; z-index: var(--sgwm-z);
+    width: 56px; height: 56px; border-radius: 9999px; border: 1px solid rgba(0,0,0,.08);
+    background:#fff; box-shadow: 0 10px 25px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06);
+    display: grid; place-items: center; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease;
+  }
+  #sgwm-theme-fab:hover { transform: scale(1.05); box-shadow: 0 12px 28px rgba(0,0,0,.12), 0 3px 10px rgba(0,0,0,.08); }
+  #sgwm-theme-panel {
+    position: fixed; right: 20px; bottom: 138px; z-index: calc(var(--sgwm-z) + 1);
+    width: 480px; max-height: 78vh; overflow: auto; background:#fff; color:#111; border: 1px solid rgba(0,0,0,.08); border-radius: 14px; box-shadow: 0 24px 48px rgba(0,0,0,.12);
+    display: none; padding-bottom: 14px;
+  }
+  #sgwm-theme-panel.open { display: block; }
+  .sgwm-hdr { position: sticky; top: 0; background: #fff; padding: 12px 14px; border-bottom: 1px solid rgba(0,0,0,.06); z-index:2 }
+  .sgwm-title { font-weight: 800; font-size: 14px; }
+  .sgwm-sub { font-size: 12px; color:#666; margin-top: 2px; }
+  .sgwm-sec { padding: 12px 14px; }
+  .sgwm-swatch { height: 18px; border-radius: 6px; border: 1px solid rgba(0,0,0,.08); }
+  .sgwm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 8px; }
+  .sgwm-card { border: 1px solid rgba(0,0,0,.06); border-radius: 10px; padding: 10px; cursor: pointer; background:#fff; }
+  .sgwm-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.06); transform: translateY(-2px); }
+  .sgwm-card-name { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .sgwm-band { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+  .sgwm-row { display:flex; gap:8px; align-items:center; }
+  .sgwm-pill { padding: 6px 10px; border-radius: 999px; font-size: 12px; border: 1px solid rgba(0,0,0,.08); background:#fafafa; cursor:pointer; }
+  .sgwm-muted { color:#777; font-size:11px; }
+  .sgwm-divider { height:1px; background:rgba(0,0,0,.06); margin: 10px -14px; }
+  .sgwm-controls { display:flex; gap:8px; flex-wrap:wrap; }
+  .sgwm-color-input { width: 44px; height: 28px; border-radius:6px; border:1px solid rgba(0,0,0,.08); padding:2px; }
+  .sgwm-section-title { font-weight:700; font-size:13px; margin-bottom:8px }
+  .sgwm-footer { padding: 10px 14px; border-top:1px solid rgba(0,0,0,.06); display:flex; gap:8px; align-items:center; justify-content:space-between }
+  .sgwm-btn-primary { background:#6b46c1; color:#fff; border-radius:8px; padding:8px 12px; border:none; cursor:pointer }
+  .sgwm-small { font-size:12px }
+  .sgwm-input { width:100%; padding:8px; border-radius:8px; border:1px solid rgba(0,0,0,.08); }
+  .sgwm-footer .sgwm-pill { background:transparent }
+  @media (max-width: 520px) { #sgwm-theme-panel { right:10px; left:10px; width:auto; bottom:120px } #sgwm-theme-fab{ right:12px; bottom:62px } }
+</style>
 
-    /* keep panel styles isolated */
-  </style>
-</head>
-<body>
+<div id="sgwm-theme-root" aria-live="polite">
+  <button id="sgwm-theme-fab" title="Theme (colors only)">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 3C7.03 3 3 7.03 3 12c0 3.31 2.69 6 6 6h1.25a1.75 1.75 0 0 1 0 3.5H10c-4.97 0-9-4.03-9-9S5.03 3 10 3s9 4.03 9 9c0 1.66-1.34 3-3 3h-1.25a1.75 1.75 0 0 1 0-3.5H16c.83 0 1.5-.67 1.5-1.5C17.5 7.47 15.03 5 12 5" stroke="#6b46c1" stroke-width="1.8" stroke-linecap="round"/>
+      <circle cx="8" cy="10" r="1.25" fill="#6b46c1"/>
+      <circle cx="11.5" cy="8.5" r="1.25" fill="#22d3ee"/>
+      <circle cx="14.5" cy="11" r="1.25" fill="#f472b6"/>
+      <circle cx="10" cy="13.5" r="1.25" fill="#f59e0b"/>
+    </svg>
+  </button>
 
-  <div id="sgwm-theme-root" aria-live="polite">
-    <button id="sgwm-theme-fab" title="Theme (colors only)">
-      <!-- SVG -->
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M12 3C7.03 3 3 7.03 3 12c0 3.31 2.69 6 6 6h1.25a1.75 1.75 0 0 1 0 3.5H10c-4.97 0-9-4.03-9-9S5.03 3 10 3s9 4.03 9 9c0 1.66-1.34 3-3 3h-1.25a1.75 1.75 0 0 1 0-3.5H16c.83 0 1.5-.67 1.5-1.5C17.5 7.47 15.03 5 12 5" stroke="#6b46c1" stroke-width="1.8" stroke-linecap="round"/>
-        <circle cx="8" cy="10" r="1.25" fill="#6b46c1"/>
-        <circle cx="11.5" cy="8.5" r="1.25" fill="#22d3ee"/>
-        <circle cx="14.5" cy="11" r="1.25" fill="#f472b6"/>
-        <circle cx="10" cy="13.5" r="1.25" fill="#f59e0b"/>
-      </svg>
-    </button>
+  <div id="sgwm-theme-panel" role="dialog" aria-modal="false" aria-label="Theme Changer">
+    <div class="sgwm-hdr">
+      <div class="sgwm-title">SGWM Theme — Advanced</div>
+      <div class="sgwm-sub">Semantic, adaptive theme engine • auto-maps styles • color pickers • export-ready</div>
+    </div>
 
-    <div id="sgwm-theme-panel" role="dialog" aria-modal="false" aria-label="Theme Changer">
-      <div class="sgwm-hdr">
-        <div class="sgwm-title">SGWM Theme — Advanced</div>
-        <div class="sgwm-sub">Semantic, adaptive theme engine • auto-maps styles • color pickers • export-ready</div>
-      </div>
-
-      <div class="sgwm-sec">
-        <div class="sgwm-row" style="justify-content:space-between;">
-          <div>
-            <div class="sgwm-muted">Detected base</div>
-            <div class="sgwm-row" style="margin-top:6px">
-              <div style="width:120px">
-                <div class="sgwm-muted">Primary</div>
-                <div class="sgwm-swatch" id="sgwm-b-primary"></div>
-              </div>
-              <div style="width:120px">
-                <div class="sgwm-muted">Background</div>
-                <div class="sgwm-swatch" id="sgwm-b-bg"></div>
-              </div>
-              <div style="width:120px">
-                <div class="sgwm-muted">Text</div>
-                <div class="sgwm-swatch" id="sgwm-b-text"></div>
-              </div>
+    <div class="sgwm-sec">
+      <div class="sgwm-row" style="justify-content:space-between;">
+        <div>
+          <div class="sgwm-muted">Detected base</div>
+          <div class="sgwm-row" style="margin-top:6px">
+            <div style="width:120px">
+              <div class="sgwm-muted">Primary</div>
+              <div class="sgwm-swatch" id="sgwm-b-primary"></div>
+            </div>
+            <div style="width:120px">
+              <div class="sgwm-muted">Background</div>
+              <div class="sgwm-swatch" id="sgwm-b-bg"></div>
+            </div>
+            <div style="width:120px">
+              <div class="sgwm-muted">Text</div>
+              <div class="sgwm-swatch" id="sgwm-b-text"></div>
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
-            <button class="sgwm-pill" id="sgwm-refresh">Refresh</button>
-            <button class="sgwm-pill" id="sgwm-clear">Reset</button>
-          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+          <button class="sgwm-pill" id="sgwm-refresh">Refresh</button>
+          <button class="sgwm-pill" id="sgwm-clear">Reset</button>
         </div>
       </div>
-
-      <div class="sgwm-sec">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div class="sgwm-section-title">Professional Themes</div>
-          <div class="sgwm-muted sgwm-small">Pick a starting palette</div>
-        </div>
-        <div class="sgwm-grid" id="sgwm-theme-grid"></div>
-      </div>
-
-      <div class="sgwm-sec">
-        <div class="sgwm-section-title">Manual Tweaks</div>
-        <div class="sgwm-row" style="justify-content:space-between;align-items:center;">
-          <div>
-            <div class="sgwm-muted">Primary</div>
-            <input type="color" id="sgwm-pick-primary" class="sgwm-color-input">
-          </div>
-          <div>
-            <div class="sgwm-muted">Background</div>
-            <input type="color" id="sgwm-pick-bg" class="sgwm-color-input">
-          </div>
-          <div>
-            <div class="sgwm-muted">Text</div>
-            <input type="color" id="sgwm-pick-text" class="sgwm-color-input">
-          </div>
-          <div>
-            <div class="sgwm-muted">Surface</div>
-            <input type="color" id="sgwm-pick-surface" class="sgwm-color-input">
-          </div>
-        </div>
-        <div style="margin-top:10px;">
-          <label class="sgwm-muted">Advanced: apply to</label>
-          <div style="margin-top:6px;" class="sgwm-controls">
-            <button id="sgwm-apply-global" class="sgwm-pill">Apply</button>
-            <button id="sgwm-save-custom" class="sgwm-pill">Save Custom</button>
-            <button id="sgwm-export-css" class="sgwm-pill">Get CSS</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="sgwm-sec">
-        <div class="sgwm-section-title">Single-element quick map</div>
-        <div class="sgwm-row" style="gap:6px;flex-wrap:wrap">
-          <button class="sgwm-pill" data-map="nav">Map Nav</button>
-          <button class="sgwm-pill" data-map="hero">Map Hero</button>
-          <button class="sgwm-pill" data-map="card">Map Cards</button>
-          <button class="sgwm-pill" data-map="btn">Map Buttons</button>
-          <button class="sgwm-pill" data-map="section">Map Sections</button>
-        </div>
-      </div>
-
-      <div class="sgwm-footer">
-        <div class="sgwm-muted">Theme state saved to window.SGWM_THEME and localStorage</div>
-        <div style="display:flex;gap:8px">
-          <button id="sgwm-toggle-apply" class="sgwm-btn-primary">Apply Now</button>
-        </div>
-      </div>
-
     </div>
+
+    <div class="sgwm-sec">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="sgwm-section-title">Professional Themes</div>
+        <div class="sgwm-muted sgwm-small">Pick a starting palette</div>
+      </div>
+      <div class="sgwm-grid" id="sgwm-theme-grid"></div>
+    </div>
+
+    <div class="sgwm-sec">
+      <div class="sgwm-section-title">Manual Tweaks</div>
+      <div class="sgwm-row" style="justify-content:space-between;align-items:center;flex-wrap:wrap">
+        <div>
+          <div class="sgwm-muted">Primary</div>
+          <input type="color" id="sgwm-pick-primary" class="sgwm-color-input">
+        </div>
+        <div>
+          <div class="sgwm-muted">Background</div>
+          <input type="color" id="sgwm-pick-bg" class="sgwm-color-input">
+        </div>
+        <div>
+          <div class="sgwm-muted">Text</div>
+          <input type="color" id="sgwm-pick-text" class="sgwm-color-input">
+        </div>
+        <div>
+          <div class="sgwm-muted">Surface</div>
+          <input type="color" id="sgwm-pick-surface" class="sgwm-color-input">
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <label class="sgwm-muted">Advanced: apply to</label>
+        <div style="margin-top:6px;" class="sgwm-controls">
+          <button id="sgwm-apply-global" class="sgwm-pill">Apply</button>
+          <button id="sgwm-save-custom" class="sgwm-pill">Save Custom</button>
+          <button id="sgwm-export-css" class="sgwm-pill">Get CSS</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sgwm-sec">
+      <div class="sgwm-section-title">Single-element quick map</div>
+      <div class="sgwm-row" style="gap:6px;flex-wrap:wrap">
+        <button class="sgwm-pill" data-map="nav">Map Nav</button>
+        <button class="sgwm-pill" data-map="hero">Map Hero</button>
+        <button class="sgwm-pill" data-map="card">Map Cards</button>
+        <button class="sgwm-pill" data-map="btn">Map Buttons</button>
+        <button class="sgwm-pill" data-map="section">Map Sections</button>
+      </div>
+    </div>
+
+    <div class="sgwm-footer">
+      <div class="sgwm-muted">Theme state saved to window.SGWM_THEME and localStorage</div>
+      <div style="display:flex;gap:8px">
+        <button id="sgwm-toggle-apply" class="sgwm-btn-primary">Apply Now</button>
+      </div>
+    </div>
+
   </div>
+</div>
 
-  <script>
-  (function(){
-    // ========= Utilities =========
-    const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
-    const toHex = (n) => Math.round(clamp(n,0,255)).toString(16).padStart(2,'0');
+<script>
+(function(){
+  // ========= Utilities =========
+  const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+  const toHex = (n) => Math.round(clamp(n,0,255)).toString(16).padStart(2,'0');
 
-    function parseColor(input) {
-      if (!input) return null;
-      const s = String(input).trim().toLowerCase();
-      let m;
-      if ((m = s.match(/^#([0-9a-f]{3,8})$/i))) {
-        let h = m[1];
-        if (h.length === 3) h = h.split('').map(ch => ch+ch).join('');
-        const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
-        return { r, g, b };
+  function parseColor(input) {
+    if (!input) return null;
+    const s = String(input).trim().toLowerCase();
+    let m;
+    if ((m = s.match(/^#([0-9a-f]{3,8})$/i))) {
+      let h = m[1];
+      if (h.length === 3) h = h.split('').map(ch => ch+ch).join('');
+      const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+      return { r, g, b };
+    }
+    if ((m = s.match(/^rgba?\(([^)]+)\)$/i))) {
+      const parts = m[1].split(',').map(v=>v.trim()).filter(Boolean);
+      const r = parseFloat(parts[0]), g = parseFloat(parts[1]), b = parseFloat(parts[2]);
+      return { r, g, b };
+    }
+    if ((m = s.match(/^hsla?\(([^)]+)\)$/i))) {
+      const [H,S,L] = m[1].split(',').map(v => v.trim());
+      return hslToRgb({ h: parseFloat(H), s: parseFloat(S)/100, l: parseFloat(L)/100 });
+    }
+    return null;
+  }
+  function rgbToHex({r,g,b}) { return `#${toHex(r)}${toHex(g)}${toHex(b)}`; }
+  function rgbToHsl({r,g,b}) { r/=255; g/=255; b/=255; const max=Math.max(r,g,b), min=Math.min(r,g,b); let h,s,l=(max+min)/2; if (max===min) { h=s=0; } else { const d=max-min; s = l>0.5 ? d/(2-max-min) : d/(max+min); switch(max){ case r: h=(g-b)/d + (g<b?6:0); break; case g: h=(b-r)/d + 2; break; case b: h=(r-g)/d + 4; break; } h/=6; } return { h:h*360, s, l }; }
+  function hslToRgb({h,s,l}){ h = ((h%360)+360)%360; const C=(1-Math.abs(2*l-1))*s, X=C*(1-Math.abs(((h/60)%2)-1)), m=l-C/2; let r1=0,g1=0,b1=0; if (h<60) [r1,g1,b1]=[C,X,0]; else if (h<120) [r1,g1,b1]=[X,C,0]; else if (h<180) [r1,g1,b1]=[0,C,X]; else if (h<240) [r1,g1,b1]=[0,X,C]; else if (h<300) [r1,g1,b1]=[X,0,C]; else [r1,g1,b1]=[C,0,X]; return { r:(r1+m)*255, g:(g1+m)*255, b:(b1+m)*255 }; }
+
+  function hex(input){ const v = parseColor(input); return v ? rgbToHex(v).toLowerCase() : null; }
+
+  // contrast helpers
+  function luminance(c){ const a=[c.r,c.g,c.b].map(v=>{ v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); }); return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2]; }
+  function contrastRatio(a,b){ return (luminance(a)+0.05)/(luminance(b)+0.05) ; }
+
+  function ensureReadable(fgHex, bgHex){
+    const fg = parseColor(fgHex), bg = parseColor(bgHex);
+    if (!fg || !bg) return fgHex;
+    const a = luminance(fg), b = luminance(bg);
+    const ratio = a>b ? (a+0.05)/(b+0.05) : (b+0.05)/(a+0.05);
+    if (ratio >= 4.5) return fgHex; // ok
+    // nudge fg lightness until contrast ok
+    let {h,s,l} = rgbToHsl(fg);
+    const bgHsl = rgbToHsl(bg);
+    const bgIsLight = bgHsl.l > l;
+    let attempts = 0;
+    while (attempts++ < 30) {
+      l = clamp(l + (bgIsLight ? -0.06 : 0.06), 0, 1);
+      const cand = hslToRgb({h,s,l});
+      const cr = contrastRatio(cand, bg);
+      if (cr >= 4.5) return rgbToHex(cand);
+    }
+    return fgHex; // fallback
+  }
+
+  // ========= Palette & Themes =========
+  const THEMES = [
+    { id:'ocean-breeze', name:'Ocean Breeze', fn:(b)=>({ primary:'#0ea5e9', secondary:'#38bdf8', accent:'#06b6d4', bg:'#f0f9ff', surface:'#e0f2fe', text:'#0f172a', muted:'#94a3b8', navbar:'#ffffff', hero:'#e6f6ff', footer:'#062b3a', card:'#ffffff', block:'#f8fdff' }) },
+    { id:'modern-indigo', name:'Modern Indigo', fn:(b)=>({ primary:'#4f46e5', secondary:'#6366f1', accent:'#a78bfa', bg:'#f8fafc', surface:'#eef2ff', text:'#0f172a', muted:'#c7c9ff', navbar:'#ffffff', hero:'#eef2ff', footer:'#0b1020', card:'#ffffff', block:'#f4f6ff' }) },
+    { id:'clean-corporate', name:'Clean Corporate', fn:(b)=>({ primary:'#0052cc', secondary:'#2684ff', accent:'#36b37e', bg:'#f9fafc', surface:'#ffffff', text:'#172b4d', muted:'#dfe1e6', navbar:'#ffffff', hero:'#ebf2ff', footer:'#091e42', card:'#ffffff', block:'#f4f5f7' }) },
+    { id:'fresh-green', name:'Fresh Green', fn:(b)=>({ primary:'#16a34a', secondary:'#4ade80', accent:'#22c55e', bg:'#f0fdf4', surface:'#ecfdf5', text:'#064e3b', muted:'#bbf7d0', navbar:'#bbf7d0', hero:'#bbf7d0', footer:'#064e3b', card:'#ffffff', block:'#f1fbf6' }) },
+    { id:'sunset-glow', name:'Sunset Glow', fn:(b)=>({ primary:'#f97316', secondary:'#fb923c', accent:'#f59e0b', bg:'#fff7ed', surface:'#ffedd5', text:'#431407', muted:'#fed7aa', navbar:'#fff', hero:'#ffedd5', footer:'#7c2d12', card:'#fff7ed', block:'#fff3ea' }) },
+    { id:'royal-elegance', name:'Royal Elegance', fn:(b)=>({ primary:'#6d28d9', secondary:'#8b5cf6', accent:'#f472b6', bg:'#f5f3ff', surface:'#ede9fe', text:'#1e1b4b', muted:'#c7b3ff', navbar:'#ffffff', hero:'#ede9fe', footer:'#2e1065', card:'#ffffff', block:'#efeaff' }) },
+    { id:'aqua-tech', name:'Aqua Tech', fn:(b)=>({ primary:'#06b6d4', secondary:'#67e8f9', accent:'#3b82f6', bg:'#ecfeff', surface:'#cffafe', text:'#054e5b', muted:'#bae6fd', navbar:'#ffffff', hero:'#e6fcff', footer:'#08303a', card:'#ffffff', block:'#f0fbfd' }) },
+    { id:'luxury-black-gold', name:'Luxury Black & Gold', fn:(b)=>({ primary:'#d4af37', secondary:'#b8860b', accent:'#ffcc00', bg:'#050505', surface:'#111111', text:'#f8f5ef', muted:'#666', navbar:'#0b0b0b', hero:'#1a1a1a', footer:'#000', card:'#121212', block:'#0f0f0f' }) },
+    { id:'playful-candy', name:'Playful Candy', fn:(b)=>({ primary:'#ec4899', secondary:'#f472b6', accent:'#facc15', bg:'#fff0f6', surface:'#fff3f8', text:'#3b0764', muted:'#fbcfe8', navbar:'#ffffff', hero:'#fff7fb', footer:'#6b0957', card:'#ffffff', block:'#fff5fb' }) },
+    { id:'minimal-white', name:'Minimal White', fn:(b)=>({ primary:'#0f172a', secondary:'#475569', accent:'#2563eb', bg:'#ffffff', surface:'#fbfdff', text:'#0f172a', muted:'#e6eef7', navbar:'#ffffff', hero:'#f8fafc', footer:'#f1f5f9', card:'#ffffff', block:'#fbfdff' }) },
+    { id:'cyberpunk', name:'Cyberpunk', fn:(b)=>({ primary:'#ff00cc', secondary:'#00ffff', accent:'#ff8a00', bg:'#0b0b12', surface:'#12121a', text:'#e6e6e6', muted:'#707070', navbar:'#0b0b12', hero:'#151525', footer:'#000', card:'#12121a', block:'#0f0f14' }) },
+    { id:'earthy-tones', name:'Earthy Tones', fn:(b)=>({ primary:'#92400e', secondary:'#d97706', accent:'#a16207', bg:'#fffbeb', surface:'#fff7ed', text:'#3b2f2f', muted:'#d6cdbb', navbar:'#fff', hero:'#fff7ed', footer:'#3a1d04', card:'#fff7ed', block:'#fdf6e8' }) },
+    { id:'glassmorphism', name:'Glassmorphism', fn:(b)=>({ primary:'#3b82f6', secondary:'#a855f7', accent:'#22d3ee', bg:'rgba(255,255,255,0.7)', surface:'rgba(255,255,255,0.12)', text:'#0f172a', muted:'#9ca3af', navbar:'rgba(255,255,255,0.12)', hero:'rgba(255,255,255,0.16)', footer:'rgba(0,0,0,0.6)', card:'rgba(255,255,255,0.08)', block:'rgba(255,255,255,0.06)' }) },
+    { id:'retro-vintage', name:'Retro Vintage', fn:(b)=>({ primary:'#b45309', secondary:'#f59e0b', accent:'#78350f', bg:'#fffbeb', surface:'#fff7ed', text:'#3b2f2f', muted:'#d6d3d1', navbar:'#fff', hero:'#fff8e6', footer:'#5a2d08', card:'#fff7ed', block:'#fff6e8' }) },
+    { id:'space-nebula', name:'Space Nebula', fn:(b)=>({ primary:'#7c3aed', secondary:'#2563eb', accent:'#f472b6', bg:'#0f172a', surface:'#111827', text:'#f1f5f9', muted:'#94a3b8', navbar:'#111827', hero:'#312e81', footer:'#0b1020', card:'#0f172a', block:'#1f2937' }) },
+    { id:'pastel-dream', name:'Pastel Dream', fn:(b)=>({ primary:'#a78bfa', secondary:'#f9a8d4', accent:'#6ee7b7', bg:'#faf5ff', surface:'#fce7f3', text:'#374151', muted:'#e9d5ff', navbar:'#f3e8ff', hero:'#fdf4ff', footer:'#a78bfa', card:'#fce7f3', block:'#ede9fe' }) },
+    { id:'warm-coffee', name:'Warm Coffee', fn:(b)=>({ primary:'#6b4226', secondary:'#d6a36c', accent:'#a16207', bg:'#fefae0', surface:'#faedcd', text:'#3b2f2f', muted:'#d6ccc2', navbar:'#f6efea', hero:'#fefae0', footer:'#4a342e', card:'#faedcd', block:'#f1e6d9' }) },
+    { id:'forest-mist', name:'Forest Mist', fn:(b)=>({ primary:'#166534', secondary:'#4ade80', accent:'#22c55e', bg:'#f0fdf4', surface:'#ecfdf5', text:'#064e3b', muted:'#bbf7d0', navbar:'#eafaf1', hero:'#ddfbe8', footer:'#052e16', card:'#ffffff', block:'#eefbf2' }) },
+    { id:'vivid-royal', name:'Vivid Royal', fn:(b)=>({ primary:'#7c3aed', secondary:'#22d3ee', accent:'#f59e0b', bg:'#071029', surface:'#0b1220', text:'#e6eefb', muted:'#3a3f55', navbar:'#071029', hero:'#16213a', footer:'#071029', card:'#0b1220', block:'#051028' }) }
+  ];
+
+  // Semantics map (common variations) — extendable
+  const SEMANTIC = {
+    header: ['header','site-header','.site-header','.topbar','.top-bar','.navbar','.nav-bar','.appbar','.app-bar','.masthead','.site-nav','.global-nav'],
+    footer: ['footer','.site-footer','.app-footer','.page-footer','.footbar','.foot-bar'],
+    hero: ['.hero','.hero-section','.jumbotron','.page-hero','.header-hero','.lead-hero'],
+    sections: ['section','.section','.content-section','.content-block','.block','.feature','.features','.module','.panel','.widget','.container','.page'],
+    cards: ['.card','.panel','.tile','.box','.well','.portlet','.image-card','.card-inner','.card-body','.panel-card'],
+    text: ['h1','h2','h3','h4','h5','h6','p','span','li','dt','dd','blockquote','.text','.muted','.lead'],
+    buttons: ['button','.btn','.button','[role="button"]','input[type="button"]','input[type="submit"]','a.button','a.btn','.badge','.chip','.tag','.cta','.action'],
+    forms: ['input','textarea','select','label','fieldset','legend','.form','.form-control','.input'],
+    tables: ['table','th','td','thead','tbody','tfoot','.table','.table-striped','.table-bordered'],
+    alerts: ['.alert','.notice','.callout','.toast','.message','.notification'],
+    misc: ['hr','.divider','.breadcrumb','.pagination','.tabs','.tab','.modal','.dialog','[role="dialog"]','.dropdown-menu','.dropdown','.toolbar','.sidebar','.aside']
+  };
+
+  // ========= DOM Helpers =========
+  function findPreviewFrame() {
+    const hints = ['#site-preview','#wizardPreview','#preview','#editor-preview','iframe[title*="Preview" i]'];
+    for (const sel of hints) { const el = document.querySelector(sel); if (el && el.tagName === 'IFRAME') return el; }
+    const iframes = [...document.querySelectorAll('iframe')].filter(f=>{
+      const r=f.getBoundingClientRect(); return r.width*r.height>30000 && r.top<window.innerHeight;
+    }).sort((a,b)=> (b.clientWidth*b.clientHeight)-(a.clientWidth*a.clientHeight));
+    return iframes[0] || null;
+  }
+  function getPreviewDocument() {
+    const f = findPreviewFrame();
+    try { return f ? (f.contentDocument || f.contentWindow?.document) : document; } catch { return null; }
+  }
+
+  function readBasePalette(doc) {
+    try {
+      if (!doc) return { primary:'#3366ff', bg:'#ffffff', text:'#111111' };
+      const RS = (el)=> el ? getComputedStyle(el) : null;
+      const root = RS(doc.documentElement), body = RS(doc.body);
+      const tryVars = ['--color-primary','--primary','--brand','--accent','--theme-primary','--color-main'];
+      let primary = null;
+      if (root) {
+        for (const v of tryVars) { const val = root.getPropertyValue(v).trim(); if (val) { primary = hex(val); break; } }
       }
-      if ((m = s.match(/^rgba?\(([^)]+)\)$/i))) {
-        const [r,g,b] = m[1].split(',').map(v => parseFloat(v));
-        return { r, g, b };
+      if (!primary) {
+        const a = doc.querySelector('a'); const c = RS(a||doc.body)?.color; primary = hex(c) || '#3366ff';
       }
-      if ((m = s.match(/^hsla?\(([^)]+)\)$/i))) {
-        const [H,S,L] = m[1].split(',').map(v => v.trim());
-        return hslToRgb({ h: parseFloat(H), s: parseFloat(S)/100, l: parseFloat(L)/100 });
-      }
-      return null;
-    }
-    function rgbToHex({r,g,b}) { return `#${toHex(r)}${toHex(g)}${toHex(b)}`; }
-    function rgbToHsl({r,g,b}) { r/=255; g/=255; b/=255; const max=Math.max(r,g,b), min=Math.min(r,g,b); let h,s,l=(max+min)/2; if (max===min) { h=s=0; } else { const d=max-min; s = l>0.5 ? d/(2-max-min) : d/(max+min); switch(max){ case r: h=(g-b)/d + (g<b?6:0); break; case g: h=(b-r)/d + 2; break; case b: h=(r-g)/d + 4; break; } h/=6; } return { h:h*360, s, l }; }
-    function hslToRgb({h,s,l}){ h = ((h%360)+360)%360; const C=(1-Math.abs(2*l-1))*s, X=C*(1-Math.abs(((h/60)%2)-1)), m=l-C/2; let r1=0,g1=0,b1=0; if (h<60) [r1,g1,b1]=[C,X,0]; else if (h<120) [r1,g1,b1]=[X,C,0]; else if (h<180) [r1,g1,b1]=[0,C,X]; else if (h<240) [r1,g1,b1]=[0,X,C]; else if (h<300) [r1,g1,b1]=[X,0,C]; else [r1,g1,b1]=[C,0,X]; return { r:(r1+m)*255, g:(g1+m)*255, b:(b1+m)*255 }; }
+      const bg  = hex(body?.backgroundColor || root?.backgroundColor) || '#ffffff';
+      const text= hex(body?.color || '#111') || '#111111';
+      return { primary, bg, text };
+    } catch(e){ return { primary:'#3366ff', bg:'#ffffff', text:'#111111' }; }
+  }
 
-    function hex(input){ const v = parseColor(input); return v ? rgbToHex(v).toLowerCase() : null; }
-
-    // contrast helpers
-    function luminance(c){ const a=[c.r,c.g,c.b].map(v=>{ v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); }); return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2]; }
-    function contrastRatio(a,b){ return (luminance(a)+0.05)/(luminance(b)+0.05) ; }
-
-    function ensureReadable(fgHex, bgHex){
-      const fg = parseColor(fgHex), bg = parseColor(bgHex);
-      if (!fg || !bg) return fgHex;
-      const a = luminance(fg), b = luminance(bg);
-      const ratio = a>b ? (a+0.05)/(b+0.05) : (b+0.05)/(a+0.05);
-      if (ratio >= 4.5) return fgHex; // ok
-      // nudge fg lightness until contrast ok
-      let {h,s,l} = rgbToHsl(fg);
-      const bgHsl = rgbToHsl(bg);
-      const bgIsLight = bgHsl.l > l;
-      let attempts = 0;
-      while (attempts++ < 20) {
-        l = clamp(l + (bgIsLight ? -0.06 : 0.06), 0, 1);
-        const cand = hslToRgb({h,s,l});
-        const cr = contrastRatio(cand, bg);
-        if (cr >= 4.5) return rgbToHex(cand);
-      }
-      return fgHex; // fallback
-    }
-
-    // ========= Palette & Themes =========
-    // Professional palettes (20) — each includes primary, secondary, accent, background, surface, text, muted, navbar, hero, footer, card, block
-    const THEMES = [
-      { id:'ocean-breeze', name:'Ocean Breeze', fn:(b)=>({ primary:'#0ea5e9', secondary:'#38bdf8', accent:'#06b6d4', bg:'#f0f9ff', surface:'#e0f2fe', text:'#0f172a', muted:'#94a3b8', navbar:'#ffffff', hero:'#e6f6ff', footer:'#062b3a', card:'#ffffff', block:'#f8fdff' }) },
-      { id:'modern-indigo', name:'Modern Indigo', fn:(b)=>({ primary:'#4f46e5', secondary:'#6366f1', accent:'#a78bfa', bg:'#f8fafc', surface:'#eef2ff', text:'#0f172a', muted:'#c7c9ff', navbar:'#ffffff', hero:'#eef2ff', footer:'#0b1020', card:'#ffffff', block:'#f4f6ff' }) },
-      { id:'clean-corporate', name:'Clean Corporate', fn:(b)=>({ primary:'#0052cc', secondary:'#2684ff', accent:'#36b37e', bg:'#f9fafc', surface:'#ffffff', text:'#172b4d', muted:'#dfe1e6', navbar:'#ffffff', hero:'#ebf2ff', footer:'#091e42', card:'#ffffff', block:'#f4f5f7' }) },
-      { id:'fresh-green', name:'Fresh Green', fn:(b)=>({ primary:'#16a34a', secondary:'#4ade80', accent:'#22c55e', bg:'#f0fdf4', surface:'#ecfdf5', text:'#064e3b', muted:'#bbf7d0', navbar:'#bbf7d0', hero:'#bbf7d0', footer:'#064e3b', card:'#ffffff', block:'#f1fbf6' }) },
-      { id:'sunset-glow', name:'Sunset Glow', fn:(b)=>({ primary:'#f97316', secondary:'#fb923c', accent:'#f59e0b', bg:'#fff7ed', surface:'#ffedd5', text:'#431407', muted:'#fed7aa', navbar:'#fff', hero:'#ffedd5', footer:'#7c2d12', card:'#fff7ed', block:'#fff3ea' }) },
-      { id:'royal-elegance', name:'Royal Elegance', fn:(b)=>({ primary:'#6d28d9', secondary:'#8b5cf6', accent:'#f472b6', bg:'#f5f3ff', surface:'#ede9fe', text:'#1e1b4b', muted:'#c7b3ff', navbar:'#ffffff', hero:'#ede9fe', footer:'#2e1065', card:'#ffffff', block:'#efeaff' }) },
-      { id:'aqua-tech', name:'Aqua Tech', fn:(b)=>({ primary:'#06b6d4', secondary:'#67e8f9', accent:'#3b82f6', bg:'#ecfeff', surface:'#cffafe', text:'#054e5b', muted:'#bae6fd', navbar:'#ffffff', hero:'#e6fcff', footer:'#08303a', card:'#ffffff', block:'#f0fbfd' }) },
-      { id:'luxury-black-gold', name:'Luxury Black & Gold', fn:(b)=>({ primary:'#d4af37', secondary:'#b8860b', accent:'#ffcc00', bg:'#050505', surface:'#111111', text:'#f8f5ef', muted:'#666', navbar:'#0b0b0b', hero:'#1a1a1a', footer:'#000', card:'#121212', block:'#0f0f0f' }) },
-      { id:'playful-candy', name:'Playful Candy', fn:(b)=>({ primary:'#ec4899', secondary:'#f472b6', accent:'#facc15', bg:'#fff0f6', surface:'#fff3f8', text:'#3b0764', muted:'#fbcfe8', navbar:'#ffffff', hero:'#fff7fb', footer:'#6b0957', card:'#ffffff', block:'#fff5fb' }) },
-      { id:'minimal-white', name:'Minimal White', fn:(b)=>({ primary:'#0f172a', secondary:'#475569', accent:'#2563eb', bg:'#ffffff', surface:'#fbfdff', text:'#0f172a', muted:'#e6eef7', navbar:'#ffffff', hero:'#f8fafc', footer:'#f1f5f9', card:'#ffffff', block:'#fbfdff' }) },
-      { id:'cyberpunk', name:'Cyberpunk', fn:(b)=>({ primary:'#ff00cc', secondary:'#00ffff', accent:'#ff8a00', bg:'#0b0b12', surface:'#12121a', text:'#e6e6e6', muted:'#707070', navbar:'#0b0b12', hero:'#151525', footer:'#000', card:'#12121a', block:'#0f0f14' }) },
-      { id:'earthy-tones', name:'Earthy Tones', fn:(b)=>({ primary:'#92400e', secondary:'#d97706', accent:'#a16207', bg:'#fffbeb', surface:'#fff7ed', text:'#3b2f2f', muted:'#d6cdbb', navbar:'#fff', hero:'#fff7ed', footer:'#3a1d04', card:'#fff7ed', block:'#fdf6e8' }) },
-      { id:'glassmorphism', name:'Glassmorphism', fn:(b)=>({ primary:'#3b82f6', secondary:'#a855f7', accent:'#22d3ee', bg:'rgba(255,255,255,0.7)', surface:'rgba(255,255,255,0.12)', text:'#0f172a', muted:'#9ca3af', navbar:'rgba(255,255,255,0.12)', hero:'rgba(255,255,255,0.16)', footer:'rgba(0,0,0,0.6)', card:'rgba(255,255,255,0.08)', block:'rgba(255,255,255,0.06)' }) },
-      { id:'retro-vintage', name:'Retro Vintage', fn:(b)=>({ primary:'#b45309', secondary:'#f59e0b', accent:'#78350f', bg:'#fffbeb', surface:'#fff7ed', text:'#3b2f2f', muted:'#d6d3d1', navbar:'#fff', hero:'#fff8e6', footer:'#5a2d08', card:'#fff7ed', block:'#fff6e8' }) },
-      { id:'space-nebula', name:'Space Nebula', fn:(b)=>({ primary:'#7c3aed', secondary:'#2563eb', accent:'#f472b6', bg:'#0f172a', surface:'#111827', text:'#f1f5f9', muted:'#94a3b8', navbar:'#111827', hero:'#312e81', footer:'#0b1020', card:'#0f172a', block:'#1f2937' }) },
-      { id:'pastel-dream', name:'Pastel Dream', fn:(b)=>({ primary:'#a78bfa', secondary:'#f9a8d4', accent:'#6ee7b7', bg:'#faf5ff', surface:'#fce7f3', text:'#374151', muted:'#e9d5ff', navbar:'#f3e8ff', hero:'#fdf4ff', footer:'#a78bfa', card:'#fce7f3', block:'#ede9fe' }) },
-      { id:'warm-coffee', name:'Warm Coffee', fn:(b)=>({ primary:'#6b4226', secondary:'#d6a36c', accent:'#a16207', bg:'#fefae0', surface:'#faedcd', text:'#3b2f2f', muted:'#d6ccc2', navbar:'#f6efea', hero:'#fefae0', footer:'#4a342e', card:'#faedcd', block:'#f1e6d9' }) },
-      { id:'forest-mist', name:'Forest Mist', fn:(b)=>({ primary:'#166534', secondary:'#4ade80', accent:'#22c55e', bg:'#f0fdf4', surface:'#ecfdf5', text:'#064e3b', muted:'#bbf7d0', navbar:'#eafaf1', hero:'#ddfbe8', footer:'#052e16', card:'#ffffff', block:'#eefbf2' }) },
-      { id:'vivid-royal', name:'Vivid Royal', fn:(b)=>({ primary:'#7c3aed', secondary:'#22d3ee', accent:'#f59e0b', bg:'#071029', surface:'#0b1220', text:'#e6eefb', muted:'#3a3f55', navbar:'#071029', hero:'#16213a', footer:'#071029', card:'#0b1220', block:'#051028' }) },
-    ];
-
-    // Semantics map (common variations) — extendable
-    const SEMANTIC = {
-      header: ['header','site-header','.site-header','.topbar','.top-bar','.navbar','.nav-bar','.appbar','.app-bar','.masthead','.site-nav','.global-nav'],
-      footer: ['footer','.site-footer','.app-footer','.page-footer','.footbar','.foot-bar'],
-      hero: ['.hero','.hero-section','.jumbotron','.page-hero','.header-hero','.lead-hero'],
-      sections: ['section','.section','.content-section','.content-block','.block','.feature','.features','.module','.panel','.widget','.container','.page'],
-      cards: ['.card','.panel','.tile','.box','.well','.portlet','.image-card','.card-inner','.card-body','.panel-card'],
-      text: ['h1','h2','h3','h4','h5','h6','p','span','li','dt','dd','blockquote','.text','.muted','.lead'],
-      buttons: ['button','.btn','.button','[role="button"]','input[type="button"]','input[type="submit"]','a.button','a.btn','.badge','.chip','.tag','.cta','.action'],
-      forms: ['input','textarea','select','label','fieldset','legend','.form','.form-control','.input'],
-      tables: ['table','th','td','thead','tbody','tfoot','.table','.table-striped','.table-bordered'],
-      alerts: ['.alert','.notice','.callout','.toast','.message','.notification'],
-      misc: ['hr','.divider','.breadcrumb','.pagination','.tabs','.tab','.modal','.dialog','[role="dialog"]','.dropdown-menu','.dropdown','.toolbar','.sidebar','.aside']
-    };
-
-    // ========= DOM Helpers =========
-    function findPreviewFrame() {
-      const hints = ['#site-preview','#wizardPreview','#preview','#editor-preview','iframe[title*="Preview" i]'];
-      for (const sel of hints) { const el = document.querySelector(sel); if (el && el.tagName === 'IFRAME') return el; }
-      const iframes = [...document.querySelectorAll('iframe')].filter(f=>{
-        const r=f.getBoundingClientRect(); return r.width*r.height>30000 && r.top<window.innerHeight;
-      }).sort((a,b)=> (b.clientWidth*b.clientHeight)-(a.clientWidth*a.clientHeight));
-      return iframes[0] || null;
-    }
-    function getPreviewDocument() {
-      const f = findPreviewFrame();
-      try { return f ? (f.contentDocument || f.contentWindow?.document) : document; } catch { return null; }
-    }
-
-    function readBasePalette(doc) {
-      try {
-        if (!doc) return { primary:'#3366ff', bg:'#ffffff', text:'#111111' };
-        const RS = (el)=> el ? getComputedStyle(el) : null;
-        const root = RS(doc.documentElement), body = RS(doc.body);
-        const tryVars = ['--color-primary','--primary','--brand','--accent','--theme-primary','--color-main'];
-        let primary = null;
-        if (root) {
-          for (const v of tryVars) { const val = root.getPropertyValue(v).trim(); if (val) { primary = hex(val); break; } }
-        }
-        if (!primary) {
-          const a = doc.querySelector('a'); const c = RS(a||doc.body)?.color; primary = hex(c) || '#3366ff';
-        }
-        const bg  = hex(body?.backgroundColor || root?.backgroundColor) || '#ffffff';
-        const text= hex(body?.color || '#111') || '#111111';
-        return { primary, bg, text };
-      } catch(e){ return { primary:'#3366ff', bg:'#ffffff', text:'#111111' }; }
-    }
-
-    function paletteCss(p) {
-      // p is full palette
-      const textOnPrimary = ensureReadable('#ffffff', p.primary) === '#ffffff' ? '#ffffff' : ensureReadable(p.text, p.primary);
-      const linkColor = (p.primary && p.primary.includes('gradient')) ? '#2563eb' : p.primary;
-      const safe = (v)=>v||'transparent';
-      return `:root{ --theme-primary:${safe(p.primary)}; --theme-secondary:${safe(p.secondary)}; --theme-accent:${safe(p.accent)}; --theme-bg:${safe(p.bg)}; --theme-surface:${safe(p.surface)}; --theme-text:${safe(p.text)}; --theme-muted:${safe(p.muted)}; }
+  function paletteCss(p) {
+    const textOnPrimary = ensureReadable('#ffffff', p.primary) === '#ffffff' ? '#ffffff' : ensureReadable(p.text, p.primary);
+    const linkColor = (p.primary && String(p.primary).includes('gradient')) ? '#2563eb' : p.primary;
+    const safe = (v)=>v||'transparent';
+    return `:root{ --theme-primary:${safe(p.primary)}; --theme-secondary:${safe(p.secondary)}; --theme-accent:${safe(p.accent)}; --theme-bg:${safe(p.bg)}; --theme-surface:${safe(p.surface)}; --theme-text:${safe(p.text)}; --theme-muted:${safe(p.muted)}; }
 
       body, html { background:var(--theme-bg) !important; color:var(--theme-text) !important; }
 
@@ -1036,207 +1033,194 @@ renderLibraryAssets();
       .toolbar, .sidebar, .aside { background:var(--theme-surface) !important; color:var(--theme-text) !important; border-right:1px solid var(--theme-muted) !important; }
 
     `;
-    }
+  }
 
-    // small helpers used in paletteCss above (defined here due to function hoisting needs)
-    function varOr(a,b){ try{ return a||b }catch(e){return b} }
-    function lighten(h,a=0.08){ try{ const base=parseColor(h)||{r:0,g:0,b:0}; const t=rgbToHsl(base); t.l=clamp(t.l+a,0,1); return rgbToHex(hslToRgb(t)); }catch(e){return h} }
-    function darken(h,a=0.08){ try{ const base=parseColor(h)||{r:0,g:0,b:0}; const t=rgbToHsl(base); t.l=clamp(t.l-a,0,1); return rgbToHex(hslToRgb(t)); }catch(e){return h} }
+  // small helpers used in paletteCss above
+  function varOr(a,b){ try{ return a||b }catch(e){return b} }
+  function lighten(h,a=0.08){ try{ const base=parseColor(h)||{r:0,g:0,b:0}; const t=rgbToHsl(base); t.l=clamp(t.l+a,0,1); return rgbToHex(hslToRgb(t)); }catch(e){return h} }
+  function darken(h,a=0.08){ try{ const base=parseColor(h)||{r:0,g:0,b:0}; const t=rgbToHsl(base); t.l=clamp(t.l-a,0,1); return rgbToHex(hslToRgb(t)); }catch(e){return h} }
 
-    // ========= Applying palette =========
-    function applyPaletteToDoc(doc, palette) {
-      if (!doc) return;
+  // ========= Applying palette =========
+  function applyPaletteToDoc(doc, palette) {
+    if (!doc) return;
+    try{
+      let style = doc.getElementById('sgwm-theme-override');
+      if (!style) { style = doc.createElement('style'); style.id = 'sgwm-theme-override'; (doc.head || doc.documentElement).appendChild(style); }
+      style.textContent = paletteCss(palette);
+
       try{
-        // create or update override style
-        let style = doc.getElementById('sgwm-theme-override');
-        if (!style) { style = doc.createElement('style'); style.id = 'sgwm-theme-override'; (doc.head || doc.documentElement).appendChild(style); }
-        style.textContent = paletteCss(palette);
-
-        // set CSS variables on :root in preview doc for inline uses
-        try{
-          const root = doc.documentElement;
-          root.style.setProperty('--theme-primary', palette.primary);
-          root.style.setProperty('--theme-secondary', palette.secondary);
-          root.style.setProperty('--theme-accent', palette.accent);
-          root.style.setProperty('--theme-bg', palette.bg);
-          root.style.setProperty('--theme-surface', palette.surface);
-          root.style.setProperty('--theme-text', palette.text);
-          root.style.setProperty('--theme-muted', palette.muted);
-          root.style.setProperty('--theme-card', palette.card || palette.surface);
-          root.style.setProperty('--theme-block', palette.block || palette.surface);
-          root.style.setProperty('--theme-hero', palette.hero || palette.surface);
-          root.style.setProperty('--theme-footer', palette.footer || palette.surface);
-        }catch(e){}
-
-      }catch(e){ console.error('applyPaletteToDoc error',e); }
-    }
-
-    function clearThemeInDoc(doc){ if(!doc) return; const style = doc.getElementById('sgwm-theme-override'); if(style) style.remove(); }
-
-    // ========= Export helpers =========
-    function injectLinkIntoHtml(html, href) {
-      if (!html || typeof html !== 'string') return html;
-      if (new RegExp(`href=["']${href}["']`).test(html)) return html;
-      const link = `<link rel="stylesheet" href="${href}">`;
-      if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `  ${link}\n</head>`);
-      if (/<html[^>]*>/i.test(html)) return html.replace(/<html[^>]*>/i, m => `${m}\n<head>\n  ${link}\n</head>`);
-      if (/<body[^>]*>/i.test(html)) return html.replace(/<body[^>]*>/i, m => `<head>\n  ${link}\n</head>\n${m}`);
-      return `${link}\n${html}`;
-    }
-
-    function attachThemeToFiles(files, cssText, cssPath = 'css/sgwm-theme.css') {
-      const out = [];
-      let hadHtml = false;
-      for (const f of files) {
-        const isHtml = /\.html?$/i.test(f.path);
-        const isCss  = /\.css$/i.test(f.path);
-        if (isHtml) hadHtml = true;
-        if (isHtml) {
-          const html = typeof f.content === 'string' ? f.content : (new TextDecoder('utf-8').decode(f.content));
-          const updated = injectLinkIntoHtml(html, cssPath);
-          out.push({ path: f.path, content: updated });
-        } else {
-          out.push(f);
+        const root = doc.documentElement;
+        if (root && root.style) {
+          root.style.setProperty('--theme-primary', palette.primary || '');
+          root.style.setProperty('--theme-secondary', palette.secondary || '');
+          root.style.setProperty('--theme-accent', palette.accent || '');
+          root.style.setProperty('--theme-bg', palette.bg || '');
+          root.style.setProperty('--theme-surface', palette.surface || '');
+          root.style.setProperty('--theme-text', palette.text || '');
+          root.style.setProperty('--theme-muted', palette.muted || '');
+          root.style.setProperty('--theme-card', palette.card || palette.surface || '');
+          root.style.setProperty('--theme-block', palette.block || palette.surface || '');
+          root.style.setProperty('--theme-hero', palette.hero || palette.surface || '');
+          root.style.setProperty('--theme-footer', palette.footer || palette.surface || '');
         }
+      }catch(e){}
+
+    }catch(e){ console.error('applyPaletteToDoc error',e); }
+  }
+
+  function clearThemeInDoc(doc){ if(!doc) return; const style = doc.getElementById('sgwm-theme-override'); if(style) style.remove(); }
+
+  // ========= Export helpers =========
+  function injectLinkIntoHtml(html, href) {
+    if (!html || typeof html !== 'string') return html;
+    if (new RegExp(`href=[\"']${href}[\"']`).test(html)) return html;
+    const link = `<link rel=\"stylesheet\" href=\"${href}\">`;
+    if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `  ${link}\n</head>`);
+    if (/<html[^>]*>/i.test(html)) return html.replace(/<html[^>]*>/i, m => `${m}\n<head>\n  ${link}\n</head>`);
+    if (/<body[^>]*>/i.test(html)) return html.replace(/<body[^>]*>/i, m => `<head>\n  ${link}\n</head>\n${m}`);
+    return `${link}\n${html}`;
+  }
+
+  function attachThemeToFiles(files, cssText, cssPath = 'css/sgwm-theme.css') {
+    const out = [];
+    let hadHtml = false;
+    for (const f of files) {
+      const isHtml = /\.html?$/i.test(f.path);
+      const isCss  = /\.css$/i.test(f.path);
+      if (isHtml) hadHtml = true;
+      if (isHtml) {
+        const html = typeof f.content === 'string' ? f.content : (new TextDecoder('utf-8').decode(f.content));
+        const updated = injectLinkIntoHtml(html, cssPath);
+        out.push({ path: f.path, content: updated });
+      } else {
+        out.push(f);
       }
-      out.push({ path: cssPath, content: cssText });
-      return out;
     }
+    out.push({ path: cssPath, content: cssText });
+    return out;
+  }
 
-    async function writeToZip(zip, files) { for (const f of files) zip.file(f.path, typeof f.content === 'string' ? f.content : f.content); }
+  async function writeToZip(zip, files) { for (const f of files) zip.file(f.path, typeof f.content === 'string' ? f.content : f.content); }
 
-    // ========= Controller & UI wiring =========
-    const $fab = document.getElementById('sgwm-theme-fab');
-    const $panel = document.getElementById('sgwm-theme-panel');
-    const $grid = document.getElementById('sgwm-theme-grid');
-    const $bPrimary = document.getElementById('sgwm-b-primary');
-    const $bBg = document.getElementById('sgwm-b-bg');
-    const $bText = document.getElementById('sgwm-b-text');
-    const $refresh = document.getElementById('sgwm-refresh');
-    const $clear = document.getElementById('sgwm-clear');
-    const $pickPrimary = document.getElementById('sgwm-pick-primary');
-    const $pickBg = document.getElementById('sgwm-pick-bg');
-    const $pickText = document.getElementById('sgwm-pick-text');
-    const $pickSurface = document.getElementById('sgwm-pick-surface');
-    const $applyGlobal = document.getElementById('sgwm-apply-global');
-    const $saveCustom = document.getElementById('sgwm-save-custom');
-    const $exportCss = document.getElementById('sgwm-export-css');
-    const $toggleApply = document.getElementById('sgwm-toggle-apply');
+  // ========= Controller & UI wiring =========
+  const $fab = document.getElementById('sgwm-theme-fab');
+  const $panel = document.getElementById('sgwm-theme-panel');
+  const $grid = document.getElementById('sgwm-theme-grid');
+  const $bPrimary = document.getElementById('sgwm-b-primary');
+  const $bBg = document.getElementById('sgwm-b-bg');
+  const $bText = document.getElementById('sgwm-b-text');
+  const $refresh = document.getElementById('sgwm-refresh');
+  const $clear = document.getElementById('sgwm-clear');
+  const $pickPrimary = document.getElementById('sgwm-pick-primary');
+  const $pickBg = document.getElementById('sgwm-pick-bg');
+  const $pickText = document.getElementById('sgwm-pick-text');
+  const $pickSurface = document.getElementById('sgwm-pick-surface');
+  const $applyGlobal = document.getElementById('sgwm-apply-global');
+  const $saveCustom = document.getElementById('sgwm-save-custom');
+  const $exportCss = document.getElementById('sgwm-export-css');
+  const $toggleApply = document.getElementById('sgwm-toggle-apply');
 
-    let BASE = { primary:'#3366ff', bg:'#ffffff', text:'#111111' };
-    let CURRENT = null;
+  let BASE = { primary:'#3366ff', bg:'#ffffff', text:'#111111' };
+  let CURRENT = null;
 
-    function refreshBase() {
-      const doc = getPreviewDocument();
-      BASE = readBasePalette(doc) || BASE;
-      $bPrimary.style.background = BASE.primary; $bBg.style.background = BASE.bg; $bText.style.background = BASE.text;
-    }
+  function refreshBase() {
+    const doc = getPreviewDocument();
+    BASE = readBasePalette(doc) || BASE;
+    try{ $bPrimary.style.background = BASE.primary; $bBg.style.background = BASE.bg; $bText.style.background = BASE.text; }catch(e){}
+  }
 
-    function buildGrid() {
-      $grid.innerHTML = '';
-      THEMES.forEach(def => {
-        const p = def.fn(BASE);
-        const card = document.createElement('div'); card.className = 'sgwm-card'; card.setAttribute('role','button');
-        card.innerHTML = `<div class=\"sgwm-card-name\">${def.name}</div><div class=\"sgwm-band\"><div class=\"sgwm-swatch\" style=\"background:${p.primary}\"></div><div class=\"sgwm-swatch\" style=\"background:${p.secondary}\"></div><div class=\"sgwm-swatch\" style=\"background:${p.accent}\"></div><div class=\"sgwm-swatch\" style=\"background:${p.bg}\"></div><div class=\"sgwm-swatch\" style=\"background:${p.surface}\"></div><div class=\"sgwm-swatch\" style=\"background:${p.text}\"></div></div>`;
-        card.addEventListener('click', ()=> onPickTheme(def));
-        $grid.appendChild(card);
-      });
-    }
+  function buildGrid() {
+    $grid.innerHTML = '';
+    THEMES.forEach(def => {
+      const p = def.fn(BASE);
+      const card = document.createElement('div'); card.className = 'sgwm-card'; card.setAttribute('role','button');
+      card.innerHTML = `<div class=\"sgwm-card-name\">${def.name}</div><div class=\"sgwm-band\"><div class=\"sgwm-swatch\" style=\"background:${p.primary}\"></div><div class=\"sgwm-swatch\" style=\"background:${p.secondary}\"></div><div class=\"sgwm-swatch\" style=\"background:${p.accent}\"></div><div class=\"sgwm-swatch\" style=\"background:${p.bg}\"></div><div class=\"sgwm-swatch\" style=\"background:${p.surface}\"></div><div class=\"sgwm-swatch\" style=\"background:${p.text}\"></div></div>`;
+      card.addEventListener('click', ()=> onPickTheme(def));
+      $grid.appendChild(card);
+    });
+  }
 
-    function onPickTheme(themeDef) {
-      const doc = getPreviewDocument();
-      const palette = themeDef.fn(BASE);
-      // ensure essential properties
-      palette.primary = palette.primary || BASE.primary; palette.secondary = palette.secondary || palette.primary; palette.surface = palette.surface || palette.bg || '#fff'; palette.text = palette.text || '#111';
-      // ensure readable
-      palette.text = ensureReadable(palette.text, palette.bg);
-      palette.primary = ensureReadable(palette.primary, palette.surface);
-      CURRENT = { name: themeDef.name, id: themeDef.id, palette, cssText: paletteCss(palette) };
-      applyPaletteToDoc(doc, palette);
-      window.SGWM_THEME = CURRENT;
-      localStorage.setItem('sgwm_theme', JSON.stringify(CURRENT));
-      document.dispatchEvent(new CustomEvent('sgwm:themeChanged',{detail:CURRENT}));
-      // populate pickers
-      try{ $pickPrimary.value = rgbToHex(parseColor(CURRENT.palette.primary)); }catch(e){}
-      try{ $pickBg.value = rgbToHex(parseColor(CURRENT.palette.bg)); }catch(e){}
-      try{ $pickText.value = rgbToHex(parseColor(CURRENT.palette.text)); }catch(e){}
-      try{ $pickSurface.value = rgbToHex(parseColor(CURRENT.palette.surface)); }catch(e){}
-    }
+  function onPickTheme(themeDef) {
+    const doc = getPreviewDocument();
+    const palette = themeDef.fn(BASE);
+    palette.primary = palette.primary || BASE.primary; palette.secondary = palette.secondary || palette.primary; palette.surface = palette.surface || palette.bg || '#fff'; palette.text = palette.text || '#111';
+    palette.text = ensureReadable(palette.text, palette.bg);
+    palette.primary = ensureReadable(palette.primary, palette.surface);
+    CURRENT = { name: themeDef.name, id: themeDef.id, palette, cssText: paletteCss(palette) };
+    applyPaletteToDoc(doc, palette);
+    window.SGWM_THEME = CURRENT;
+    try{ localStorage.setItem('sgwm_theme', JSON.stringify(CURRENT)); }catch(e){}
+    document.dispatchEvent(new CustomEvent('sgwm:themeChanged',{detail:CURRENT}));
+    try{ $pickPrimary.value = rgbToHex(parseColor(CURRENT.palette.primary)); }catch(e){}
+    try{ $pickBg.value = rgbToHex(parseColor(CURRENT.palette.bg)); }catch(e){}
+    try{ $pickText.value = rgbToHex(parseColor(CURRENT.palette.text)); }catch(e){}
+    try{ $pickSurface.value = rgbToHex(parseColor(CURRENT.palette.surface)); }catch(e){}
+  }
 
-    function clearTheme() { const doc = getPreviewDocument(); clearThemeInDoc(doc); CURRENT = null; window.SGWM_THEME = null; localStorage.removeItem('sgwm_theme'); document.dispatchEvent(new CustomEvent('sgwm:themeCleared')); }
+  function clearTheme() { const doc = getPreviewDocument(); clearThemeInDoc(doc); CURRENT = null; window.SGWM_THEME = null; try{ localStorage.removeItem('sgwm_theme'); }catch(e){} document.dispatchEvent(new CustomEvent('sgwm:themeCleared')); }
 
-    // manual apply
-    function applyManual() {
-      const doc = getPreviewDocument();
-      if (!CURRENT) CURRENT = { name:'custom', id:'custom', palette: {} };
-      const p = CURRENT.palette;
-      if ($pickPrimary.value) p.primary = $pickPrimary.value;
-      if ($pickBg.value) p.bg = $pickBg.value;
-      if ($pickText.value) p.text = $pickText.value;
-      if ($pickSurface.value) p.surface = $pickSurface.value;
-      p.muted = p.muted || lighten(p.surface, .07);
-      p.card = p.card || p.surface;
-      CURRENT.cssText = paletteCss(p);
-      applyPaletteToDoc(getPreviewDocument(), p);
-      window.SGWM_THEME = CURRENT;
-      localStorage.setItem('sgwm_theme', JSON.stringify(CURRENT));
-    }
+  function applyManual() {
+    const doc = getPreviewDocument();
+    if (!CURRENT) CURRENT = { name:'custom', id:'custom', palette: {} };
+    const p = CURRENT.palette;
+    if ($pickPrimary.value) p.primary = $pickPrimary.value;
+    if ($pickBg.value) p.bg = $pickBg.value;
+    if ($pickText.value) p.text = $pickText.value;
+    if ($pickSurface.value) p.surface = $pickSurface.value;
+    p.muted = p.muted || lighten(p.surface, .07);
+    p.card = p.card || p.surface;
+    CURRENT.cssText = paletteCss(p);
+    applyPaletteToDoc(getPreviewDocument(), p);
+    window.SGWM_THEME = CURRENT;
+    try{ localStorage.setItem('sgwm_theme', JSON.stringify(CURRENT)); }catch(e){}
+  }
 
-    // quick map: map a semantic group by scanning class/ids
-    function quickMap(kind){ const doc = getPreviewDocument(); if (!doc) return; const candidates = SEMANTIC[kind] || []; candidates.forEach(sel => { try{ const list = doc.querySelectorAll(sel); list.forEach(el => { if (kind==='nav'){ el.style.background = CURRENT.palette.primary; el.style.color = CURRENT.palette.text; } else if (kind==='card'){ el.style.background = CURRENT.palette.card || CURRENT.palette.surface; el.style.color = CURRENT.palette.text; el.style.borderColor = CURRENT.palette.muted; } else if (kind==='btn'){ el.style.background = CURRENT.palette.primary; el.style.color = ensureReadable(CURRENT.palette.text, CURRENT.palette.primary); } else if (kind==='hero'){ el.style.background = CURRENT.palette.hero || CURRENT.palette.surface; el.style.color = CURRENT.palette.text; } else if (kind==='section'){ el.style.background = CURRENT.palette.bg; el.style.color = CURRENT.palette.text; } }); }catch(e){} }); }
+  function quickMap(kind){ const doc = getPreviewDocument(); if (!doc || !CURRENT) return; const candidates = SEMANTIC[kind] || []; candidates.forEach(sel => { try{ const list = doc.querySelectorAll(sel); list.forEach(el => { try{ if (kind==='nav'){ el.style.background = CURRENT.palette.primary; el.style.color = CURRENT.palette.text; } else if (kind==='card'){ el.style.background = CURRENT.palette.card || CURRENT.palette.surface; el.style.color = CURRENT.palette.text; el.style.borderColor = CURRENT.palette.muted; } else if (kind==='btn'){ el.style.background = CURRENT.palette.primary; el.style.color = ensureReadable(CURRENT.palette.text, CURRENT.palette.primary); } else if (kind==='hero'){ el.style.background = CURRENT.palette.hero || CURRENT.palette.surface; el.style.color = CURRENT.palette.text; } else if (kind==='section'){ el.style.background = CURRENT.palette.bg; el.style.color = CURRENT.palette.text; } }catch(e){} }); }catch(e){} }); }
 
-    // save custom set
-    function saveCustom(){ if(!CURRENT) return; const key = 'sgwm_custom_presets'; const arr = JSON.parse(localStorage.getItem(key)||'[]'); arr.unshift(CURRENT); localStorage.setItem(key, JSON.stringify(arr.slice(0,12))); alert('Custom saved'); }
+  function saveCustom(){ if(!CURRENT) return; const key = 'sgwm_custom_presets'; try{ const arr = JSON.parse(localStorage.getItem(key)||'[]'); arr.unshift(CURRENT); localStorage.setItem(key, JSON.stringify(arr.slice(0,12))); alert('Custom saved'); }catch(e){ alert('Save failed'); } }
 
-    // return CSS text for current active theme
-    function getActiveCss(){ return window.SGWM_THEME?.cssText || ''; }
+  function getActiveCss(){ return window.SGWM_THEME?.cssText || ''; }
 
-    // wire up UI
-    $fab.addEventListener('click', ()=>{ if (!$panel.classList.contains('open')){ refreshBase(); buildGrid(); } $panel.classList.toggle('open'); });
-    $refresh.addEventListener('click', ()=>{ refreshBase(); buildGrid(); });
-    $clear.addEventListener('click', clearTheme);
-    $applyGlobal.addEventListener('click', ()=>{ applyManual(); alert('Applied to preview'); });
-    $saveCustom.addEventListener('click', saveCustom);
-    $exportCss.addEventListener('click', ()=>{ const css = getActiveCss(); prompt('Copy CSS below (save as css/sgwm-theme.css in your export):', css); });
-    $toggleApply.addEventListener('click', ()=>{ applyManual(); alert('Theme applied'); });
+  // wire up UI
+  $fab.addEventListener('click', ()=>{ if (!$panel.classList.contains('open')){ refreshBase(); buildGrid(); } $panel.classList.toggle('open'); });
+  $refresh.addEventListener('click', ()=>{ refreshBase(); buildGrid(); });
+  $clear.addEventListener('click', clearTheme);
+  $applyGlobal.addEventListener('click', ()=>{ applyManual(); alert('Applied to preview'); });
+  $saveCustom.addEventListener('click', saveCustom);
+  $exportCss.addEventListener('click', ()=>{ const css = getActiveCss(); prompt('Copy CSS below (save as css/sgwm-theme.css in your export):', css); });
+  $toggleApply.addEventListener('click', ()=>{ applyManual(); alert('Theme applied'); });
 
-    // quick map buttons
-    document.querySelectorAll('[data-map]').forEach(btn=> btn.addEventListener('click', (e)=>{ const map = e.currentTarget.getAttribute('data-map'); if(!CURRENT) { alert('Pick a theme first'); return } quickMap(map); }));
+  document.querySelectorAll('[data-map]').forEach(btn=> btn.addEventListener('click', (e)=>{ const map = e.currentTarget.getAttribute('data-map'); if(!CURRENT) { alert('Pick a theme first'); return } quickMap(map); }));
 
-    // pickers change
-    [$pickPrimary,$pickBg,$pickText,$pickSurface].forEach(el=> el && el.addEventListener('input', ()=>{ if(!CURRENT) CURRENT={name:'custom',id:'custom',palette:{}}; CURRENT.palette.primary = $pickPrimary.value; CURRENT.palette.bg = $pickBg.value; CURRENT.palette.text = $pickText.value; CURRENT.palette.surface = $pickSurface.value; CURRENT.cssText = paletteCss(CURRENT.palette); applyPaletteToDoc(getPreviewDocument(), CURRENT.palette); window.SGWM_THEME = CURRENT; localStorage.setItem('sgwm_theme', JSON.stringify(CURRENT)); }));
+  [$pickPrimary,$pickBg,$pickText,$pickSurface].forEach(el=> el && el.addEventListener('input', ()=>{ if(!CURRENT) CURRENT={name:'custom',id:'custom',palette:{}}; CURRENT.palette.primary = $pickPrimary.value; CURRENT.palette.bg = $pickBg.value; CURRENT.palette.text = $pickText.value; CURRENT.palette.surface = $pickSurface.value; CURRENT.cssText = paletteCss(CURRENT.palette); applyPaletteToDoc(getPreviewDocument(), CURRENT.palette); window.SGWM_THEME = CURRENT; try{ localStorage.setItem('sgwm_theme', JSON.stringify(CURRENT)); }catch(e){} }));
 
-    // load previously saved
-    try{ const saved = JSON.parse(localStorage.getItem('sgwm_theme')); if (saved) { CURRENT = saved; window.SGWM_THEME = CURRENT; } }catch(e){}
+  try{ const saved = JSON.parse(localStorage.getItem('sgwm_theme')); if (saved) { CURRENT = saved; window.SGWM_THEME = CURRENT; } }catch(e){}
 
-    // react to preview reloads if host triggers sgwm:previewReloaded
-    document.addEventListener('sgwm:previewReloaded', ()=>{ if (CURRENT) applyPaletteToDoc(getPreviewDocument(), CURRENT.palette); });
+  document.addEventListener('sgwm:previewReloaded', ()=>{ if (CURRENT) applyPaletteToDoc(getPreviewDocument(), CURRENT.palette); });
 
-    // watch for DOM changes in preview and reapply override style to keep precedence
-    function observePreview(){ const f = findPreviewFrame(); const doc = f ? (f.contentDocument || f.contentWindow?.document) : document; if(!doc) return; try{
+  function observePreview(){ const f = findPreviewFrame(); const doc = f ? (f.contentDocument || f.contentWindow?.document) : document; if(!doc) return; try{
       const observer = new MutationObserver((mut)=>{ if (CURRENT) { applyPaletteToDoc(doc, CURRENT.palette); } });
       observer.observe(doc.documentElement || doc, { attributes:true, childList:true, subtree:true });
     }catch(e){}
-    }
-    // attempt to observe after short delay
-    setTimeout(observePreview, 700);
+  }
+  setTimeout(observePreview, 700);
 
-    // expose exporter and helpers on window
-    window.SGWM_THEME = CURRENT;
-    window.SGWM_THEME_EXPORTER = {
-      ensureThemeInFiles(files, cssPath='css/sgwm-theme.css'){ const theme = window.SGWM_THEME; if(!theme||!theme.cssText) return files; return attachThemeToFiles(files, theme.cssText, cssPath); },
-      async ensureThemeInZip(zip, files, cssPath='css/sgwm-theme.css'){ const theme = window.SGWM_THEME; if(!theme||!theme.cssText){ await writeToZip(zip, files); return; } const updated = attachThemeToFiles(files, theme.cssText, cssPath); await writeToZip(zip, updated); },
-      getActiveCss(){ return window.SGWM_THEME?.cssText || ''; }
-    };
+  // expose exporter and helpers on window
+  window.SGWM_THEME = CURRENT;
+  window.SGWM_THEME_EXPORTER = {
+    ensureThemeInFiles(files, cssPath='css/sgwm-theme.css'){ const theme = window.SGWM_THEME; if(!theme||!theme.cssText) return files; return attachThemeToFiles(files, theme.cssText, cssPath); },
+    async ensureThemeInZip(zip, files, cssPath='css/sgwm-theme.css'){ const theme = window.SGWM_THEME; if(!theme||!theme.cssText){ await writeToZip(zip, files); return; } const updated = attachThemeToFiles(files, theme.cssText, cssPath); await writeToZip(zip, updated); },
+    getActiveCss(){ return window.SGWM_THEME?.cssText || ''; }
+  };
 
-    // init UI state
-    refreshBase(); buildGrid();
+  // init
+  refreshBase(); buildGrid();
+  console.info('SGWM Theme Changer (advanced) initialized');
+})();
+</script>
+<!-- 🎨 END SGWM THEME TOOL -->
 
-    // small utility: prompt developer how to export
-    console.info('SGWM Theme Changer (advanced) ready — use window.SGWM_THEME_EXPORTER.ensureThemeInFiles(files) in export pipeline');
 
-  })();
-  </script>
  
 </body>
 </html>
