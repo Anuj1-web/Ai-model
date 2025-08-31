@@ -1,262 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>User Dashboard</title>
-  <link rel="stylesheet" href="styles.css" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #fff;
-      color: #000;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background: #f5f5f5;
-      padding: 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #ddd;
-    }
-    header h1 {
-      font-size: 20px;
-      margin: 0;
-    }
-    .nav-links {
-      display: flex;
-      gap: 10px;
-    }
-    .nav-btn {
-      background: #000;
-      color: #fff;
-      padding: 10px 18px;
-      border-radius: 6px;
-      text-decoration: none;
-      transition: background 0.2s;
-      font-size: 15px;
-      border: none;
-      cursor: pointer;
-    }
-    .nav-btn:hover {
-      background: #333;
-    }
-    main {
-      padding: 20px;
-      max-width: 900px;
-      margin: auto;
-    }
-    section {
-      margin-bottom: 30px;
-      padding: 20px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: #fafafa;
-    }
-    section h2 {
-      margin-top: 0;
-      font-size: 18px;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 6px;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    input {
-      width: 100%;
-      padding: 8px;
-      margin-top: 4px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    button {
-      background: #000;
-      color: #fff;
-      padding: 10px 18px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      margin-top: 12px;
-      font-size: 15px;
-    }
-    button:hover {
-      background: #333;
-    }
-    .toast {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 12px 18px;
-      background: #000;
-      color: #fff;
-      border-radius: 6px;
-      z-index: 9999;
-      opacity: 0.95;
-      font-size: 14px;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>User Dashboard</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+  body { font-family: Arial,sans-serif; margin:0; padding:0; background:#fff; color:#000; }
+  header { background:#f5f5f5; padding:15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ddd; }
+  header h1 { margin:0; font-size:20px; }
+  .nav-links { display:flex; gap:10px; }
+  .nav-btn { background:#000; color:#fff; padding:10px 18px; border-radius:6px; text-decoration:none; font-size:15px; border:none; cursor:pointer; transition:0.2s; }
+  .nav-btn:hover { background:#333; }
+  main { padding:20px; max-width:1000px; margin:auto; }
+  section { margin-bottom:30px; padding:20px; border:1px solid #ddd; border-radius:8px; background:#fafafa; }
+  section h2 { margin-top:0; font-size:18px; border-bottom:1px solid #ddd; padding-bottom:6px; }
+  label { display:block; margin-top:10px; font-weight:bold; }
+  input, select, textarea { width:100%; padding:8px; margin-top:4px; border:1px solid #ccc; border-radius:6px; }
+  button { background:#000; color:#fff; padding:10px 18px; border-radius:6px; border:none; cursor:pointer; margin-top:12px; font-size:15px; }
+  button:hover { background:#333; }
+  .toast { position:fixed; top:20px; right:20px; padding:12px 18px; background:#000; color:#fff; border-radius:6px; z-index:9999; opacity:0.95; font-size:14px; }
+  .activity-list li { margin-bottom:6px; }
+</style>
 </head>
 <body>
-  <header>
-    <h1>Dashboard</h1>
-    <nav class="nav-links">
-      <a href="index.html" class="nav-btn">Home</a>
-      <button id="logoutBtn" class="nav-btn">Logout</button>
-    </nav>
-  </header>
 
-  <main>
-    <!-- Account Info -->
-    <section id="accountSection">
-      <h2>Account Information</h2>
-      <form id="accountForm">
-        <label>Email</label>
-        <input type="email" id="accountEmail" disabled />
+<header>
+  <h1>Dashboard</h1>
+  <nav class="nav-links">
+    <a href="index.html" class="nav-btn">Home</a>
+    <button id="logoutBtn" class="nav-btn">Logout</button>
+  </nav>
+</header>
 
-        <label>Change Password</label>
-        <input type="password" id="newPassword" placeholder="Enter new password" />
+<main>
 
-        <button type="submit">Update Account</button>
-      </form>
-    </section>
+  <!-- Account Section -->
+  <section id="accountSection">
+    <h2>Account Information</h2>
+    <form id="accountForm">
+      <label>Email</label>
+      <input type="email" id="accountEmail" disabled />
 
-    <!-- Activity Tracking -->
-    <section id="activitySection">
-      <h2>Recent Activity</h2>
-      <ul id="activityList">
-        <li>No recent activity.</li>
-      </ul>
-    </section>
+      <label>Current Password</label>
+      <input type="password" id="currentPassword" placeholder="Enter current password" />
 
-    <!-- Subscription -->
-    <section id="subscriptionSection">
-      <h2>Subscription</h2>
-      <div id="subscriptionBox">Loading subscription details...</div>
-    </section>
-  </main>
+      <label>New Password</label>
+      <input type="password" id="newPassword" placeholder="Enter new password" />
 
-  <div id="toastContainer"></div>
+      <button type="submit">Update Account</button>
+    </form>
+  </section>
 
-  <script type="module">
-    import { 
-      onAuthStateChanged, 
-      signOut, 
-      sendEmailVerification, 
-      updatePassword, 
-      reload 
-    } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+  <!-- Activity Section -->
+  <section id="activitySection">
+    <h2>Recent Activity</h2>
+    <ul id="activityList" class="activity-list">
+      <li>No recent activity.</li>
+    </ul>
+  </section>
 
-    import { 
-      doc, 
-      getDoc, 
-      collection, 
-      addDoc, 
-      serverTimestamp 
-    } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+  <!-- Subscription Section -->
+  <section id="subscriptionSection">
+    <h2>Subscription</h2>
+    <div id="subscriptionBox">Loading subscription details...</div>
+  </section>
 
-    import { auth, db } from "./firebase-login.js";
+  <!-- Theme Section -->
+  <section id="themeSection">
+    <h2>Theme Settings</h2>
+    <label>Select Theme Color</label>
+    <input type="color" id="themeColorPicker" value="#000000" />
+    <button id="applyThemeBtn">Apply Theme</button>
+  </section>
 
-    const emailInput = document.getElementById("accountEmail");
-    const passwordInput = document.getElementById("newPassword");
-    const accountForm = document.getElementById("accountForm");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const toastContainer = document.getElementById("toastContainer");
-    const activityList = document.getElementById("activityList");
-    const subscriptionBox = document.getElementById("subscriptionBox");
+  <!-- Upload Section -->
+  <section id="uploadSection">
+    <h2>Upload Files</h2>
+    <input type="file" id="fileUpload" multiple />
+    <ul id="uploadedFilesList"></ul>
+  </section>
 
-    function showToast(msg) {
-      const el = document.createElement("div");
-      el.className = "toast";
-      el.textContent = msg;
-      toastContainer.appendChild(el);
-      setTimeout(() => el.remove(), 4000);
-    }
+</main>
 
-    // Load subscription
-    fetch("subscription.html")
-      .then(r => r.ok ? r.text() : null)
-      .then(html => {
-        subscriptionBox.innerHTML = html || "📦 Coming soon...";
-      })
-      .catch(() => subscriptionBox.innerHTML = "📦 Coming soon...");
+<div id="toastContainer"></div>
 
-    // Load activity
-    async function loadActivity(uid) {
-      try {
-        const snap = await getDoc(doc(db, "users", uid));
-        const userData = snap.exists() ? snap.data() : {};
-        const activity = userData.activity || [];
-        activityList.innerHTML = "";
-        if (activity.length === 0) {
-          activityList.innerHTML = "<li>No recent activity.</li>";
-        } else {
-          activity.forEach(act => {
-            const li = document.createElement("li");
-            li.textContent = `${act.action} - ${new Date(act.time.seconds*1000).toLocaleString()}`;
-            activityList.appendChild(li);
-          });
-        }
-      } catch (err) {
-        console.error("Activity load failed", err);
-      }
-    }
+<script type="module">
+  import { auth, db } from "./firebase-login.js";
+  import {
+    onAuthStateChanged, signOut, sendEmailVerification, updatePassword,
+    reauthenticateWithCredential, EmailAuthProvider
+  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+  import { doc, getDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-    // Auth state
-    onAuthStateChanged(auth, async user => {
-      if (!user) {
-        window.location.href = "login.html";
-        return;
-      }
-      emailInput.value = user.email;
-      await loadActivity(user.uid);
-    });
+  const emailInput = document.getElementById("accountEmail");
+  const currentPasswordInput = document.getElementById("currentPassword");
+  const newPasswordInput = document.getElementById("newPassword");
+  const accountForm = document.getElementById("accountForm");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const toastContainer = document.getElementById("toastContainer");
+  const activityList = document.getElementById("activityList");
+  const subscriptionBox = document.getElementById("subscriptionBox");
+  const themeColorPicker = document.getElementById("themeColorPicker");
+  const applyThemeBtn = document.getElementById("applyThemeBtn");
+  const fileUpload = document.getElementById("fileUpload");
+  const uploadedFilesList = document.getElementById("uploadedFilesList");
 
-    // Update account with verification
-    accountForm.addEventListener("submit", async e => {
-      e.preventDefault();
-      const user = auth.currentUser;
-      if (!user) return;
+  function showToast(msg) {
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.textContent = msg;
+    toastContainer.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
 
-      const newPass = passwordInput.value.trim();
-      if (!newPass) {
-        showToast("⚠️ Please enter a new password.");
-        return;
-      }
-
-      await reload(user); // refresh user state
-
-      if (!user.emailVerified) {
-        await sendEmailVerification(user);
-        showToast("📧 Verification email sent. Please verify before changing password.");
-        return;
-      }
-
-      try {
-        await updatePassword(user, newPass);
-        showToast("✅ Password updated successfully!");
-
-        // log activity
-        await addDoc(collection(db, "users", user.uid, "activities"), {
-          action: "Updated account password",
-          time: serverTimestamp()
+  async function loadActivity(uid) {
+    try {
+      const snap = await getDoc(doc(db, "users", uid));
+      const userData = snap.exists() ? snap.data() : {};
+      const activity = userData.activity || [];
+      activityList.innerHTML = "";
+      if (activity.length === 0) {
+        activityList.innerHTML = "<li>No recent activity.</li>";
+      } else {
+        activity.forEach(act => {
+          const li = document.createElement("li");
+          li.textContent = `${act.action} - ${new Date(act.time.seconds*1000).toLocaleString()}`;
+          activityList.appendChild(li);
         });
-        await loadActivity(user.uid);
-
-      } catch (err) {
-        console.error(err);
-        showToast("❌ Failed to update password.");
       }
+    } catch (err) { console.error("Activity load failed", err); }
+  }
 
-      passwordInput.value = "";
-    });
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = "login.html"; return; }
+    emailInput.value = user.email;
+    await loadActivity(user.uid);
+    subscriptionBox.innerHTML = "📦 User subscription info loaded.";
+  });
 
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      window.location.href = "login.html";
+  accountForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const currentPass = currentPasswordInput.value.trim();
+    const newPass = newPasswordInput.value.trim();
+    if (!currentPass || !newPass) { showToast("⚠️ Fill current and new passwords."); return; }
+
+    if (!user.emailVerified) {
+      await sendEmailVerification(user);
+      showToast("📧 Verification email sent. Verify before changing password.");
+      return;
+    }
+
+    try {
+      const cred = EmailAuthProvider.credential(user.email, currentPass);
+      await reauthenticateWithCredential(user, cred);
+      await updatePassword(user, newPass);
+      showToast("✅ Password updated successfully!");
+
+      await addDoc(collection(db, "users", user.uid, "activities"), {
+        action: "Updated password",
+        time: serverTimestamp()
+      });
+      await loadActivity(user.uid);
+      currentPasswordInput.value = "";
+      newPasswordInput.value = "";
+    } catch (err) {
+      console.error(err);
+      showToast("❌ Failed to update password. Check current password.");
+    }
+  });
+
+  logoutBtn.addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "login.html";
+  });
+
+  // Theme change
+  applyThemeBtn.addEventListener("click", () => {
+    document.body.style.color = themeColorPicker.value;
+    document.body.style.borderColor = themeColorPicker.value;
+    showToast("🎨 Theme applied!");
+  });
+
+  // File uploads
+  fileUpload.addEventListener("change", () => {
+    uploadedFilesList.innerHTML = "";
+    Array.from(fileUpload.files).forEach(file => {
+      const li = document.createElement("li");
+      li.textContent = file.name;
+      uploadedFilesList.appendChild(li);
     });
-  </script>
+    showToast("📂 Files selected.");
+  });
+
+</script>
 </body>
 </html>
