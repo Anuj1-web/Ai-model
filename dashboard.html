@@ -31,11 +31,13 @@
     .nav-btn {
       background: #000;
       color: #fff;
-      padding: 8px 14px;
+      padding: 10px 18px;
       border-radius: 6px;
       text-decoration: none;
       transition: background 0.2s;
-      font-size: 14px;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
     }
     .nav-btn:hover {
       background: #333;
@@ -61,6 +63,7 @@
     label {
       display: block;
       margin-top: 10px;
+      font-weight: bold;
     }
     input {
       width: 100%;
@@ -72,11 +75,12 @@
     button {
       background: #000;
       color: #fff;
-      padding: 8px 14px;
+      padding: 10px 18px;
       border-radius: 6px;
       border: none;
       cursor: pointer;
-      margin-top: 10px;
+      margin-top: 12px;
+      font-size: 15px;
     }
     button:hover {
       background: #333;
@@ -90,7 +94,8 @@
       color: #fff;
       border-radius: 6px;
       z-index: 9999;
-      opacity: 0.9;
+      opacity: 0.95;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -140,13 +145,13 @@
       onAuthStateChanged, 
       signOut, 
       sendEmailVerification, 
-      updatePassword 
+      updatePassword, 
+      reload 
     } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
     import { 
       doc, 
       getDoc, 
-      updateDoc, 
       collection, 
       addDoc, 
       serverTimestamp 
@@ -178,19 +183,24 @@
       })
       .catch(() => subscriptionBox.innerHTML = "📦 Coming soon...");
 
-    // Track activity
+    // Load activity
     async function loadActivity(uid) {
-      const snap = await getDoc(doc(db, "users", uid));
-      const activity = snap.data()?.activity || [];
-      activityList.innerHTML = "";
-      if (activity.length === 0) {
-        activityList.innerHTML = "<li>No recent activity.</li>";
-      } else {
-        activity.forEach(act => {
-          const li = document.createElement("li");
-          li.textContent = `${act.action} - ${new Date(act.time.seconds*1000).toLocaleString()}`;
-          activityList.appendChild(li);
-        });
+      try {
+        const snap = await getDoc(doc(db, "users", uid));
+        const userData = snap.exists() ? snap.data() : {};
+        const activity = userData.activity || [];
+        activityList.innerHTML = "";
+        if (activity.length === 0) {
+          activityList.innerHTML = "<li>No recent activity.</li>";
+        } else {
+          activity.forEach(act => {
+            const li = document.createElement("li");
+            li.textContent = `${act.action} - ${new Date(act.time.seconds*1000).toLocaleString()}`;
+            activityList.appendChild(li);
+          });
+        }
+      } catch (err) {
+        console.error("Activity load failed", err);
       }
     }
 
@@ -204,30 +214,43 @@
       await loadActivity(user.uid);
     });
 
-    // Update account with email verification before password change
+    // Update account with verification
     accountForm.addEventListener("submit", async e => {
       e.preventDefault();
       const user = auth.currentUser;
       if (!user) return;
 
       const newPass = passwordInput.value.trim();
-      if (newPass) {
-        if (!user.emailVerified) {
-          await sendEmailVerification(user);
-          showToast("📧 Please verify your email before changing password. Verification email sent.");
-          return;
-        }
+      if (!newPass) {
+        showToast("⚠️ Please enter a new password.");
+        return;
+      }
+
+      await reload(user); // refresh user state
+
+      if (!user.emailVerified) {
+        await sendEmailVerification(user);
+        showToast("📧 Verification email sent. Please verify before changing password.");
+        return;
+      }
+
+      try {
         await updatePassword(user, newPass);
         showToast("✅ Password updated successfully!");
+
+        // log activity
+        await addDoc(collection(db, "users", user.uid, "activities"), {
+          action: "Updated account password",
+          time: serverTimestamp()
+        });
+        await loadActivity(user.uid);
+
+      } catch (err) {
+        console.error(err);
+        showToast("❌ Failed to update password.");
       }
 
       passwordInput.value = "";
-      // Track activity
-      await addDoc(collection(db, "users", user.uid, "activities"), {
-        action: "Updated account info",
-        time: serverTimestamp()
-      });
-      await loadActivity(user.uid);
     });
 
     logoutBtn.addEventListener("click", async () => {
