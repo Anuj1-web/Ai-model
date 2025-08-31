@@ -1,5 +1,5 @@
-// signup2.js — FULL, robust, untrimmed
-// Uses Firebase web SDK v12.2.1 imports (must match firebase-login.js version)
+// signup2.js — FULL, explicit, robust
+// Uses Firebase Web SDK v12.2.1 imports (make sure firebase-login.js uses the same)
 
 import {
   createUserWithEmailAndPassword,
@@ -12,21 +12,18 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-import {
-  doc,
-  setDoc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-// Import auth & db instances from your firebase-login.js (must export them)
+// IMPORTANT: firebase-login.js must export `auth` and `db` and use the same SDK version
 import { auth, db } from "./firebase-login.js";
 
-/* -------------------------------------------------------------------
-   DOM: Make sure your signup.html has elements with these IDs:
-   - signupForm2, name, email, password
-   - resendVerificationBtn, goToLoginBtn, googleSignupBtn, toastContainer
-   If toastContainer or resend button missing, script creates fallbacks.
-   ------------------------------------------------------------------- */
+/* ---------- Expected HTML IDs (signup.html) ----------
+#signupForm2, #name, #email, #password,
+#resendVerificationBtn, #goToLoginBtn, #googleSignupBtn, #toastContainer
+If missing, the script will create fallback controls so functionality still works.
+------------------------------------------------------*/
+
+// DOM references (create fallbacks when absent)
 const signupForm = document.getElementById("signupForm2");
 const nameInput = document.getElementById("name");
 const emailInput = document.getElementById("email");
@@ -36,92 +33,69 @@ const goToLoginBtn = document.getElementById("goToLoginBtn");
 const googleSignupBtn = document.getElementById("googleSignupBtn");
 let toastContainer = document.getElementById("toastContainer");
 
-// Create fallback toast container if missing
+// create toastContainer fallback if missing
 if (!toastContainer) {
   toastContainer = document.createElement("div");
   toastContainer.id = "toastContainer";
   toastContainer.style.position = "fixed";
-  toastContainer.style.top = "18px";
-  toastContainer.style.right = "18px";
+  toastContainer.style.top = "16px";
+  toastContainer.style.right = "16px";
   toastContainer.style.zIndex = "999999";
   document.body.appendChild(toastContainer);
 }
 
-// Create a fallback resend button if missing (keeps UI working)
+// create resendBtn fallback if missing (keeps behavior intact)
 if (!resendBtn) {
   resendBtn = document.createElement("button");
   resendBtn.id = "resendVerificationBtn";
   resendBtn.textContent = "Resend Verification";
-  // basic inline style so it looks clickable
   resendBtn.style.display = "none";
   resendBtn.style.padding = "10px 14px";
-  resendBtn.style.borderRadius = "8px";
   resendBtn.style.border = "none";
+  resendBtn.style.borderRadius = "6px";
   resendBtn.style.background = "black";
   resendBtn.style.color = "white";
   resendBtn.style.marginTop = "10px";
-  // Insert after the form if it exists, otherwise append to body
-  if (signupForm && signupForm.parentNode) {
-    signupForm.parentNode.insertBefore(resendBtn, signupForm.nextSibling);
-  } else {
-    document.body.appendChild(resendBtn);
-  }
+  if (signupForm && signupForm.parentNode) signupForm.parentNode.insertBefore(resendBtn, signupForm.nextSibling);
+  else document.body.appendChild(resendBtn);
 }
 
-// Inline-visible toast utility (ensures visibility in white/black themes)
-function showToast(message, success = true, opts = {}) {
+/* ------------------------- Toast helper -------------------------
+   Uses inline styles so toast is visible regardless of page CSS/theme.
+-----------------------------------------------------------------*/
+function showToast(message, success = true, duration = 4500) {
   const el = document.createElement("div");
-  el.className = `sg-toast ${success ? "success" : "error"}`;
   el.textContent = message;
-
-  // Inline fallback styling to avoid being overridden by site CSS
-  el.style.backgroundColor = success ? "#16a34a" : "#dc2626"; // green / red
+  // inline styling to ensure visibility
+  el.style.background = success ? "#16a34a" : "#dc2626";
   el.style.color = "#fff";
   el.style.padding = "10px 14px";
   el.style.borderRadius = "8px";
-  el.style.boxShadow = "0 6px 18px rgba(0,0,0,0.12)";
+  el.style.boxShadow = "0 6px 20px rgba(0,0,0,0.12)";
   el.style.fontWeight = "600";
   el.style.marginTop = "8px";
   el.style.maxWidth = "380px";
   el.style.zIndex = "100000";
-  el.style.fontFamily = "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial";
-
-  (toastContainer || document.body).appendChild(el);
-
-  const duration = opts.duration || 4500;
-  setTimeout(() => {
-    try { el.remove(); } catch (e) {}
-  }, duration);
+  el.style.fontFamily = "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial";
+  toastContainer.appendChild(el);
+  setTimeout(() => { try { el.remove() } catch(e){} }, duration);
 }
 
-// Helper: disable/enable signup form inputs (to indicate instruction to check email)
-function disableSignupFormInputs() {
+/* ------------------------- Form helpers ------------------------- */
+function disableFormInputs() {
   if (!signupForm) return;
   signupForm.querySelectorAll("input, button").forEach(el => {
-    // keep Google & goToLogin clickable (they may be outside the form)
-    if (el.id === "googleSignupBtn" || el.id === "goToLoginBtn") return;
-    try { el.disabled = true; } catch(e) {}
+    // keep goToLogin and googleSignup outside or enabled
+    if (el.id === "goToLoginBtn" || el.id === "googleSignupBtn") return;
+    try { el.disabled = true; } catch(e){}
   });
 }
-function enableSignupFormInputs() {
+function enableFormInputs() {
   if (!signupForm) return;
-  signupForm.querySelectorAll("input, button").forEach(el => {
-    try { el.disabled = false; } catch(e) {}
-  });
+  signupForm.querySelectorAll("input, button").forEach(el => { try { el.disabled = false; } catch(e){} });
 }
 
-// Helper: ensure Firestore user doc exists (merge to avoid overwriting)
-async function ensureUserDoc(uid, payload) {
-  try {
-    await setDoc(doc(db, "users", uid), payload, { merge: true });
-  } catch (err) {
-    console.warn("Failed to write user doc:", err);
-  }
-}
-
-/* -----------------------------
-   Resend cooldown (30 seconds)
-   ----------------------------- */
+/* ------------------------- Resend cooldown ------------------------- */
 let cooldown = false;
 let cooldownInterval = null;
 function startResendCooldown(seconds = 30) {
@@ -147,64 +121,104 @@ function startResendCooldown(seconds = 30) {
   }, 1000);
 }
 
-// Utility: polite delay
-const delay = (ms) => new Promise(res => setTimeout(res, ms));
+/* ------------------- Polling for verification -------------------
+   When we send a verification link, poll the Firebase user record
+   (user.reload()) to detect emailVerified = true and then redirect.
+-----------------------------------------------------------------*/
+let pollingHandle = null;
+async function pollForVerification(user, intervalMs = 3000, maxAttempts = 40) {
+  // stop previous poll
+  if (pollingHandle) clearInterval(pollingHandle);
+  let attempts = 0;
+  pollingHandle = setInterval(async () => {
+    attempts++;
+    try {
+      await user.reload();
+      if (user.emailVerified) {
+        clearInterval(pollingHandle);
+        pollingHandle = null;
+        showToast("Email verified — redirecting to login...", true);
+        // sign out so login flow is clean
+        try { await auth.signOut(); } catch(e){}
+        setTimeout(() => { window.location.href = "login.html"; }, 1200);
+      } else {
+        if (attempts >= maxAttempts) {
+          clearInterval(pollingHandle);
+          pollingHandle = null;
+          showToast("Still not verified. If you clicked the link, try logging in. You can resend the email.", false);
+        }
+      }
+    } catch (err) {
+      console.warn("pollForVerification reload error:", err);
+      if (err?.code === "auth/network-request-failed") {
+        showToast("Network issue checking verification. Try again later.", false);
+        clearInterval(pollingHandle);
+        pollingHandle = null;
+      }
+    }
+  }, intervalMs);
+}
 
-/* ==========================
-   CORE: Signup flow
-   - never show "email already in use"
-   - if registered & not verified -> resend verification
-   - if registered & verified -> tell user to login
-   - if registered & wrong password -> send password reset and inform
-   - if new -> create, save user doc, send verification
-   ========================== */
-signupForm?.addEventListener("submit", async (ev) => {
-  ev.preventDefault();
-
-  // read & sanitize inputs
+/* ---------------------- SIGNUP SUBMIT HANDLER ----------------------
+   Logic:
+   1) fetchSignInMethodsForEmail(auth, email)
+      - if methods.length > 0 => account exists => DO NOT CALL createUserWithEmailAndPassword
+         * if 'password' in methods:
+             - try signInWithEmailAndPassword(auth, email, password)
+               - if sign-in success && !emailVerified => sendEmailVerification(user) -> show toast + start cooldown + poll
+               - if sign-in success && emailVerified => tell user to login
+               - if sign-in fails with wrong-password => sendPasswordResetEmail(auth, email) -> show toast
+               - other sign-in errors -> show friendly message
+         * else if 'google.com' in methods -> tell user to sign in with Google
+         * else -> fallback: sendPasswordResetEmail (safe) and tell user
+      - return (do NOT create user)
+   2) methods empty -> createUserWithEmailAndPassword -> set Firestore doc -> sendEmailVerification -> start cooldown + poll
+----------------------------------------------------------------------*/
+signupForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
   const name = (nameInput?.value || "").trim();
   const email = (emailInput?.value || "").trim().toLowerCase();
   const password = passwordInput?.value || "";
 
   if (!email || !password) {
-    showToast("Please enter email and password.", false);
+    showToast("Please enter an email and password.", false);
     return;
   }
 
   try {
-    // Step 1: check if email already has sign-in methods
+    // ------------- check existing sign-in methods -------------
     let methods = [];
     try {
       methods = await fetchSignInMethodsForEmail(auth, email);
     } catch (fetchErr) {
-      // network or other — inform user but continue attempt to create
+      // network: fail fast and inform user
       if (fetchErr?.code === "auth/network-request-failed") {
-        showToast("Network error checking account. Try again.", false);
+        showToast("Network error. Check connection and try again.", false);
         return;
       }
-      // else continue, because fetch sometimes fails in some environments
+      // If fetch fails for other reasons, log and continue cautiously:
       console.warn("fetchSignInMethodsForEmail error:", fetchErr);
+      // but we still avoid blindly creating if email truly exists — prefer to inform user
     }
 
-    // If methods exist => email already present in Auth
-    if (methods && methods.length > 0) {
-      // If it supports password sign-in, try to sign in with given password
+    if (Array.isArray(methods) && methods.length > 0) {
+      // account exists — handle without showing "email already in use"
+      // prefer password provider path
       if (methods.includes("password")) {
         try {
+          // Try sign-in with provided password to get a user object we can send verification for
           const signInCred = await signInWithEmailAndPassword(auth, email, password);
           const user = signInCred.user;
 
-          // If user exists and is unverified -> send verification again
+          // if not verified -> resend verification
           if (!user.emailVerified) {
             try {
               await sendEmailVerification(user);
               showToast("Account exists but not verified — verification email resent. Check inbox & spam.", true);
-              // ensure user doc exists
-              await ensureUserDoc(user.uid, { name: name || user.displayName || "User", email, role: "user" });
-              // disable inputs & enable resend cooldown
-              disableSignupFormInputs();
+              // create/ensure Firestore doc (merge)
+              try { await setDoc(doc(db, "users", user.uid), { name: name || user.displayName || "User", email, role: "user" }, { merge: true }); } catch(e){ console.warn("setDoc error:", e); }
+              disableFormInputs();
               startResendCooldown(30);
-              // Start short polling to detect verification (we'll also auto-redirect in onAuthStateChanged)
               pollForVerification(user);
               return;
             } catch (verr) {
@@ -212,17 +226,16 @@ signupForm?.addEventListener("submit", async (ev) => {
               return;
             }
           } else {
-            // Verified already - instruct to login
-            showToast("This account is already verified. Please login.", false);
+            showToast("This account is already verified — please login.", false);
             return;
           }
         } catch (signErr) {
-          // sign-in failed — likely wrong password
+          // sign-in failed (wrong password etc.)
           if (signErr?.code === "auth/wrong-password") {
-            // Instead of showing email-in-use, help them recover: send password reset
+            // Safe recovery: send password reset email and inform user
             try {
               await sendPasswordResetEmail(auth, email);
-              showToast("Account exists. Wrong password — a password reset email has been sent. Use it to regain access & verify.", true);
+              showToast("Account exists. Wrong password — a password-reset email was sent so you can regain access & verify.", true);
               startResendCooldown(30);
               return;
             } catch (resetErr) {
@@ -230,117 +243,134 @@ signupForm?.addEventListener("submit", async (ev) => {
                 showToast("Network error while sending reset email. Try again later.", false);
                 return;
               }
-              // fallback message
-              showToast("Account exists. Could not sign you in. Try 'Forgot password' from login page.", false);
+              showToast("Could not send reset email: " + (resetErr.message || resetErr), false);
               return;
             }
           } else if (signErr?.code === "auth/network-request-failed") {
             showToast("Network error while signing in. Try again.", false);
             return;
           } else {
-            // other sign-in errors (2FA, disabled etc.)
-            showToast(signErr.message || "Account exists — please login or reset password.", false);
+            showToast(signErr.message || "Account exists — please try login or password reset.", false);
             return;
           }
         }
       }
 
-      // If account exists but password provider not present (for example google-only)
+      // If account exists but password provider is not present (e.g. google.com only)
       if (methods.includes("google.com") && !methods.includes("password")) {
-        showToast("An account for this email uses Google sign-in. Use 'Sign up with Google' (or log in with Google).", false);
+        showToast("An account exists with Google sign-in. Please use 'Sign up with Google' or login with Google.", false);
         return;
       }
 
-      // Generic fallback when some other provider exists
+      // Generic fallback for other providers: send reset email as safe option
       try {
         await sendPasswordResetEmail(auth, email);
-        showToast("Account exists. Sent password-reset email so you can regain access and verify.", true);
+        showToast("Account exists — sent password reset email so you can regain access and verify.", true);
         startResendCooldown(30);
       } catch (fallbackErr) {
         if (fallbackErr?.code === "auth/network-request-failed") {
           showToast("Network error sending reset email. Try later.", false);
         } else {
-          showToast("Account exists — please try to sign in or use password reset.", false);
+          showToast("Account exists — please try signing in or resetting your password.", false);
         }
       }
-      return;
+
+      return; // very important: do NOT attempt to create user
     }
 
-    // No methods -> fresh email. Create account.
-    let newUserCredential;
+    // ------------- fresh email -> create user -------------
+    // At this point methods is empty — safe to create
+    let createResult;
     try {
-      newUserCredential = await createUserWithEmailAndPassword(auth, email, password);
+      createResult = await createUserWithEmailAndPassword(auth, email, password);
     } catch (createErr) {
-      // network or other create failure
+      // protect against race conditions / unexpected errors
       if (createErr?.code === "auth/network-request-failed") {
-        showToast("Network error - account not created. Try again.", false);
+        showToast("Network error creating account. Try again.", false);
         return;
       }
-      // If create fails but not due to 'already in use' (we handled that above), show message
+      // If createErr is "email-already-in-use" something went wrong with our earlier check;
+      // still, do not show raw error—give helpful guidance:
+      if (createErr?.code === "auth/email-already-in-use") {
+        // fallback: attempt to sign in then resend (defensive)
+        try {
+          const signInDef = await signInWithEmailAndPassword(auth, email, password);
+          const user = signInDef.user;
+          if (!user.emailVerified) {
+            await sendEmailVerification(user);
+            showToast("Account existed but not verified — verification resent.", true);
+            disableFormInputs();
+            startResendCooldown(30);
+            pollForVerification(user);
+            return;
+          } else {
+            showToast("Account already exists and verified. Please login.", false);
+            return;
+          }
+        } catch (sErr) {
+          showToast("Account exists. Try login or password reset.", false);
+          return;
+        }
+      }
+
       showToast("Could not create account: " + (createErr.message || createErr), false);
       return;
     }
 
-    const newUser = newUserCredential.user;
+    // Successfully created
+    const newUser = createResult.user;
 
-    // Save user doc in Firestore
+    // Save Firestore user doc (merge)
     try {
-      await setDoc(doc(db, "users", newUser.uid), {
-        name: name || "User",
-        email: email,
-        role: "user"
-      }, { merge: true });
+      await setDoc(doc(db, "users", newUser.uid), { name: name || "User", email, role: "user" }, { merge: true });
     } catch (fsErr) {
-      console.warn("Could not write user doc:", fsErr);
-      // not blocking — user is created and we continue
+      console.warn("Firestore write failed:", fsErr);
+      // proceed anyway
     }
 
-    // Send verification email to new user
+    // Send verification
     try {
       await sendEmailVerification(newUser);
-      showToast("Verification email sent. Please check your inbox & spam.", true);
-      disableSignupFormInputs();
+      showToast("Verification email sent. Please check inbox & spam.", true);
+      disableFormInputs();
       startResendCooldown(30);
       pollForVerification(newUser);
       return;
-    } catch (verr2) {
-      if (verr2?.code === "auth/network-request-failed") {
-        showToast("Network error sending verification email. Try again.", false);
+    } catch (verErr) {
+      if (verErr?.code === "auth/network-request-failed") {
+        showToast("Network error sending verification. Try again.", false);
         return;
       }
-      showToast("Could not send verification: " + (verr2.message || verr2), false);
+      showToast("Could not send verification: " + (verErr.message || verErr), false);
       return;
     }
   } catch (outerErr) {
-    console.error("Unhandled signup flow error:", outerErr);
+    console.error("Signup flow outer error:", outerErr);
     showToast("Signup failed: " + (outerErr.message || outerErr), false);
   }
 });
 
-/* ----------------------
-   Resend button click
-   ---------------------- */
+/* ----------------- Resend verification click ----------------- */
 resendBtn?.addEventListener("click", async (ev) => {
   ev?.preventDefault();
   if (cooldown) return;
-
   let user = auth.currentUser;
   const email = (emailInput?.value || "").trim().toLowerCase();
   const password = passwordInput?.value || "";
 
   try {
     if (!user) {
-      // Attempt to sign in silently using provided credentials to get a user object
+      // Try silent sign-in with provided credentials
       if (email && password) {
         try {
-          const signIn = await signInWithEmailAndPassword(auth, email, password);
-          user = signIn.user;
+          const s = await signInWithEmailAndPassword(auth, email, password);
+          user = s.user;
         } catch (signErr) {
-          // If wrong password, send password reset and tell the user
           if (signErr?.code === "auth/wrong-password") {
+            // send reset email automatically
             try {
               await sendPasswordResetEmail(auth, email);
-              showToast("Wrong password. Sent password reset email so you can login & verify.", true);
+              showToast("Wrong password. Sent password reset email — use it to regain access & verify.", true);
               startResendCooldown(30);
               return;
             } catch (resetErr) {
@@ -348,135 +378,83 @@ resendBtn?.addEventListener("click", async (ev) => {
               return;
             }
           } else {
-            showToast("Cannot sign you in to resend. Please login first.", false);
+            showToast("Unable to sign you in. Please login first or use password reset.", false);
             return;
           }
         }
       } else {
-        showToast("Enter your email and password above to resend verification.", false);
+        showToast("Please enter your email and password above to resend verification.", false);
         return;
       }
     }
 
     if (!user) {
-      showToast("Unable to locate account for resending verification.", false);
+      showToast("Unable to locate account to resend verification for.", false);
       return;
     }
 
     if (user.emailVerified) {
-      showToast("Email already verified. Please login.", true);
+      showToast("Email is already verified. Please login.", true);
       return;
     }
 
-    await sendEmailVerification(user);
-    showToast("Verification email resent. Check inbox & spam.", true);
-    startResendCooldown(30);
-    // ensure user doc exists if possible
-    try { await ensureUserDoc(user.uid, { email: user.email, name: user.displayName || "User", role: "user" }); } catch(e){}
-  } catch (err) {
-    console.error("Resend click error:", err);
-    if (err?.code === "auth/network-request-failed") {
-      showToast("Network error. Try again later.", false);
-    } else {
+    try {
+      await sendEmailVerification(user);
+      showToast("Verification email resent. Check inbox & spam.", true);
+      startResendCooldown(30);
+    } catch (err) {
+      if (err?.code === "auth/network-request-failed") {
+        showToast("Network error sending verification. Try again.", false);
+        return;
+      }
       showToast("Could not resend verification: " + (err.message || err), false);
     }
+  } catch (err) {
+    console.error("Resend click outer error:", err);
+    showToast("Resend failed: " + (err.message || err), false);
   }
 });
 
-/* ----------------------
-   Google signup
-   ---------------------- */
+/* -------------------- Google signup flow -------------------- */
 googleSignupBtn?.addEventListener("click", async (ev) => {
   ev?.preventDefault();
   const provider = new GoogleAuthProvider();
-
   try {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
-
-    // Ensure a users/uid doc exists
     try {
-      await ensureUserDoc(user.uid, { name: user.displayName || "User", email: user.email || "", role: "user", verified: !!user.emailVerified });
-    } catch (e) { console.warn("Could not write google user doc:", e); }
-
+      await setDoc(doc(db, "users", user.uid), { name: user.displayName || "User", email: user.email || "", role: "user", verified: !!user.emailVerified }, { merge: true });
+    } catch (fsErr) {
+      console.warn("Failed writing google user doc:", fsErr);
+    }
     showToast("Signed in with Google. Redirecting...", true);
-    await delay(700);
+    await new Promise(r => setTimeout(r, 700));
     window.location.href = "index.html";
   } catch (err) {
     console.error("Google signup error:", err);
     if (err?.code === "auth/network-request-failed") {
-      showToast("Network error when signing with Google. Try again.", false);
+      showToast("Network error during Google sign-in. Try again.", false);
     } else {
       showToast("Google sign-in failed: " + (err.message || err), false);
     }
   }
 });
 
-/* ----------------------
-   Auto detect verification:
-   - If user is signed in and verifies via email link, user.emailVerified becomes true once we reload user.
-   - We'll poll current user.reload() up to a limit and then redirect to login when verified.
-   ---------------------- */
-let verificationPollHandle = null;
-async function pollForVerification(user, intervalMs = 3000, maxAttempts = 40) {
-  // stop previous poll if any
-  if (verificationPollHandle) {
-    clearInterval(verificationPollHandle);
-    verificationPollHandle = null;
-  }
-  let attempts = 0;
-  verificationPollHandle = setInterval(async () => {
-    attempts++;
-    try {
-      // reload user to refresh emailVerified flag
-      await user.reload();
-      if (user.emailVerified) {
-        clearInterval(verificationPollHandle);
-        verificationPollHandle = null;
-        showToast("Email verified! Redirecting to login...", true);
-        // sign out so next flow is clean (optional)
-        try { await auth.signOut(); } catch(e){}
-        await delay(1200);
-        window.location.href = "login.html";
-      } else {
-        // if exceeded attempts, stop polling silently
-        if (attempts >= maxAttempts) {
-          clearInterval(verificationPollHandle);
-          verificationPollHandle = null;
-          // allow user to manually click resend later
-          showToast("Still not verified. If you clicked the link, try logging in; otherwise resend.", false);
-        }
-      }
-    } catch (reloadErr) {
-      console.warn("Error reloading user for verification poll:", reloadErr);
-      // network issues or token issues — don't spam user with toasts, but stop if network error
-      if (reloadErr?.code === "auth/network-request-failed") {
-        showToast("Network issue while checking verification. Try again later.", false);
-        clearInterval(verificationPollHandle);
-        verificationPollHandle = null;
-      }
-    }
-  }, intervalMs);
-}
-
-/* ----------------------
-   onAuthStateChanged: keep UX responsive
-   - if user signs in elsewhere or auto-signed in, and is verified -> redirect
-   ---------------------- */
+/* ------------- onAuthStateChanged: auto-redirect when verification completed ------------- */
 onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    // if already verified, guide to login/dashboard
+  if (!user) return;
+  // If user becomes verified, sign them out and redirect to login so they can log in normally
+  try {
     if (user.emailVerified) {
-      // sign out and redirect to login (so they can login normally)
-      showToast("Verified. Redirecting to login...", true);
+      showToast("Email verified! Redirecting to login...", true);
       try { await auth.signOut(); } catch(e){}
-      await delay(900);
+      await new Promise(r => setTimeout(r, 900));
       window.location.href = "login.html";
     } else {
-      // user signed in but not verified: ensure UI shows resend button
+      // Show resend UI when user present but not verified
       resendBtn.style.display = "inline-block";
     }
-  } else {
-    // not signed in — nothing to do
+  } catch (err) {
+    console.warn("onAuthStateChanged handler error:", err);
   }
 });
