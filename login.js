@@ -14,7 +14,6 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ✅ Use the separate Firebase config only for login-related features
 import { auth, db } from './firebase-login.js';
 
 // ✅ DOM References
@@ -104,17 +103,26 @@ googleBtn.addEventListener("click", async () => {
   }
 });
 
-// ✅ Role Check & Redirect
+// ✅ Role Check & Access Control
 async function checkUserRole(uid) {
   try {
     const userDocRef = doc(db, "users", uid);
     const userDoc = await getDoc(userDocRef);
-    const role = userDoc.data()?.role;
+    const role = userDoc.data()?.role || "user"; // default = user
+
+    const currentPage = window.location.pathname.split("/").pop();
 
     if (role === "admin") {
-      window.location.href = "admin-dashboard.html";
-    } else {
-      window.location.href = "dashboard.html";
+      // ✅ Admin: unrestricted, nothing blocked
+      return;
+    }
+
+    if (role === "user") {
+      // ✅ Normal user: block ONLY library.html
+      if (currentPage === "library.html") {
+        window.location.href = "index.html";
+      }
+      return;
     }
   } catch (error) {
     console.error("Role check failed:", error);
@@ -122,9 +130,18 @@ async function checkUserRole(uid) {
   }
 }
 
-// ✅ Optional Auto-Redirect If Already Logged In
+// ✅ Auto-Redirect If Already Logged In
 onAuthStateChanged(auth, (user) => {
-  if (user) {
-    checkUserRole(user.uid);
+  const currentPage = window.location.pathname.split("/").pop();
+
+  if (!user) {
+    // ❌ Not logged in: block wizardmaker.html
+    if (currentPage === "wizardmaker.html") {
+      window.location.href = "login.html";
+    }
+    return;
   }
+
+  // Logged in → check role restrictions
+  checkUserRole(user.uid);
 });
