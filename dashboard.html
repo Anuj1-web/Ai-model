@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js"></script>
+  <link rel="stylesheet" href="style.css"> <!-- keep consistent styles -->
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #000;
+    }
+    header {
+      background: #111;
+      color: #fff;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+    header button {
+      background: #f87171;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    main {
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    section {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #fafafa;
+    }
+    section h2 {
+      margin-top: 0;
+      font-size: 18px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 6px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      border: 1px solid #aaa;
+      border-radius: 6px;
+    }
+    button.save {
+      background: #34d399;
+      margin-top: 12px;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>User Dashboard</h1>
+    <button id="logoutBtn">Logout</button>
+  </header>
+
+  <main>
+    <!-- Account Info -->
+    <section>
+      <h2>Account Information</h2>
+      <label for="displayName">Name</label>
+      <input type="text" id="displayName" placeholder="Enter your name">
+
+      <label for="password">Change Password</label>
+      <input type="password" id="password" placeholder="New password">
+
+      <button class="save" id="saveAccountBtn">Save Changes</button>
+    </section>
+
+    <!-- Activity -->
+    <section>
+      <h2>Past Activity</h2>
+      <p id="activityList">No activity recorded yet.</p>
+    </section>
+
+    <!-- Subscription -->
+    <section>
+      <h2>Subscription Details</h2>
+      <p id="subscriptionInfo">Free Plan — Upgrade coming soon.</p>
+    </section>
+
+    <!-- Advanced -->
+    <section>
+      <h2>Advanced Options</h2>
+      <p>More settings will be available here.</p>
+    </section>
+  </main>
+
+  <script type="module">
+    import { auth, db } from "./firebase-login.js";
+    import {
+      signOut,
+      updateProfile,
+      updatePassword,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+    import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+    const logoutBtn = document.getElementById("logoutBtn");
+    const saveBtn = document.getElementById("saveAccountBtn");
+    const displayNameInput = document.getElementById("displayName");
+    const passwordInput = document.getElementById("password");
+
+    // Auth check
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+      if (!user.emailVerified) {
+        alert("Please verify your email before using the dashboard.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      // Load user profile
+      displayNameInput.value = user.displayName || "";
+
+      // Load role/info from Firestore
+      const docRef = doc(db, "users", user.uid);
+      const snap = await getDoc(docRef);
+      if (!snap.exists()) {
+        await setDoc(docRef, { email: user.email, role: "user" });
+      }
+    });
+
+    // Save Account Info
+    saveBtn.addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      try {
+        if (displayNameInput.value.trim()) {
+          await updateProfile(user, { displayName: displayNameInput.value.trim() });
+        }
+        if (passwordInput.value.trim()) {
+          await updatePassword(user, passwordInput.value.trim());
+        }
+        alert("✅ Account updated successfully.");
+      } catch (err) {
+        console.error("Update failed:", err);
+        alert("❌ Failed: " + err.message);
+      }
+    });
+
+    // Logout
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "login.html";
+    });
+  </script>
+</body>
+</html>
