@@ -1,178 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>User Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js"></script>
-  <link rel="stylesheet" href="style.css"> <!-- keep consistent styles -->
+  <link rel="stylesheet" href="styles.css" />
   <style>
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
       background: #fff;
       color: #000;
+      margin: 0;
+      padding: 0;
     }
     header {
-      background: #111;
-      color: #fff;
-      padding: 12px 20px;
+      background: #f5f5f5;
+      padding: 15px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      border-bottom: 1px solid #ddd;
     }
     header h1 {
-      margin: 0;
       font-size: 20px;
+      margin: 0;
     }
-    header button {
-      background: #f87171;
+    .nav-links {
+      display: flex;
+      gap: 10px;
+    }
+    .nav-btn {
+      background: #000;
       color: #fff;
-      border: none;
       padding: 8px 14px;
       border-radius: 6px;
-      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+      font-size: 14px;
+    }
+    .nav-btn:hover {
+      background: #333;
     }
     main {
       padding: 20px;
-      max-width: 800px;
+      max-width: 900px;
       margin: auto;
     }
     section {
       margin-bottom: 30px;
       padding: 20px;
       border: 1px solid #ddd;
-      border-radius: 10px;
+      border-radius: 8px;
       background: #fafafa;
     }
     section h2 {
       margin-top: 0;
       font-size: 18px;
-      border-bottom: 1px solid #ccc;
+      border-bottom: 1px solid #ddd;
       padding-bottom: 6px;
     }
     label {
       display: block;
       margin-top: 10px;
-      font-weight: bold;
     }
     input {
       width: 100%;
       padding: 8px;
       margin-top: 4px;
-      border: 1px solid #aaa;
+      border: 1px solid #ccc;
       border-radius: 6px;
     }
-    button.save {
-      background: #34d399;
-      margin-top: 12px;
+    button {
+      background: #000;
       color: #fff;
-      border: none;
       padding: 8px 14px;
       border-radius: 6px;
+      border: none;
       cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #333;
+    }
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 18px;
+      background: #000;
+      color: #fff;
+      border-radius: 6px;
+      z-index: 9999;
+      opacity: 0.9;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>User Dashboard</h1>
-    <button id="logoutBtn">Logout</button>
+    <h1>Dashboard</h1>
+    <nav class="nav-links">
+      <a href="index.html" class="nav-btn">Home</a>
+      <button id="logoutBtn" class="nav-btn">Logout</button>
+    </nav>
   </header>
 
   <main>
     <!-- Account Info -->
-    <section>
+    <section id="accountSection">
       <h2>Account Information</h2>
-      <label for="displayName">Name</label>
-      <input type="text" id="displayName" placeholder="Enter your name">
+      <form id="accountForm">
+        <label>Email</label>
+        <input type="email" id="accountEmail" disabled />
 
-      <label for="password">Change Password</label>
-      <input type="password" id="password" placeholder="New password">
+        <label>Change Password</label>
+        <input type="password" id="newPassword" placeholder="Enter new password" />
 
-      <button class="save" id="saveAccountBtn">Save Changes</button>
+        <button type="submit">Update Account</button>
+      </form>
     </section>
 
-    <!-- Activity -->
-    <section>
-      <h2>Past Activity</h2>
-      <p id="activityList">No activity recorded yet.</p>
+    <!-- Activity Tracking -->
+    <section id="activitySection">
+      <h2>Recent Activity</h2>
+      <ul id="activityList">
+        <li>No recent activity.</li>
+      </ul>
     </section>
 
     <!-- Subscription -->
-    <section>
-      <h2>Subscription Details</h2>
-      <p id="subscriptionInfo">Free Plan — Upgrade coming soon.</p>
-    </section>
-
-    <!-- Advanced -->
-    <section>
-      <h2>Advanced Options</h2>
-      <p>More settings will be available here.</p>
+    <section id="subscriptionSection">
+      <h2>Subscription</h2>
+      <div id="subscriptionBox">Loading subscription details...</div>
     </section>
   </main>
 
+  <div id="toastContainer"></div>
+
   <script type="module">
-    import { auth, db } from "./firebase-login.js";
-    import {
-      signOut,
-      updateProfile,
-      updatePassword,
-      onAuthStateChanged
+    import { 
+      onAuthStateChanged, 
+      signOut, 
+      sendEmailVerification, 
+      updatePassword 
     } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-    import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    import { 
+      doc, 
+      getDoc, 
+      updateDoc, 
+      collection, 
+      addDoc, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
+    import { auth, db } from "./firebase-login.js";
+
+    const emailInput = document.getElementById("accountEmail");
+    const passwordInput = document.getElementById("newPassword");
+    const accountForm = document.getElementById("accountForm");
     const logoutBtn = document.getElementById("logoutBtn");
-    const saveBtn = document.getElementById("saveAccountBtn");
-    const displayNameInput = document.getElementById("displayName");
-    const passwordInput = document.getElementById("password");
+    const toastContainer = document.getElementById("toastContainer");
+    const activityList = document.getElementById("activityList");
+    const subscriptionBox = document.getElementById("subscriptionBox");
 
-    // Auth check
-    onAuthStateChanged(auth, async (user) => {
+    function showToast(msg) {
+      const el = document.createElement("div");
+      el.className = "toast";
+      el.textContent = msg;
+      toastContainer.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+
+    // Load subscription
+    fetch("subscription.html")
+      .then(r => r.ok ? r.text() : null)
+      .then(html => {
+        subscriptionBox.innerHTML = html || "📦 Coming soon...";
+      })
+      .catch(() => subscriptionBox.innerHTML = "📦 Coming soon...");
+
+    // Track activity
+    async function loadActivity(uid) {
+      const snap = await getDoc(doc(db, "users", uid));
+      const activity = snap.data()?.activity || [];
+      activityList.innerHTML = "";
+      if (activity.length === 0) {
+        activityList.innerHTML = "<li>No recent activity.</li>";
+      } else {
+        activity.forEach(act => {
+          const li = document.createElement("li");
+          li.textContent = `${act.action} - ${new Date(act.time.seconds*1000).toLocaleString()}`;
+          activityList.appendChild(li);
+        });
+      }
+    }
+
+    // Auth state
+    onAuthStateChanged(auth, async user => {
       if (!user) {
         window.location.href = "login.html";
         return;
       }
-      if (!user.emailVerified) {
-        alert("Please verify your email before using the dashboard.");
-        window.location.href = "login.html";
-        return;
-      }
-
-      // Load user profile
-      displayNameInput.value = user.displayName || "";
-
-      // Load role/info from Firestore
-      const docRef = doc(db, "users", user.uid);
-      const snap = await getDoc(docRef);
-      if (!snap.exists()) {
-        await setDoc(docRef, { email: user.email, role: "user" });
-      }
+      emailInput.value = user.email;
+      await loadActivity(user.uid);
     });
 
-    // Save Account Info
-    saveBtn.addEventListener("click", async () => {
+    // Update account with email verification before password change
+    accountForm.addEventListener("submit", async e => {
+      e.preventDefault();
       const user = auth.currentUser;
       if (!user) return;
 
-      try {
-        if (displayNameInput.value.trim()) {
-          await updateProfile(user, { displayName: displayNameInput.value.trim() });
+      const newPass = passwordInput.value.trim();
+      if (newPass) {
+        if (!user.emailVerified) {
+          await sendEmailVerification(user);
+          showToast("📧 Please verify your email before changing password. Verification email sent.");
+          return;
         }
-        if (passwordInput.value.trim()) {
-          await updatePassword(user, passwordInput.value.trim());
-        }
-        alert("✅ Account updated successfully.");
-      } catch (err) {
-        console.error("Update failed:", err);
-        alert("❌ Failed: " + err.message);
+        await updatePassword(user, newPass);
+        showToast("✅ Password updated successfully!");
       }
+
+      passwordInput.value = "";
+      // Track activity
+      await addDoc(collection(db, "users", user.uid, "activities"), {
+        action: "Updated account info",
+        time: serverTimestamp()
+      });
+      await loadActivity(user.uid);
     });
 
-    // Logout
     logoutBtn.addEventListener("click", async () => {
       await signOut(auth);
       window.location.href = "login.html";
