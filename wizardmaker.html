@@ -720,11 +720,11 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-<!-- 🎨 SGWM Theme Tool Trigger -->
+<!-- 🎨 SGWM Theme Tool Integration -->
 <style>
   #theme-tool-btn {
     position: fixed;
-    bottom: 80px; /* slightly above your existing + FAB */
+    bottom: 80px; /* above the + button */
     left: 20px;
     width: 50px;
     height: 50px;
@@ -738,10 +738,14 @@ renderLibraryAssets();
     cursor: pointer;
     z-index: 999999;
     box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    transition: background 0.3s ease;
+  }
+  #theme-tool-btn:hover {
+    background: #357ABD;
   }
   #theme-tool-iframe {
     position: fixed;
-    bottom: 140px; /* appears above the button */
+    bottom: 140px;
     left: 20px;
     width: 420px;
     height: 600px;
@@ -750,9 +754,11 @@ renderLibraryAssets();
     box-shadow: 0 8px 20px rgba(0,0,0,0.35);
     display: none;
     z-index: 999999;
+    background: white;
   }
 </style>
 
+<!-- Floating button and iframe -->
 <div id="theme-tool-btn" title="Theme Tool 🎨">🎨</div>
 <iframe id="theme-tool-iframe" src="theme.html"></iframe>
 
@@ -760,11 +766,59 @@ renderLibraryAssets();
   const themeBtn = document.getElementById("theme-tool-btn");
   const themeFrame = document.getElementById("theme-tool-iframe");
 
+  // Toggle iframe visibility on button click
   themeBtn.addEventListener("click", () => {
     if (themeFrame.style.display === "none" || themeFrame.style.display === "") {
       themeFrame.style.display = "block";
     } else {
       themeFrame.style.display = "none";
+    }
+  });
+
+  // Listen for messages from theme.html
+  window.addEventListener("message", (event) => {
+    if (event.data.type === "APPLY_THEME") {
+      const theme = event.data.theme;
+
+      // Apply CSS variables globally in Wizard Maker
+      const root = document.documentElement;
+      root.style.setProperty("--theme-primary", theme.primary);
+      root.style.setProperty("--theme-secondary", theme.secondary);
+      root.style.setProperty("--theme-background", theme.background);
+      root.style.setProperty("--theme-surface", theme.surface);
+      root.style.setProperty("--theme-text", theme.text);
+
+      // Inject strong override CSS so all UI updates
+      const css = `
+        body, .page, .section, .container {
+          background: ${theme.background} !important;
+          color: ${theme.text} !important;
+        }
+        .btn, .button, .cta, .action {
+          background: ${theme.primary} !important;
+          color: ${theme.text} !important;
+          border-color: ${theme.secondary} !important;
+        }
+        .card, .box, .tile, .panel, .widget, .image-card {
+          background: ${theme.surface} !important;
+          color: ${theme.text} !important;
+          border-color: ${theme.primary} !important;
+        }
+        .navbar, .topbar, .menu, .header, .site-header {
+          background: ${theme.primary} !important;
+          color: ${theme.text} !important;
+        }
+      `;
+
+      // Remove old injected style if any
+      let oldStyle = document.getElementById("sgwm-theme-style");
+      if (oldStyle) oldStyle.remove();
+
+      // Add new injected style
+      const styleEl = document.createElement("style");
+      styleEl.id = "sgwm-theme-style";
+      styleEl.innerHTML = css;
+      document.head.appendChild(styleEl);
     }
   });
 </script>
