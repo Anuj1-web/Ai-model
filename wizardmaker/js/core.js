@@ -110,9 +110,12 @@ function renderIframes() {
   };
 }
 
-// ================= Editing Bridge =================
+// ================= Editing Bridge (iframe) =================
 function injectEditingBridge(html, pageName) {
   const bridge = `<script>(function(){
+    if(window.SGWM_BRIDGE_INJECTED) return;
+    window.SGWM_BRIDGE_INJECTED = true;
+
     var EDIT_ATTR='data-edit-id';
     var clickTimers={};
     function ensureId(el){
@@ -168,12 +171,14 @@ function injectEditingBridge(html, pageName) {
     // Message receiver (text/color/image + theme messages)
     window.addEventListener('message',function(ev){
       var d=ev.data||{};
-      // existing handlers
       var el=document.querySelector('['+EDIT_ATTR+'="'+d.id+'"]');
       if(el && d.type==='APPLY_TEXT'){
         if('placeholder' in el) el.placeholder=d.text||''; else el.innerText=d.text||'';
       }
-      if(el && d.type==='APPLY_COLOR'){ if(d.target==='background') el.style.backgroundColor=d.color; else el.style.color=d.color; }
+      if(el && d.type==='APPLY_COLOR'){ 
+        if(d.target==='background') el.style.backgroundColor=d.color; 
+        else el.style.color=d.color; 
+      }
       if(el && d.type==='APPLY_IMAGE'&&el.tagName==='IMG') el.src=d.src;
       if(el && d.type==='RESTORE_ELEMENT'&&d.snapshot){
         if(d.snapshot.html!==undefined && !('placeholder' in el)) el.innerHTML=d.snapshot.html;
@@ -182,7 +187,30 @@ function injectEditingBridge(html, pageName) {
         if(d.snapshot.inline){ el.style.color=d.snapshot.inline.color||''; el.style.backgroundColor=d.snapshot.inline.backgroundColor||''; }
       }
 
-      // THEME PREVIEW: inject or update a non-destructive preview style element in the page
+      // ========== THEME HANDLERS ==========
+      if(d.type === 'SGWM_RUN_FALLBACKS'){
+        // optional: reset preview or reapply current theme
+        if(window.SGWM_CURRENT_THEME){
+          applyTheme(window.SGWM_CURRENT_THEME);
+        }
+      }
+      if(d.type === 'APPLY_THEME_PREVIEW'){
+        window.SGWM_CURRENT_THEME = d.payload.theme;
+        applyTheme(d.payload.theme);
+      }
+      if(d.type === 'COMMIT_THEME'){
+        window.SGWM_CURRENT_THEME = d.payload.theme;
+        applyTheme(d.payload.theme);
+      }
+
+      function applyTheme(theme){
+        if(!theme||typeof theme!=='object') return;
+        Object.keys(theme).forEach(function(k){
+          document.documentElement.style.setProperty('--'+k, theme[k]);
+        });
+      }
+
+      // Existing THEME_PREVIEW / THEME_COMMIT logic
       if(d.type === 'THEME_PREVIEW' && typeof d.css === 'string') {
         var id = 'sgwm-theme-preview';
         var s = document.getElementById(id);
@@ -194,16 +222,11 @@ function injectEditingBridge(html, pageName) {
         }
         s.textContent = d.css;
       }
-
-      // THEME_CLEAR_PREVIEW: remove preview style
       if(d.type === 'THEME_CLEAR_PREVIEW') {
         var s2 = document.getElementById('sgwm-theme-preview');
         if(s2) s2.parentNode.removeChild(s2);
       }
-
-      // THEME_COMMIT: apply permanent theme CSS into the document head (inline style tag)
       if(d.type === 'THEME_COMMIT' && typeof d.css === 'string') {
-        // Add a permanent style (data-sgwm-theme) so it persists when serializing outerHTML
         var existing = document.querySelector('style[data-sgwm-theme]');
         if(existing) existing.textContent = d.css;
         else {
@@ -212,7 +235,6 @@ function injectEditingBridge(html, pageName) {
           el2.textContent = d.css;
           document.head.appendChild(el2);
         }
-        // return the updated HTML snapshot to parent for saving if requested
         parent.postMessage({ type: 'THEME_COMMIT_DONE', page: '${pageName}', html: '<!DOCTYPE html>' + document.documentElement.outerHTML }, '*');
       }
     });
@@ -234,7 +256,6 @@ window.addEventListener("message", (e) => {
     editorImageInput.style.display = d.src !== undefined ? "block" : "none";
     if (d.src !== undefined) editorImageInput.value = d.src;
   } else if (d.type === "THEME_COMMIT_DONE" && d.page && d.html) {
-    // Save updated html after commit
     editedContents[d.page] = d.html;
   }
 });
@@ -270,7 +291,6 @@ saveEditBtn.onclick = () => {
     },
     "*"
   );
-  // Save back
   const doc = iframe.contentDocument || iframe.contentWindow.document;
   editedContents[currentEdit.page] =
     "<!DOCTYPE html>" + doc.documentElement.outerHTML;
@@ -281,3 +301,46 @@ cancelEditBtn.onclick = () => {
   editorModal.style.display = "none";
   currentEdit = null;
 };
+
+// ================= PARENT-SIDE THEME CONTROLLER =================
+(function setupParentThemeController() {
+  const iframe = document.getElementById("preview").querySelector("iframe");
+  if (!iframe) return;
+
+  let currentTheme = {};
+
+  window.addEventListener('message', (event) => {
+    const msg = event.data;
+    if (!msg || !msg.type) return;
+
+    switch(msg.type) {
+      case 'APPLY_THEME_PREVIEW':
+        currentTheme = msg.payload.theme || {};
+        const cssPreview = buildFullThemeCss(currentTheme);
+        injectThemeCss(cssPreview);
+        break;
+      case 'COMMIT_THEME':
+        currentTheme = msg.payload.theme || {};
+        const cssCommit = buildFullThemeCss(currentTheme);
+        injectThemeCss(cssCommit);
+        break;
+    }
+  });
+
+  function injectThemeCss(cssText){
+    let styleTag = document.getElementById('sgwm-theme-style');
+    if(!styleTag){
+      styleTag = document.createElement('style');
+      styleTag.id = 'sgwm-theme-style';
+      document.head.appendChild(styleTag);
+    }
+    styleTag.innerHTML = cssText;
+  }
+
+  // Optional: API to send theme messages to iframe
+  window.SGWM_ParentThemeController = {
+    sendThemeToIframe: (type, theme) => {
+      if(iframe.contentWindow) iframe.contentWindow.postMessage({type, payload:{theme}}, '*');
+    }
+  };
+})();
