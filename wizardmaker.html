@@ -719,182 +719,148 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-      <!-- ========== Theme Module (Improved Part 1) ========== -->
+      <!-- 🎨 Theme Manager (Part 1) -->
 <style>
+#themeToggle {
+  position: fixed; bottom: 70px; right: 20px; z-index: 10000;
+  background:#0b79ff; color:#fff; border-radius:50%; width:46px; height:46px;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  box-shadow:0 6px 20px rgba(0,0,0,0.2); font-size:22px; font-weight:700;
+}
 #themePanel {
-  position: fixed;
-  bottom: 70px;
-  right: 20px;
-  width: 320px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
-  z-index: 9999;
-  display: none;
+  position: fixed; bottom: 130px; right: 20px; width:320px; max-height:70vh;
+  background:#fff; border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,0.2);
+  padding:12px; overflow:auto; z-index:10000; display:none;
 }
-#themePanel h3 { margin:0 0 10px 0; font-size:16px; }
-#themePanel .preset-grid { 
-  display:grid; grid-template-columns:repeat(3,1fr); gap:8px; 
-  max-height:200px; overflow:auto;
+.theme-tile {
+  display:flex; flex-direction:column; gap:4px; border:1px solid #eee;
+  padding:8px; border-radius:8px; cursor:pointer; background:#fafafa;
 }
-#themePanel .preset-tile { 
-  border:1px solid #eee; padding:8px; border-radius:8px; cursor:pointer;
-  text-align:center; font-size:12px; background:#fafafa;
-}
-#themePanel .preset-tile:hover { background:#f0f0f0; }
-#themeToggleBtn {
-  position: fixed; bottom: 80px; right: 20px; /* leaves 60px space below */
-  background:#000; color:#fff; border-radius:50%; width:46px; height:46px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:20px; cursor:pointer; z-index:10000;
+.theme-swatch {
+  height:36px; border-radius:6px;
+  background:linear-gradient(90deg,var(--c1),var(--c2));
 }
 </style>
 
+<div id="themeToggle" title="Themes">🎨</div>
 <div id="themePanel">
-  <h3>🎨 Themes</h3>
-  <div class="preset-grid" id="themeGrid"></div>
-  <div style="margin-top:10px; display:flex; gap:6px;">
-    <input type="color" id="primaryColor" value="#0b79ff">
-    <input type="color" id="accentColor" value="#06b6d4">
-    <input type="color" id="bgColor" value="#ffffff">
-    <button id="applyCustomTheme">Apply</button>
+  <h4 style="margin:0 0 8px;font-size:16px;">Select Theme</h4>
+  <div id="themeGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;"></div>
+  <div style="margin-top:10px;text-align:right">
+    <button id="applyThemeBtn" style="padding:6px 12px;border-radius:6px;background:#0b79ff;color:#fff;border:0;font-weight:600;cursor:pointer">Apply</button>
   </div>
 </div>
-<div id="themeToggleBtn">🎨</div>
 
 <script>
-(function(){
-  // ----------------- Themes -----------------
-  const themePresets = [
-    {name:'Oceanic', primary:'#0b79ff', accent:'#06b6d4', bg:'#f6fbff'},
-    {name:'Midnight', primary:'#7c3aed', accent:'#06b6d4', bg:'#071026'},
-    {name:'Sunset', primary:'#ff6b6b', accent:'#ff9a00', bg:'#fff7f2'},
-    {name:'Forest', primary:'#0b8457', accent:'#34d399', bg:'#f3fbf6'},
-    {name:'Corporate', primary:'#0b3d91', accent:'#06b6d4', bg:'#fbfdff'},
-    {name:'Warm', primary:'#d97706', accent:'#fb923c', bg:'#fffaf0'},
-    {name:'Violet', primary:'#6b21a8', accent:'#8b5cf6', bg:'#fbf7ff'},
-    {name:'Candy', primary:'#ff6bcb', accent:'#ffd166', bg:'#fff7fb'},
-    {name:'Grayscale', primary:'#111827', accent:'#6b7280', bg:'#ffffff'},
-    {name:'Aqua', primary:'#0088cc', accent:'#00c2c7', bg:'#f0fcff'},
-    {name:'Rose', primary:'#e11d48', accent:'#fb7185', bg:'#fff5f7'},
-    {name:'Indigo', primary:'#272ddf', accent:'#7c3aed', bg:'#f5f7ff'},
-    {name:'Lime', primary:'#84cc16', accent:'#bef264', bg:'#fbfff0'},
-    {name:'Coral', primary:'#ff7a59', accent:'#ffb199', bg:'#fff6f2'},
-    {name:'Teal', primary:'#0d9488', accent:'#2dd4bf', bg:'#f2fffb'},
-    {name:'Slate', primary:'#334155', accent:'#64748b', bg:'#f8fafc'},
-    {name:'Classic', primary:'#0b79ff', accent:'#ff6b6b', bg:'#ffffff'},
-    {name:'Lavender', primary:'#a78bfa', accent:'#c4b5fd', bg:'#fbf8ff'},
-    {name:'Copper', primary:'#9a3412', accent:'#fb923c', bg:'#fff6f0'}
-  ];
+/* ---------------------------
+   THEME MANAGER (Part 1)
+   --------------------------- */
 
-  const themeGrid = document.getElementById("themeGrid");
-  themePresets.forEach(t=>{
-    const tile=document.createElement("div");
-    tile.className="preset-tile";
-    tile.style.background=`linear-gradient(90deg,${t.primary},${t.accent})`;
-    tile.innerHTML=`<div>${t.name}</div>`;
-    tile.addEventListener("click",()=>applyTheme(t));
-    themeGrid.appendChild(tile);
-  });
+// 🔹 Utilities
+function hexToRgb(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');const num=parseInt(hex,16);return{r:(num>>16)&255,g:(num>>8)&255,b:num&255}}
+function luminance(hex){const c=hexToRgb(hex);const a=[c.r/255,c.g/255,c.b/255].map(v=>v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4));return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2]}
+function contrastText(bg){const L=luminance(bg);const white=(1.05)/(L+0.05);const black=(L+0.05)/0.05;return white>=black?'#fff':'#000'}
+function ensureReadable(fg,bg){const Lfg=luminance(fg),Lbg=luminance(bg);if(isNaN(Lfg)||isNaN(Lbg))return fg;const ratio=(Math.max(Lfg,Lbg)+0.05)/(Math.min(Lfg,Lbg)+0.05);if(ratio<3.5)return contrastText(bg);return fg}
+function safeTextColor(bg,preferred){if(!preferred)return contrastText(bg);return ensureReadable(preferred,bg)}
 
-  // ----------------- Apply Theme -----------------
-  function applyTheme(theme){
-    const iframe = iframeRefs[activePage];
-    if(!iframe) return alert("No active page loaded.");
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
+// 🔹 Theme Presets
+const themes=[
+  {name:'Oceanic',primary:'#0b79ff',accent:'#06b6d4',bg:'#f6fbff',text:'#111',
+   headerBg:'#0b79ff',headerText:'#fff',footerBg:'#06b6d4',footerText:'#fff',
+   cardBg:'#fff',cardText:'#111'},
+  {name:'Midnight',primary:'#7c3aed',accent:'#06b6d4',bg:'#071026',text:'#fff',
+   headerBg:'#1e1b4b',headerText:'#fff',footerBg:'#312e81',footerText:'#fff',
+   cardBg:'#1f2937',cardText:'#f9fafb'},
+  {name:'Sunset',primary:'#ff6b6b',accent:'#ff9a00',bg:'#fff7f2',text:'#111',
+   headerBg:'#ff6b6b',headerText:'#fff',footerBg:'#ff9a00',footerText:'#fff',
+   cardBg:'#fffaf5',cardText:'#111'},
+  {name:'Cyberpunk',primary:'#ff00ff',accent:'#00ffff',bg:'#0a0a0a',text:'#eee',
+   headerBg:'#1a1a1a',headerText:'#0ff',footerBg:'#111',footerText:'#f0f',
+   cardBg:'#111827',cardText:'#fff'},
+  {name:'Pastel',primary:'#fbbf24',accent:'#a78bfa',bg:'#fefce8',text:'#333',
+   headerBg:'#fde68a',headerText:'#111',footerBg:'#ddd6fe',footerText:'#111',
+   cardBg:'#fff',cardText:'#111'},
+  {name:'Gold',primary:'#b45309',accent:'#f59e0b',bg:'#fff8f1',text:'#111',
+   headerBg:'#b45309',headerText:'#fff',footerBg:'#92400e',footerText:'#fff',
+   cardBg:'#fef3c7',cardText:'#111'},
+  {name:'Minimal Dark',primary:'#334155',accent:'#64748b',bg:'#0f172a',text:'#e2e8f0',
+   headerBg:'#1e293b',headerText:'#f1f5f9',footerBg:'#1e293b',footerText:'#f1f5f9',
+   cardBg:'#1e293b',cardText:'#f8fafc'},
+  {name:'Neon',primary:'#39ff14',accent:'#ff3131',bg:'#000',text:'#f0f0f0',
+   headerBg:'#111',headerText:'#39ff14',footerBg:'#111',footerText:'#ff3131',
+   cardBg:'#0f0f0f',cardText:'#fff'}
+];
+// (you can keep adding more unique ones here)
 
-    const css = `
-      body { background:${theme.bg} !important; color:${contrastText(theme.bg)} !important; }
-      h1,h2,h3,h4,h5,h6,p,span,li { color:${contrastText(theme.bg)} !important; }
-      a { color:${theme.primary} !important; }
-      header, .header, nav, .nav, .navbar { background:${theme.primary} !important; color:${contrastText(theme.primary)} !important; }
-      footer, .footer { background:${theme.accent} !important; color:${contrastText(theme.accent)} !important; }
-      button, .btn, .button, input[type="submit"] {
-        background:${theme.primary} !important; color:${contrastText(theme.primary)} !important;
-        border-radius:6px; padding:8px 14px;
-      }
-      .card, .panel, .tile, .box { background:#fff !important; border:1px solid ${theme.primary}44 !important; color:#111; border-radius:12px; }
-      input, select, textarea {
-        border:1px solid ${theme.primary}88 !important; border-radius:6px; padding:6px;
-      }
-      input:focus, select:focus, textarea:focus {
-        outline:2px solid ${theme.accent} !important;
-      }
-      .section, .container, .hero, .banner {
-        background: linear-gradient(180deg, ${theme.bg}, ${theme.bg}cc) !important;
-      }
-    `;
+let selectedTheme=null;
 
-    // inject live (overwrite only once)
-    let styleTag = doc.getElementById("__wizard_theme");
-    if(!styleTag){
-      styleTag = doc.createElement("style");
-      styleTag.id="__wizard_theme";
-      doc.head.appendChild(styleTag);
+// 🔹 Build Theme Grid
+const grid=document.getElementById('themeGrid');
+themes.forEach(t=>{
+  const div=document.createElement('div');
+  div.className='theme-tile';
+  div.innerHTML=`<div class="theme-swatch" style="--c1:${t.primary};--c2:${t.accent}"></div>
+                 <div style="font-weight:600;font-size:13px">${t.name}</div>`;
+  div.onclick=()=>{selectedTheme=t;previewTheme(t)};
+  grid.appendChild(div);
+});
+
+// 🔹 Live Preview
+function previewTheme(t){
+  const frame=iframeRefs[activePage]; if(!frame) return;
+  const doc=frame.contentDocument;
+  const styleId='__wizard_theme';
+  let style=doc.getElementById(styleId);
+  if(!style){style=doc.createElement('style');style.id=styleId;doc.head.appendChild(style);}
+  style.textContent=`
+    body{background:${t.bg};color:${safeTextColor(t.bg,t.text)}}
+    header, .header{background:${t.headerBg};color:${safeTextColor(t.headerBg,t.headerText)}}
+    footer, .footer{background:${t.footerBg};color:${safeTextColor(t.footerBg,t.footerText)}}
+    .card{background:${t.cardBg};color:${safeTextColor(t.cardBg,t.cardText)}}
+    button,.btn{background:${t.primary};color:${safeTextColor(t.primary,t.buttonText)}}
+    a{color:${t.accent}}
+  `;
+}
+
+// 🔹 Save Theme to ZIP (when Apply clicked)
+document.getElementById('applyThemeBtn').onclick=()=>{
+  if(!selectedTheme)return alert('Pick a theme first');
+  // 1. Update live preview
+  previewTheme(selectedTheme);
+  // 2. Save into CSS file if exists
+  const cssFile=Object.keys(otherFiles).find(f=>/style\.css$/i.test(f));
+  const cssRules=`
+/* Theme: ${selectedTheme.name} */
+body{background:${selectedTheme.bg};color:${safeTextColor(selectedTheme.bg,selectedTheme.text)}}
+header,.header{background:${selectedTheme.headerBg};color:${safeTextColor(selectedTheme.headerBg,selectedTheme.headerText)}}
+footer,.footer{background:${selectedTheme.footerBg};color:${safeTextColor(selectedTheme.footerBg,selectedTheme.footerText)}}
+.card{background:${selectedTheme.cardBg};color:${safeTextColor(selectedTheme.cardBg,selectedTheme.cardText)}}
+button,.btn{background:${selectedTheme.primary};color:${safeTextColor(selectedTheme.primary,selectedTheme.buttonText)}}
+a{color:${selectedTheme.accent}}
+`;
+  if(cssFile){
+    const cssStr=new TextDecoder().decode(otherFiles[cssFile]);
+    const newCss=cssStr.replace(/\/\* Theme:.*?\*\//s,'')+'\n'+cssRules;
+    otherFiles[cssFile]=new TextEncoder().encode(newCss);
+  }else if(activePage){
+    // 3. Or inject into HTML if no CSS file
+    let html=editedContents[activePage]||pageContents[activePage];
+    if(/<\/head>/i.test(html)){
+      html=html.replace(/<\/head>/i,`<style>${cssRules}</style></head>`);
+    }else{
+      html=`<head><style>${cssRules}</style></head>`+html;
     }
-    styleTag.innerHTML = css;
-
-    // update editedContents cleanly
-    let html = editedContents[activePage];
-    if(html){
-      if(html.includes("__wizard_theme")){
-        html = html.replace(/<style id="__wizard_theme">([\s\S]*?)<\/style>/,
-                            `<style id="__wizard_theme">${css}</style>`);
-      } else {
-        html = html.replace(/<\/head>/i, `<style id="__wizard_theme">${css}</style></head>`);
-      }
-      editedContents[activePage] = html;
-    }
-
-    // update first CSS file if available (replace block, not append forever)
-    const cssFile = Object.keys(otherFiles).find(f=>f.endsWith(".css"));
-    if(cssFile){
-      const decoder = new TextDecoder();
-      const encoder = new TextEncoder();
-      let cssText = decoder.decode(otherFiles[cssFile]);
-      if(cssText.includes("/* WizardMaker Theme */")){
-        cssText = cssText.replace(/\/\* WizardMaker Theme \*\/([\s\S]*)?\/\* End Theme \*\//,
-                  `/* WizardMaker Theme */\n${css}\n/* End Theme */`);
-      } else {
-        cssText += `\n/* WizardMaker Theme */\n${css}\n/* End Theme */`;
-      }
-      otherFiles[cssFile] = encoder.encode(cssText);
-    }
+    editedContents[activePage]=html;
   }
+  alert(`Theme "${selectedTheme.name}" applied and saved`);
+};
 
-  // ----------------- Helpers -----------------
-  function hexToRgb(hex){
-    hex = hex.replace("#","");
-    if(hex.length===3) hex=hex.split("").map(c=>c+c).join("");
-    const num = parseInt(hex,16);
-    return {r:(num>>16)&255, g:(num>>8)&255, b:num&255};
-  }
-  function luminance(hex){
-    const c=hexToRgb(hex);
-    const a=[c.r/255,c.g/255,c.b/255].map(v=>v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4));
-    return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2];
-  }
-  function contrastText(hex){
-    const L=luminance(hex);
-    return L>0.55 ? "#000" : "#fff";
-  }
-
-  // ----------------- Toggle -----------------
-  document.getElementById("themeToggleBtn").onclick=()=>{
-    const panel=document.getElementById("themePanel");
-    panel.style.display=panel.style.display==="none"?"block":"none";
-  };
-  document.getElementById("applyCustomTheme").onclick=()=>{
-    const t={name:"Custom", primary:primaryColor.value, accent:accentColor.value, bg:bgColor.value};
-    applyTheme(t);
-  };
-})();
+// 🔹 Toggle panel
+document.getElementById('themeToggle').onclick=()=>{
+  const p=document.getElementById('themePanel');
+  p.style.display=p.style.display==='block'?'none':'block';
+};
 </script>
-<!-- ========== /Theme Module ========== -->
-
-  
-
 
 </body>
 </html>
