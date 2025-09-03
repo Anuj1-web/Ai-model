@@ -720,46 +720,78 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-<!-- === Part 1: Theme Panel (Wizard Maker integration) === -->
+<!-- === Part 1: Full Theme Module (Wizard Maker) === -->
 <style>
-.theme-launcher {
-  position: fixed; bottom: 80px; right: 20px;
-  width: 44px; height: 44px; border-radius: 50%;
-  background: #111; color: #fff; display:flex; align-items:center; justify-content:center;
-  cursor: pointer; font-size:20px; z-index:1000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-.theme-panel {
-  position: fixed; bottom: 140px; right: 20px;
-  width: 340px; max-height: 460px;
-  background:#fff; border-radius:12px; padding:12px;
-  box-shadow:0 12px 30px rgba(0,0,0,0.12);
-  z-index:1000; overflow:auto; display:none;
-}
-.theme-panel h3 { margin:0 0 10px 0; font-size:16px; }
-.theme-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-.theme-tile {
-  padding:8px; border-radius:8px; border:1px solid #e5e7eb;
-  cursor:pointer; background:#fff; display:flex; flex-direction:column;
-  align-items:start; gap:6px;
-}
-.theme-swatch { height:36px; width:100%; border-radius:6px; box-shadow:inset 0 0 0 1px rgba(0,0,0,0.05); }
-.theme-tile label { font-size:13px; font-weight:600; }
+  /* Floating toggle icon */
+  #theme-toggle {
+    position: fixed;
+    bottom: 70px; /* leaves space below for future icon */
+    right: 20px;
+    width: 45px;
+    height: 45px;
+    background: #4c6ef5;
+    border-radius: 50%;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 10000;
+  }
+
+  /* Theme panel (sidebar) */
+  #theme-panel {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 260px;
+    height: 100%;
+    background: #fff;
+    border-right: 1px solid #ddd;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.15);
+    transition: left 0.3s ease;
+    z-index: 9999;
+    overflow-y: auto;
+    padding: 15px;
+  }
+  #theme-panel.open { left: 0; }
+
+  #theme-panel h3 {
+    margin: 0 0 12px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .theme-grid {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 10px;
+  }
+  .theme-swatch {
+    width: 70px;
+    height: 70px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .theme-swatch div { flex: 1 1 50%; height: 50%; }
 </style>
 
-<div class="theme-launcher" id="themeLauncher">🎨</div>
-<div class="theme-panel" id="themePanel">
-  <h3>Theme Gallery</h3>
-  <div class="theme-grid" id="themeGrid"></div>
+<div id="theme-toggle">🎨</div>
+
+<div id="theme-panel">
+  <h3>Choose Theme</h3>
+  <div class="theme-grid" id="theme-list"></div>
 </div>
 
 <script>
 (function(){
-  const launcher = document.getElementById('themeLauncher');
-  const panel = document.getElementById('themePanel');
-  const grid = document.getElementById('themeGrid');
-  const frame = document.getElementById('previewFrame'); // IMPORTANT: uploaded site preview iframe
-
+  // ========== THEMES ==========
   const themes = [
     {name:'Oceanic', primary:'#0b79ff', accent:'#06b6d4', bg:'#f6fbff'},
     {name:'Midnight', primary:'#7c3aed', accent:'#06b6d4', bg:'#071026'},
@@ -793,56 +825,83 @@ renderLibraryAssets();
     {name:'Monochrome', primary:'#111827', accent:'#374151', bg:'#ffffff'}
   ];
 
-  function contrastText(hex){
-    if(!hex) return '#000';
-    hex = hex.replace('#','');
-    if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
-    const r=parseInt(hex.substr(0,2),16), g=parseInt(hex.substr(2,2),16), b=parseInt(hex.substr(4,2),16);
-    const L = (0.299*r+0.587*g+0.114*b)/255;
-    return L > 0.55 ? '#000' : '#fff';
-  }
+  const panel = document.getElementById("theme-panel");
+  const toggle = document.getElementById("theme-toggle");
+  const grid = document.getElementById("theme-list");
+  const frame = document.getElementById("previewFrame"); // your iframe
 
+  toggle.addEventListener("click", ()=> {
+    panel.classList.toggle("open");
+  });
+
+  // build swatches
+  themes.forEach(t=>{
+    const sw = document.createElement("div");
+    sw.className = "theme-swatch";
+    sw.title = t.name;
+    sw.innerHTML = `
+      <div style="background:${t.primary}"></div>
+      <div style="background:${t.accent}"></div>
+      <div style="background:${t.bg}"></div>
+      <div style="background:${t.accent}"></div>`;
+    sw.addEventListener("click", ()=> applyTheme(t));
+    grid.appendChild(sw);
+  });
+
+  // ========== APPLY THEME ==========
   function applyTheme(t){
-    const text = contrastText(t.bg);
     const css = `
-      body { background:${t.bg} !important; color:${text} !important; font-family:Inter,Arial,sans-serif; }
+      body { background:${t.bg} !important; color:${contrastText(t.bg)} !important; font-family: Inter, Arial, sans-serif; }
       header, .header, [role="banner"], .site-header { background:${t.primary} !important; color:${contrastText(t.primary)} !important; }
       footer, .footer, [role="contentinfo"], .site-footer { background:${t.accent} !important; color:${contrastText(t.accent)} !important; }
       nav, .nav, .navbar { background:${t.primary} !important; color:${contrastText(t.primary)} !important; }
       button, .btn, .button, input[type="submit"] {
-        background:${t.primary} !important; color:${contrastText(t.primary)} !important; border-radius:8px; padding:8px 14px;
+        background:${t.primary} !important; color:${contrastText(t.primary)} !important; border-radius:6px; padding:8px 14px;
       }
       a { color:${t.primary} !important; }
-      .card, .panel, .tile { background:#fff !important; border:1px solid ${t.primary}22 !important; border-radius:12px; color:#111; }
-      input, select, textarea {
-        border:1px solid ${t.primary}77 !important; border-radius:6px; padding:6px;
-      }
+      .card, .panel, .tile { background:#fff !important; border:1px solid ${t.primary}33 !important; border-radius:12px; }
+      input, select, textarea { border:1px solid ${t.primary}66 !important; border-radius:6px; padding:6px; }
       .hero, .banner, .jumbotron, .masthead {
-        background: linear-gradient(180deg, ${t.primary}11, transparent) !important;
+        background: linear-gradient(180deg, ${t.primary}22, transparent) !important;
         color:${contrastText(t.primary)} !important;
       }
     `;
-    // send to preview iframe only
+    // inject to preview
     if(frame && frame.contentWindow){
       frame.contentWindow.postMessage({ type:'SET_THEME', themeCss: css }, '*');
     }
+
+    // also update in ZIP files
+    if(window.currentZip && window.currentHtmlFile){
+      // try to update CSS file first
+      const cssFile = Object.keys(window.currentZip.files).find(f => f.endsWith('.css'));
+      if(cssFile){
+        window.currentZip.file(cssFile, css);
+      } else {
+        // if no CSS file, update HTML head with <style>
+        let html = window.currentZip.file(window.currentHtmlFile).async ? null : window.currentZip.file(window.currentHtmlFile).asText();
+        if(html){
+          if(html.includes("<head>")){
+            html = html.replace("</head>", `<style id="wizardTheme">${css}</style></head>`);
+          } else {
+            html = `<style id="wizardTheme">${css}</style>` + html;
+          }
+          window.currentZip.file(window.currentHtmlFile, html);
+        }
+      }
+    }
   }
 
-  // build grid
-  themes.forEach(t=>{
-    const tile = document.createElement('div');
-    tile.className = 'theme-tile';
-    const sw = document.createElement('div'); sw.className='theme-swatch';
-    sw.style.background = `linear-gradient(90deg, ${t.primary}, ${t.accent})`;
-    const lab = document.createElement('label'); lab.textContent = t.name;
-    tile.appendChild(sw); tile.appendChild(lab);
-    tile.addEventListener('click', ()=> applyTheme(t));
-    grid.appendChild(tile);
-  });
-
-  launcher.addEventListener('click', ()=> {
-    panel.style.display = panel.style.display==='block' ? 'none' : 'block';
-  });
+  // ========== HELPERS ==========
+  function luminance(hex){
+    const c = hex.replace("#",""); const num=parseInt(c,16);
+    const r=((num>>16)&255)/255, g=((num>>8)&255)/255, b=(num&255)/255;
+    const a=[r,g,b].map(v=>v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4));
+    return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2];
+  }
+  function contrastText(hex){
+    const L=luminance(hex); return (1.05/(L+0.05) >= (L+0.05)/0.05)?"#fff":"#000";
+  }
 })();
 </script>
 <!-- === /Part 1 === -->
