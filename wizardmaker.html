@@ -719,7 +719,7 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-    <!-- ========== Theme Module (Part 1 – Universal Theme System, Fixed) ========== -->
+    <!-- ========== Fixed Theme Module (Part 1 – Section-specific text colors + card fix) ========== -->
 <style>
 #themePanel {
   position: fixed;
@@ -765,7 +765,6 @@ renderLibraryAssets();
 
 <script>
 (function(){
-  // ----------------- Theme Presets -----------------
   const themePresets = [
     {name:'Oceanic', primary:'#0b79ff', accent:'#06b6d4', bg:'#f6fbff'},
     {name:'Midnight', primary:'#7c3aed', accent:'#06b6d4', bg:'#071026'},
@@ -798,13 +797,11 @@ renderLibraryAssets();
     themeGrid.appendChild(tile);
   });
 
-  // ----------------- Apply Theme -----------------
   function applyTheme(theme){
     const iframe = iframeRefs[activePage];
     if(!iframe) return alert("No active page loaded.");
     const doc = iframe.contentDocument || iframe.contentWindow.document;
 
-    // Generate card background (lighter or darker than bg)
     const cardBg = adjustCardBg(theme.bg);
 
     const css = `
@@ -812,53 +809,52 @@ renderLibraryAssets();
         --primary: ${theme.primary};
         --accent: ${theme.accent};
         --bg: ${theme.bg};
-        --text: ${safeText(theme.bg)};
-        --textOnPrimary: ${safeText(theme.primary)};
-        --textOnAccent: ${safeText(theme.accent)};
+        --bodyText: ${safeText(theme.bg)};
+        --headerText: ${safeText(theme.primary)};
+        --footerText: ${safeText(theme.accent)};
         --cardBg: ${cardBg};
         --cardText: ${safeText(cardBg)};
+        --buttonText: ${safeText(theme.primary)};
       }
       body {
         background: var(--bg) !important;
-        color: var(--text) !important;
+        color: var(--bodyText) !important;
       }
       header, .header, nav, .nav, .navbar {
         background: var(--primary) !important;
-        color: var(--textOnPrimary) !important;
+        color: var(--headerText) !important;
       }
       footer, .footer, .site-footer {
         background: var(--accent) !important;
-        color: var(--textOnAccent) !important;
+        color: var(--footerText) !important;
       }
       h1,h2,h3,h4,h5,h6,p,span,li {
-        color: var(--text) !important;
+        color: var(--bodyText) !important;
       }
-      a {
-        color: var(--primary) !important;
-      }
+      a { color: var(--primary) !important; }
       button, .btn, .button, input[type="submit"], .action-btn, .cta {
         background: var(--primary) !important;
-        color: var(--textOnPrimary) !important;
+        color: var(--buttonText) !important;
         border-radius:6px; padding:8px 14px;
       }
       .card, .panel, .tile, .box, .content-card, .card-body {
         background: var(--cardBg) !important;
-        border: 1px solid var(--primary)44 !important;
         color: var(--cardText) !important;
+        border: 1px solid var(--primary)44 !important;
         border-radius: 12px;
       }
       input, select, textarea {
         border: 1px solid var(--primary)88 !important;
         border-radius: 6px;
         padding: 6px;
-        color: var(--text) !important;
+        color: var(--bodyText) !important;
       }
       input:focus, select:focus, textarea:focus {
         outline: 2px solid var(--accent) !important;
       }
       .section, .container, .hero, .banner {
         background: linear-gradient(180deg, var(--bg), var(--bg)cc) !important;
-        color: var(--text) !important;
+        color: var(--bodyText) !important;
       }
     `;
 
@@ -887,7 +883,6 @@ renderLibraryAssets();
       }
       editedContents[activePage] = html;
     }
-
     const cssFile = Object.keys(otherFiles).find(f=>f.endsWith(".css"));
     if(cssFile){
       const decoder = new TextDecoder();
@@ -903,7 +898,7 @@ renderLibraryAssets();
     }
   }
 
-  // ----------------- Helpers -----------------
+  // ---------- Helpers ----------
   function hexToRgb(hex){
     hex = hex.replace("#","");
     if(hex.length===3) hex=hex.split("").map(c=>c+c).join("");
@@ -933,7 +928,6 @@ renderLibraryAssets();
     return `rgb(${r},${g},${b})`;
   }
 
-  // ----------------- Toggle -----------------
   document.getElementById("themeToggleBtn").onclick=()=>{
     const panel=document.getElementById("themePanel");
     panel.style.display=panel.style.display==="none"?"block":"none";
