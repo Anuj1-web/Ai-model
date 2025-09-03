@@ -719,148 +719,496 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-      <!-- 🎨 Theme Manager (Part 1) -->
+      <!-- ======= Theme Manager (Part 1) — paste before </body> ======= -->
 <style>
-#themeToggle {
-  position: fixed; bottom: 70px; right: 20px; z-index: 10000;
-  background:#0b79ff; color:#fff; border-radius:50%; width:46px; height:46px;
-  display:flex; align-items:center; justify-content:center; cursor:pointer;
-  box-shadow:0 6px 20px rgba(0,0,0,0.2); font-size:22px; font-weight:700;
+/* Theme Manager UI */
+#es-theme-toggle {
+  position: fixed;
+  bottom: 90px; /* leaves space below for another icon at 20px */
+  right: 20px;
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  background:#0b79ff;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:11000;
+  cursor:pointer;
+  box-shadow: 0 8px 24px rgba(7,21,64,0.18);
+  font-weight:700;
+  font-size:18px;
 }
-#themePanel {
-  position: fixed; bottom: 130px; right: 20px; width:320px; max-height:70vh;
-  background:#fff; border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,0.2);
-  padding:12px; overflow:auto; z-index:10000; display:none;
+#es-theme-panel {
+  position: fixed;
+  bottom: 150px;
+  right: 20px;
+  width:360px;
+  max-height:72vh;
+  overflow:auto;
+  background:white;
+  border-radius:12px;
+  padding:12px;
+  z-index:11000;
+  box-shadow: 0 18px 40px rgba(7,21,64,0.18);
+  display:none;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
 }
-.theme-tile {
-  display:flex; flex-direction:column; gap:4px; border:1px solid #eee;
-  padding:8px; border-radius:8px; cursor:pointer; background:#fafafa;
-}
-.theme-swatch {
-  height:36px; border-radius:6px;
-  background:linear-gradient(90deg,var(--c1),var(--c2));
-}
+#es-theme-panel h3 { margin:0 0 8px 0; font-size:16px; }
+.es-theme-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.es-theme-tile { border-radius:10px; padding:8px; background:#fafafa; cursor:pointer; border:1px solid #eef2f7; display:flex; gap:8px; align-items:center; }
+.es-theme-swatch { width:56px; height:40px; border-radius:8px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04); flex-shrink:0; }
+.es-theme-meta { font-size:13px; font-weight:600; }
+.es-theme-sub { font-size:12px; color:#6b7280; margin-top:4px; font-weight:500; }
+.es-theme-controls { display:flex; gap:8px; margin-top:10px; align-items:center; }
+.es-theme-controls input[type="color"]{ width:40px; height:36px; border-radius:8px; border:1px solid #eef3f6; padding:4px; }
+.es-apply-btn { margin-left:auto; background:#111827; color:#fff; padding:8px 12px; border-radius:8px; border:0; cursor:pointer; font-weight:600;}
+.es-small{ font-size:12px; color:#6b7280; }
 </style>
 
-<div id="themeToggle" title="Themes">🎨</div>
-<div id="themePanel">
-  <h4 style="margin:0 0 8px;font-size:16px;">Select Theme</h4>
-  <div id="themeGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;"></div>
-  <div style="margin-top:10px;text-align:right">
-    <button id="applyThemeBtn" style="padding:6px 12px;border-radius:6px;background:#0b79ff;color:#fff;border:0;font-weight:600;cursor:pointer">Apply</button>
+<div id="es-theme-toggle" title="Open themes">🎨</div>
+
+<div id="es-theme-panel" role="dialog" aria-hidden="true">
+  <h3>Themes</h3>
+  <div class="es-theme-grid" id="esThemeGrid"></div>
+
+  <div style="margin-top:10px; display:flex; align-items:center; gap:8px;">
+    <div class="es-small">Custom</div>
+    <input type="color" id="esCustomPrimary" value="#0b79ff" title="Primary">
+    <input type="color" id="esCustomAccent" value="#06b6d4" title="Accent">
+    <input type="color" id="esCustomBg" value="#ffffff" title="Background">
+    <button class="es-apply-btn" id="esApplyCustom">Apply</button>
+  </div>
+
+  <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+    <div class="es-small">Preview only — Apply to save into ZIP</div>
+    <button class="es-apply-btn" id="esApplyToZip">Apply & Save</button>
+  </div>
+
+  <div style="margin-top:12px; font-size:12px; color:#6b7280;">
+    Tip: Theme has no <code>!important</code> so element edits (double-click) will override the theme.
   </div>
 </div>
 
 <script>
-/* ---------------------------
-   THEME MANAGER (Part 1)
-   --------------------------- */
+/* =========================
+   Part 1 — Theme Manager
+   - 36 curated themes (unique + classic)
+   - safe contrast detection
+   - writes to existing .css in ZIP when Apply & Save clicked
+   - otherwise injects single <style id="__wizard_theme"> into editedContents[activePage]
+   - expects wizard variables: iframeRefs, activePage, editedContents, pageContents, otherFiles
+   ========================= */
 
-// 🔹 Utilities
-function hexToRgb(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');const num=parseInt(hex,16);return{r:(num>>16)&255,g:(num>>8)&255,b:num&255}}
-function luminance(hex){const c=hexToRgb(hex);const a=[c.r/255,c.g/255,c.b/255].map(v=>v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4));return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2]}
-function contrastText(bg){const L=luminance(bg);const white=(1.05)/(L+0.05);const black=(L+0.05)/0.05;return white>=black?'#fff':'#000'}
-function ensureReadable(fg,bg){const Lfg=luminance(fg),Lbg=luminance(bg);if(isNaN(Lfg)||isNaN(Lbg))return fg;const ratio=(Math.max(Lfg,Lbg)+0.05)/(Math.min(Lfg,Lbg)+0.05);if(ratio<3.5)return contrastText(bg);return fg}
-function safeTextColor(bg,preferred){if(!preferred)return contrastText(bg);return ensureReadable(preferred,bg)}
-
-// 🔹 Theme Presets
-const themes=[
-  {name:'Oceanic',primary:'#0b79ff',accent:'#06b6d4',bg:'#f6fbff',text:'#111',
-   headerBg:'#0b79ff',headerText:'#fff',footerBg:'#06b6d4',footerText:'#fff',
-   cardBg:'#fff',cardText:'#111'},
-  {name:'Midnight',primary:'#7c3aed',accent:'#06b6d4',bg:'#071026',text:'#fff',
-   headerBg:'#1e1b4b',headerText:'#fff',footerBg:'#312e81',footerText:'#fff',
-   cardBg:'#1f2937',cardText:'#f9fafb'},
-  {name:'Sunset',primary:'#ff6b6b',accent:'#ff9a00',bg:'#fff7f2',text:'#111',
-   headerBg:'#ff6b6b',headerText:'#fff',footerBg:'#ff9a00',footerText:'#fff',
-   cardBg:'#fffaf5',cardText:'#111'},
-  {name:'Cyberpunk',primary:'#ff00ff',accent:'#00ffff',bg:'#0a0a0a',text:'#eee',
-   headerBg:'#1a1a1a',headerText:'#0ff',footerBg:'#111',footerText:'#f0f',
-   cardBg:'#111827',cardText:'#fff'},
-  {name:'Pastel',primary:'#fbbf24',accent:'#a78bfa',bg:'#fefce8',text:'#333',
-   headerBg:'#fde68a',headerText:'#111',footerBg:'#ddd6fe',footerText:'#111',
-   cardBg:'#fff',cardText:'#111'},
-  {name:'Gold',primary:'#b45309',accent:'#f59e0b',bg:'#fff8f1',text:'#111',
-   headerBg:'#b45309',headerText:'#fff',footerBg:'#92400e',footerText:'#fff',
-   cardBg:'#fef3c7',cardText:'#111'},
-  {name:'Minimal Dark',primary:'#334155',accent:'#64748b',bg:'#0f172a',text:'#e2e8f0',
-   headerBg:'#1e293b',headerText:'#f1f5f9',footerBg:'#1e293b',footerText:'#f1f5f9',
-   cardBg:'#1e293b',cardText:'#f8fafc'},
-  {name:'Neon',primary:'#39ff14',accent:'#ff3131',bg:'#000',text:'#f0f0f0',
-   headerBg:'#111',headerText:'#39ff14',footerBg:'#111',footerText:'#ff3131',
-   cardBg:'#0f0f0f',cardText:'#fff'}
-];
-// (you can keep adding more unique ones here)
-
-let selectedTheme=null;
-
-// 🔹 Build Theme Grid
-const grid=document.getElementById('themeGrid');
-themes.forEach(t=>{
-  const div=document.createElement('div');
-  div.className='theme-tile';
-  div.innerHTML=`<div class="theme-swatch" style="--c1:${t.primary};--c2:${t.accent}"></div>
-                 <div style="font-weight:600;font-size:13px">${t.name}</div>`;
-  div.onclick=()=>{selectedTheme=t;previewTheme(t)};
-  grid.appendChild(div);
-});
-
-// 🔹 Live Preview
-function previewTheme(t){
-  const frame=iframeRefs[activePage]; if(!frame) return;
-  const doc=frame.contentDocument;
-  const styleId='__wizard_theme';
-  let style=doc.getElementById(styleId);
-  if(!style){style=doc.createElement('style');style.id=styleId;doc.head.appendChild(style);}
-  style.textContent=`
-    body{background:${t.bg};color:${safeTextColor(t.bg,t.text)}}
-    header, .header{background:${t.headerBg};color:${safeTextColor(t.headerBg,t.headerText)}}
-    footer, .footer{background:${t.footerBg};color:${safeTextColor(t.footerBg,t.footerText)}}
-    .card{background:${t.cardBg};color:${safeTextColor(t.cardBg,t.cardText)}}
-    button,.btn{background:${t.primary};color:${safeTextColor(t.primary,t.buttonText)}}
-    a{color:${t.accent}}
-  `;
+// ---------------- Utilities ----------------
+function _hexToRgb(hex){
+  if(!hex) return {r:0,g:0,b:0};
+  hex = (hex+'').replace('#','').trim();
+  if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+  const num = parseInt(hex,16);
+  return {r:(num>>16)&255, g:(num>>8)&255, b:num&255};
+}
+function _luminance(hex){
+  try{
+    const c = _hexToRgb(hex);
+    const srgb = [c.r/255,c.g/255,c.b/255];
+    const a = srgb.map(v => v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4));
+    return 0.2126*a[0] + 0.7152*a[1] + 0.0722*a[2];
+  }catch(e){ return 0; }
+}
+function _contrastText(hex){
+  try{
+    const L = _luminance(hex);
+    const white = (1.05)/(L+0.05);
+    const black = (L+0.05)/0.05;
+    return white >= black ? '#ffffff' : '#000000';
+  }catch(e){ return '#000000'; }
+}
+function _ensureReadable(fg, bg){
+  try{
+    if(!fg) return _contrastText(bg);
+    const Lfg = _luminance(fg), Lbg = _luminance(bg);
+    if(isNaN(Lfg) || isNaN(Lbg)) return fg;
+    const ratio = (Math.max(Lfg,Lbg)+0.05)/(Math.min(Lfg,Lbg)+0.05);
+    if(ratio < 3.5) return _contrastText(bg);
+    return fg;
+  }catch(e){ return fg || _contrastText(bg); }
+}
+function _showNote(msg, timeout=1400){
+  const n = document.createElement('div');
+  n.textContent = msg;
+  n.style.position = 'fixed';
+  n.style.right = '20px';
+  n.style.top = '20px';
+  n.style.background = '#111827';
+  n.style.color = '#fff';
+  n.style.padding = '8px 12px';
+  n.style.borderRadius = '8px';
+  n.style.zIndex = 12000;
+  document.body.appendChild(n);
+  setTimeout(()=> n.remove(), timeout);
 }
 
-// 🔹 Save Theme to ZIP (when Apply clicked)
-document.getElementById('applyThemeBtn').onclick=()=>{
-  if(!selectedTheme)return alert('Pick a theme first');
-  // 1. Update live preview
-  previewTheme(selectedTheme);
-  // 2. Save into CSS file if exists
-  const cssFile=Object.keys(otherFiles).find(f=>/style\.css$/i.test(f));
-  const cssRules=`
-/* Theme: ${selectedTheme.name} */
-body{background:${selectedTheme.bg};color:${safeTextColor(selectedTheme.bg,selectedTheme.text)}}
-header,.header{background:${selectedTheme.headerBg};color:${safeTextColor(selectedTheme.headerBg,selectedTheme.headerText)}}
-footer,.footer{background:${selectedTheme.footerBg};color:${safeTextColor(selectedTheme.footerBg,selectedTheme.footerText)}}
-.card{background:${selectedTheme.cardBg};color:${safeTextColor(selectedTheme.cardBg,selectedTheme.cardText)}}
-button,.btn{background:${selectedTheme.primary};color:${safeTextColor(selectedTheme.primary,selectedTheme.buttonText)}}
-a{color:${selectedTheme.accent}}
-`;
-  if(cssFile){
-    const cssStr=new TextDecoder().decode(otherFiles[cssFile]);
-    const newCss=cssStr.replace(/\/\* Theme:.*?\*\//s,'')+'\n'+cssRules;
-    otherFiles[cssFile]=new TextEncoder().encode(newCss);
-  }else if(activePage){
-    // 3. Or inject into HTML if no CSS file
-    let html=editedContents[activePage]||pageContents[activePage];
-    if(/<\/head>/i.test(html)){
-      html=html.replace(/<\/head>/i,`<style>${cssRules}</style></head>`);
-    }else{
-      html=`<head><style>${cssRules}</style></head>`+html;
-    }
-    editedContents[activePage]=html;
+// ---------------- Theme Library (36+) ----------------
+const ES_THEMES = [
+  {name:'Oceanic', primary:'#0b79ff', accent:'#06b6d4', bg:'#f6fbff', text:'#111',
+   headerBg:'#0b79ff', headerText:'#ffffff', footerBg:'#06b6d4', footerText:'#ffffff',
+   cardBg:'#ffffff', cardText:'#111', buttonText:'#ffffff'},
+  {name:'Midnight', primary:'#7c3aed', accent:'#06b6d4', bg:'#071026', text:'#e6eef8',
+   headerBg:'#111827', headerText:'#e6eef8', footerBg:'#0b1220', footerText:'#e6eef8',
+   cardBg:'#0b1220', cardText:'#e6eef8', buttonText:'#ffffff'},
+  {name:'Sunset', primary:'#ff6b6b', accent:'#ff9a00', bg:'#fff7f2', text:'#111',
+   headerBg:'#ff6b6b', headerText:'#fff', footerBg:'#ff9a00', footerText:'#fff',
+   cardBg:'#fffaf5', cardText:'#111', buttonText:'#fff'},
+  {name:'Forest', primary:'#0b8457', accent:'#34d399', bg:'#f3fbf6', text:'#0b3d2e',
+   headerBg:'#065f46', headerText:'#fff', footerBg:'#0b8457', footerText:'#fff',
+   cardBg:'#ffffff', cardText:'#09211a', buttonText:'#fff'},
+  {name:'Corporate', primary:'#0b3d91', accent:'#06b6d4', bg:'#fbfdff', text:'#111',
+   headerBg:'#08306b', headerText:'#fff', footerBg:'#05204a', footerText:'#fff',
+   cardBg:'#fff', cardText:'#111', buttonText:'#fff'},
+  {name:'Warm', primary:'#d97706', accent:'#fb923c', bg:'#fffaf0', text:'#2b1b00',
+   headerBg:'#b45309', headerText:'#fff', footerBg:'#92400e', footerText:'#fff',
+   cardBg:'#fffaf0', cardText:'#2b1b00', buttonText:'#fff'},
+  {name:'Violet', primary:'#6b21a8', accent:'#8b5cf6', bg:'#fbf7ff', text:'#2b0b3b',
+   headerBg:'#4c1d95', headerText:'#fff', footerBg:'#3b0f66', footerText:'#fff',
+   cardBg:'#fff', cardText:'#2b0b3b', buttonText:'#fff'},
+  {name:'Candy', primary:'#ff6bcb', accent:'#ffd166', bg:'#fff7fb', text:'#2b0b3b',
+   headerBg:'#ff6bcb', headerText:'#fff', footerBg:'#ffd166', footerText:'#111',
+   cardBg:'#fff', cardText:'#2b0b3b', buttonText:'#fff'},
+  {name:'Grayscale', primary:'#111827', accent:'#6b7280', bg:'#ffffff', text:'#111827',
+   headerBg:'#111827', headerText:'#fff', footerBg:'#f3f4f6', footerText:'#111827',
+   cardBg:'#ffffff', cardText:'#111827', buttonText:'#fff'},
+  {name:'Aqua', primary:'#0088cc', accent:'#00c2c7', bg:'#f0fcff', text:'#022a30',
+   headerBg:'#006d9a', headerText:'#fff', footerBg:'#005b7a', footerText:'#fff',
+   cardBg:'#fff', cardText:'#022a30', buttonText:'#fff'},
+  {name:'Rose', primary:'#e11d48', accent:'#fb7185', bg:'#fff5f7', text:'#3b0a0f',
+   headerBg:'#be123c', headerText:'#fff', footerBg:'#9f1239', footerText:'#fff',
+   cardBg:'#fff', cardText:'#3b0a0f', buttonText:'#fff'},
+  {name:'Indigo', primary:'#272ddf', accent:'#7c3aed', bg:'#f5f7ff', text:'#0b0b3b',
+   headerBg:'#1e2a78', headerText:'#fff', footerBg:'#0f1746', footerText:'#fff',
+   cardBg:'#fff', cardText:'#0b0b3b', buttonText:'#fff'},
+  {name:'Lime', primary:'#84cc16', accent:'#bef264', bg:'#fbfff0', text:'#153300',
+   headerBg:'#65a30d', headerText:'#fff', footerBg:'#4d7c0f', footerText:'#fff',
+   cardBg:'#ffffff', cardText:'#153300', buttonText:'#fff'},
+  {name:'Coral', primary:'#ff7a59', accent:'#ffb199', bg:'#fff6f2', text:'#431b14',
+   headerBg:'#ff7a59', headerText:'#fff', footerBg:'#ffb199', footerText:'#111',
+   cardBg:'#fff', cardText:'#431b14', buttonText:'#fff'},
+  {name:'Teal', primary:'#0d9488', accent:'#2dd4bf', bg:'#f2fffb', text:'#05332f',
+   headerBg:'#0f766e', headerText:'#fff', footerBg:'#07585a', footerText:'#fff',
+   cardBg:'#fff', cardText:'#05332f', buttonText:'#fff'},
+  {name:'Slate', primary:'#334155', accent:'#64748b', bg:'#f8fafc', text:'#0f172a',
+   headerBg:'#0f172a', headerText:'#fff', footerBg:'#0b1223', footerText:'#fff',
+   cardBg:'#fff', cardText:'#0f172a', buttonText:'#fff'},
+  {name:'Marigold', primary:'#f59e0b', accent:'#fb923c', bg:'#fffaf0', text:'#432a00',
+   headerBg:'#d97706', headerText:'#fff', footerBg:'#b45309', footerText:'#fff',
+   cardBg:'#fff', cardText:'#432a00', buttonText:'#fff'},
+  {name:'Cobalt', primary:'#0047ab', accent:'#60a5fa', bg:'#f4f8ff', text:'#021a3f',
+   headerBg:'#003a8c', headerText:'#fff', footerBg:'#002c6b', footerText:'#fff',
+   cardBg:'#fff', cardText:'#021a3f', buttonText:'#fff'},
+  {name:'Berry', primary:'#b91c1c', accent:'#fb7185', bg:'#fff7f7', text:'#3b0b0b',
+   headerBg:'#7f1d1d', headerText:'#fff', footerBg:'#5f1414', footerText:'#fff',
+   cardBg:'#fff', cardText:'#3b0b0b', buttonText:'#fff'},
+  {name:'Mint', primary:'#10b981', accent:'#34d399', bg:'#f2fff7', text:'#08321f',
+   headerBg:'#059669', headerText:'#fff', footerBg:'#047857', footerText:'#fff',
+   cardBg:'#fff', cardText:'#08321f', buttonText:'#fff'},
+  {name:'Classic', primary:'#0b79ff', accent:'#ff6b6b', bg:'#ffffff', text:'#111827',
+   headerBg:'#0b79ff', headerText:'#fff', footerBg:'#0b79ff', footerText:'#fff',
+   cardBg:'#fff', cardText:'#111827', buttonText:'#fff'},
+  {name:'Plum', primary:'#6d28d9', accent:'#a78bfa', bg:'#f9f7ff', text:'#2b0753',
+   headerBg:'#5b21b6', headerText:'#fff', footerBg:'#4c1d95', footerText:'#fff',
+   cardBg:'#fff', cardText:'#2b0753', buttonText:'#fff'},
+  {name:'Ochre', primary:'#b45309', accent:'#f59e0b', bg:'#fff8f1', text:'#382000',
+   headerBg:'#92400e', headerText:'#fff', footerBg:'#7c2d12', footerText:'#fff',
+   cardBg:'#fff', cardText:'#382000', buttonText:'#fff'},
+  {name:'Sky', primary:'#38bdf8', accent:'#0ea5e9', bg:'#f3fbff', text:'#07364a',
+   headerBg:'#0ea5e9', headerText:'#fff', footerBg:'#0284c7', footerText:'#fff',
+   cardBg:'#fff', cardText:'#07364a', buttonText:'#fff'},
+  {name:'Emerald', primary:'#10b981', accent:'#059669', bg:'#f2fff6', text:'#0b3b2f',
+   headerBg:'#059669', headerText:'#fff', footerBg:'#047857', footerText:'#fff',
+   cardBg:'#fff', cardText:'#0b3b2f', buttonText:'#fff'},
+  {name:'Sienna', primary:'#7c2d12', accent:'#fb923c', bg:'#fff7f2', text:'#3b1609',
+   headerBg:'#7c2d12', headerText:'#fff', footerBg:'#6b2910', footerText:'#fff',
+   cardBg:'#fff', cardText:'#3b1609', buttonText:'#fff'},
+  {name:'Azure', primary:'#0066ff', accent:'#00bcd4', bg:'#f4f9ff', text:'#072145',
+   headerBg:'#0066ff', headerText:'#fff', footerBg:'#0050d4', footerText:'#fff',
+   cardBg:'#fff', cardText:'#072145', buttonText:'#fff'},
+  {name:'Lavender', primary:'#a78bfa', accent:'#c4b5fd', bg:'#fbf8ff', text:'#2a1650',
+   headerBg:'#a78bfa', headerText:'#fff', footerBg:'#7c3aed', footerText:'#fff',
+   cardBg:'#fff', cardText:'#2a1650', buttonText:'#fff'},
+  {name:'Copper', primary:'#9a3412', accent:'#fb923c', bg:'#fff6f0', text:'#3b1a10',
+   headerBg:'#9a3412', headerText:'#fff', footerBg:'#7c2d12', footerText:'#fff',
+   cardBg:'#fff', cardText:'#3b1a10', buttonText:'#fff'},
+  {name:'Monochrome', primary:'#111827', accent:'#374151', bg:'#ffffff', text:'#111827',
+   headerBg:'#111827', headerText:'#fff', footerBg:'#f1f5f9', footerText:'#111827',
+   cardBg:'#fff', cardText:'#111827', buttonText:'#fff'},
+  // Unique / creative themes
+  {name:'Cyberpunk', primary:'#ff00ff', accent:'#00ffff', bg:'#0a0a12', text:'#e6f7ff',
+   headerBg:'#0f0c13', headerText:'#ff6eff', footerBg:'#0b0b12', footerText:'#00fff0',
+   cardBg:'#0b0b12', cardText:'#e6f7ff', buttonText:'#000'},
+  {name:'Neon', primary:'#39ff14', accent:'#ff3131', bg:'#050505', text:'#f8f8f8',
+   headerBg:'#111111', headerText:'#39ff14', footerBg:'#111111', footerText:'#ff3131',
+   cardBg:'#0e0e0e', cardText:'#f8f8f8', buttonText:'#000'},
+  {name:'Pastel', primary:'#f9a8d4', accent:'#a3e635', bg:'#fffafc', text:'#2b1b2b',
+   headerBg:'#ffe4f0', headerText:'#2b1b2b', footerBg:'#e6ffe8', footerText:'#2b1b2b',
+   cardBg:'#fff', cardText:'#2b1b2b', buttonText:'#2b1b2b'},
+  {name:'Gold', primary:'#b38f00', accent:'#ffcf6b', bg:'#fffdf6', text:'#2b1b00',
+   headerBg:'#b38f00', headerText:'#fff', footerBg:'#855e00', footerText:'#fff',
+   cardBg:'#fffaf0', cardText:'#2b1b00', buttonText:'#fff'},
+  {name:'Aurora', primary:'#6ee7b7', accent:'#60a5fa', bg:'#f8fffb', text:'#042a22',
+   headerBg:'#34d399', headerText:'#042a22', footerBg:'#60a5fa', footerText:'#042a22',
+   cardBg:'#fff', cardText:'#042a22', buttonText:'#fff'},
+  {name:'Glass', primary:'#60a5fa', accent:'#93c5fd', bg:'#f8fbff', text:'#07304c',
+   headerBg:'#eaf4ff', headerText:'#07304c', footerBg:'#e9f5ff', footerText:'#07304c',
+   cardBg:'#ffffffcc', cardText:'#07304c', buttonText:'#fff'},
+  {name:'Retro', primary:'#ff9f1c', accent:'#2ec4b6', bg:'#fffaf2', text:'#332211',
+   headerBg:'#ff9f1c', headerText:'#111', footerBg:'#d46f00', footerText:'#fff',
+   cardBg:'#fff', cardText:'#332211', buttonText:'#fff'},
+  {name:'Rustic', primary:'#8b5e3c', accent:'#c08447', bg:'#fff8f5', text:'#2b160a',
+   headerBg:'#7b3f19', headerText:'#fff', footerBg:'#6b2f10', footerText:'#fff',
+   cardBg:'#fff', cardText:'#2b160a', buttonText:'#fff'}
+];
+
+// ------------------ UI wiring ------------------
+const toggle = document.getElementById('es-theme-toggle');
+const panel = document.getElementById('es-theme-panel');
+const grid = document.getElementById('esThemeGrid');
+const btnApplyZip = document.getElementById('esApplyToZip');
+const btnApplyCustom = document.getElementById('esApplyCustom');
+const customPrimary = document.getElementById('esCustomPrimary');
+const customAccent = document.getElementById('esCustomAccent');
+const customBg = document.getElementById('esCustomBg');
+
+let ES_selected = null;
+
+function buildGrid(){
+  grid.innerHTML = '';
+  for(const t of ES_THEMES){
+    const tile = document.createElement('div');
+    tile.className = 'es-theme-tile';
+    const sw = document.createElement('div');
+    sw.className = 'es-theme-swatch';
+    sw.style.background = `linear-gradient(90deg, ${t.primary}, ${t.accent})`;
+    const meta = document.createElement('div');
+    meta.innerHTML = `<div class="es-theme-meta">${t.name}</div><div class="es-theme-sub">${t.primary} • ${t.accent}</div>`;
+    tile.appendChild(sw);
+    tile.appendChild(meta);
+    tile.onclick = ()=> { ES_selected = t; previewToActiveIframe(t); _showNote('Previewing theme: ' + t.name, 900); };
+    grid.appendChild(tile);
   }
-  alert(`Theme "${selectedTheme.name}" applied and saved`);
+}
+buildGrid();
+
+toggle.onclick = ()=>{
+  panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+  panel.setAttribute('aria-hidden', panel.style.display === 'none' ? 'true' : 'false');
 };
 
-// 🔹 Toggle panel
-document.getElementById('themeToggle').onclick=()=>{
-  const p=document.getElementById('themePanel');
-  p.style.display=p.style.display==='block'?'none':'block';
+// ------------------ Theme Preview & Apply ------------------
+function previewToActiveIframe(t){
+  try{
+    const frame = (typeof iframeRefs !== 'undefined') ? iframeRefs[activePage] : null;
+    if(!frame || !frame.contentDocument) {
+      _showNote('No active preview loaded', 1200); return;
+    }
+    const doc = frame.contentDocument;
+    const styleId = '__wizard_theme';
+    let s = doc.getElementById(styleId);
+    if(!s){
+      s = doc.createElement('style');
+      s.id = styleId;
+      doc.head.appendChild(s);
+    }
+    // build css rules with safe text colors
+    const bodyText = _ensureReadable(t.text || '#000', t.bg || '#fff');
+    const headerText = _ensureReadable(t.headerText || bodyText, t.headerBg || t.primary);
+    const footerText = _ensureReadable(t.footerText || bodyText, t.footerBg || t.primary);
+    const cardText = _ensureReadable(t.cardText || bodyText, t.cardBg || '#fff');
+    const buttonText = _ensureReadable(t.buttonText || '#fff', t.primary);
+    const css = `
+/* WizardMaker Live Theme (preview only) */
+:root{
+  --es-primary: ${t.primary};
+  --es-accent: ${t.accent};
+  --es-bg: ${t.bg};
+  --es-body-text: ${bodyText};
+  --es-header-text: ${headerText};
+  --es-footer-text: ${footerText};
+  --es-card-text: ${cardText};
+  --es-button-text: ${buttonText};
+}
+body { background: ${t.bg}; color: ${bodyText}; }
+h1,h2,h3,h4,h5,h6,p,span,li { color: ${bodyText}; }
+a { color: ${t.accent}; }
+header, .header, nav, .nav, .navbar { background: ${t.headerBg}; color: ${headerText}; }
+footer, .footer { background: ${t.footerBg}; color: ${footerText}; }
+.section, .hero, .banner, .container { background: linear-gradient(180deg, ${t.bg}, ${t.bg}cc); }
+.card, .panel, .tile, .box { background: ${t.cardBg}; color: ${cardText}; border: 1px solid ${_shadeHex(t.primary,20)}22; border-radius: 10px; }
+button, .btn, .button, input[type="submit"] { background: ${t.primary}; color: ${buttonText}; border-radius: 8px; padding: 8px 12px; border: none; }
+input, textarea, select { border:1px solid ${_shadeHex(t.accent,-20)}44; border-radius:6px; color: ${bodyText}; background: #fff; padding:6px; }
+input:focus, textarea:focus, select:focus { outline: 2px solid ${t.accent}; }
+nav a, .nav a, .menu a { color: ${_ensureReadable(t.accent, t.headerBg)}; }
+table, th, td { border:1px solid ${_shadeHex(t.primary,40)}22; }
+code, pre { background:#0b1220; color:#f8f8f2; padding:6px; border-radius:6px; }
+`;
+    s.textContent = css;
+  }catch(err){
+    console.warn('previewToActiveIframe failed', err);
+  }
+}
+
+// helper to shade hex by percent (-100..100)
+function _shadeHex(hex, pct){
+  try{
+    const c = _hexToRgb(hex);
+    const r = Math.max(0, Math.min(255, Math.round(c.r + (255 * pct / 100))));
+    const g = Math.max(0, Math.min(255, Math.round(c.g + (255 * pct / 100))));
+    const b = Math.max(0, Math.min(255, Math.round(c.b + (255 * pct / 100))));
+    return '#'+((1<<24) + (r<<16) + (g<<8) + b).toString(16).slice(1);
+  }catch(e){ return hex; }
+}
+
+// Apply & Save into ZIP or HTML
+async function applyAndSaveTheme(theme){
+  if(!theme) return _showNote('Pick a theme first');
+  // 1) apply live to iframe (so user sees immediately)
+  previewToActiveIframe(theme);
+
+  // 2) prepare CSS rules to persist (same as preview, but as a compact block)
+  const bodyText = _ensureReadable(theme.text || '#000', theme.bg || '#fff');
+  const headerText = _ensureReadable(theme.headerText || bodyText, theme.headerBg || theme.primary);
+  const footerText = _ensureReadable(theme.footerText || bodyText, theme.footerBg || theme.primary);
+  const cardText = _ensureReadable(theme.cardText || bodyText, theme.cardBg || '#fff');
+  const buttonText = _ensureReadable(theme.buttonText || '#fff', theme.primary);
+  const cssRules = `
+/* WizardMaker Theme START: ${theme.name} */
+:root{
+  --es-primary: ${theme.primary};
+  --es-accent: ${theme.accent};
+  --es-bg: ${theme.bg};
+  --es-body-text: ${bodyText};
+}
+body { background: ${theme.bg}; color: ${bodyText}; }
+h1,h2,h3,h4,h5,h6,p,span,li { color: ${bodyText}; }
+a { color: ${theme.accent}; }
+header, .header, nav, .nav, .navbar { background: ${theme.headerBg}; color: ${headerText}; }
+footer, .footer { background: ${theme.footerBg}; color: ${footerText}; }
+.section, .hero, .banner, .container { background: linear-gradient(180deg, ${theme.bg}, ${theme.bg}cc); }
+.card, .panel, .tile, .box { background: ${theme.cardBg}; color: ${cardText}; border: 1px solid ${_shadeHex(theme.primary,20)}22; border-radius: 10px; }
+button, .btn, .button, input[type="submit"] { background: ${theme.primary}; color: ${buttonText}; border-radius: 8px; padding: 8px 12px; border: none; }
+input, textarea, select { border:1px solid ${_shadeHex(theme.accent,-20)}44; border-radius:6px; color: ${bodyText}; background: #fff; padding:6px; }
+input:focus, textarea:focus, select:focus { outline: 2px solid ${theme.accent}; }
+nav a, .nav a, .menu a { color: ${_ensureReadable(theme.accent, theme.headerBg)}; }
+table, th, td { border:1px solid ${_shadeHex(theme.primary,40)}22; }
+code, pre { background:#0b1220; color:#f8f8f2; padding:6px; border-radius:6px; }
+/* WizardMaker Theme END */
+`;
+
+  // 3) if there's a CSS file in otherFiles, replace the previous theme block or append
+  try{
+    if(typeof otherFiles !== 'undefined' && otherFiles && Object.keys(otherFiles).length > 0){
+      // prefer common filenames
+      const preferred = ['style.css','main.css','app.css','site.css','styles.css'];
+      let cssFile = null;
+      for(const p of preferred) if(typeof otherFiles[p] !== 'undefined') { cssFile = p; break; }
+      if(!cssFile){
+        // pick the first .css we find
+        const anyCss = Object.keys(otherFiles).find(f => /\.css$/i.test(f));
+        if(anyCss) cssFile = anyCss;
+      }
+      if(cssFile){
+        const decoder = new TextDecoder();
+        const encoder = new TextEncoder();
+        let cssText = decoder.decode(otherFiles[cssFile]);
+        if(/\/\* WizardMaker Theme START:/i.test(cssText)){
+          // replace block between START and END
+          cssText = cssText.replace(/\/\* WizardMaker Theme START:[\s\S]*?\/\* WizardMaker Theme END \*\//i, cssRules);
+        } else {
+          cssText = cssText + '\n' + cssRules;
+        }
+        otherFiles[cssFile] = encoder.encode(cssText);
+        _showNote('Theme saved into CSS file: ' + cssFile, 1600);
+        return;
+      }
+    }
+  }catch(e){
+    console.warn('saving to CSS file failed', e);
+  }
+
+  // 4) No CSS file — inject/replace <style id="__wizard_theme"> in editedContents[activePage]
+  try{
+    if(typeof activePage === 'undefined' || !activePage) return _showNote('No active page to save to',1400);
+    const pageKey = activePage;
+    const baseHtml = (typeof editedContents !== 'undefined' && editedContents[pageKey]) ? editedContents[pageKey] : (typeof pageContents !== 'undefined' ? pageContents[pageKey] : null);
+    if(!baseHtml) { _showNote('Active page HTML missing',1400); return; }
+    let html = baseHtml;
+    if(/<style\s+id=["']__wizard_theme["']>[\s\S]*?<\/style>/i.test(html)){
+      html = html.replace(/<style\s+id=["']__wizard_theme["']>[\s\S]*?<\/style>/i, `<style id="__wizard_theme">\n${cssRules}\n</style>`);
+    } else if(/<\/head>/i.test(html)){
+      html = html.replace(/<\/head>/i, `<style id="__wizard_theme">\n${cssRules}\n</style></head>`);
+    } else {
+      html = `<head><style id="__wizard_theme">\n${cssRules}\n</style></head>` + html;
+    }
+    // persist to editedContents
+    if(typeof editedContents !== 'undefined') {
+      editedContents[pageKey] = html;
+      _showNote('Theme written into page (editedContents)', 1400);
+    } else {
+      // fallback: attempt to set pageContents as well (not ideal)
+      if(typeof pageContents !== 'undefined') pageContents[pageKey] = html;
+      _showNote('Theme written into pageContents', 1400);
+    }
+  }catch(err){
+    console.warn('applyAndSaveTheme failed', err);
+    _showNote('Save failed (see console)', 1600);
+  }
+}
+
+// ---------------- event hooks ----------------
+btnApplyCustom.onclick = ()=>{
+  const t = {
+    name: 'Custom',
+    primary: customPrimary.value,
+    accent: customAccent.value,
+    bg: customBg.value,
+    text: null,
+    headerBg: customPrimary.value,
+    headerText: null,
+    footerBg: customAccent.value,
+    footerText: null,
+    cardBg: '#ffffff',
+    cardText: null,
+    buttonText: null
+  };
+  ES_selected = t;
+  previewToActiveIframe(t);
+  _showNote('Previewing custom theme',900);
 };
+
+btnApplyZip.onclick = async ()=>{
+  const t = ES_selected || { primary: customPrimary.value, accent: customAccent.value, bg: customBg.value };
+  if(!t) return _showNote('Pick or create a theme first',1200);
+  await applyAndSaveTheme(t);
+};
+
+// Make theme preview when activePage changes (optional) — try to reapply selected theme
+try{
+  // if there is a global mechanism to observe page switch, user can re-preview themselves
+  // we add a short interval that checks if activePage iframe changed and reapplies current preview (lightweight)
+  let __es_lastActive = null;
+  setInterval(()=>{
+    try{
+      if(typeof activePage === 'undefined') return;
+      if(activePage !== __es_lastActive){
+        __es_lastActive = activePage;
+        if(ES_selected) previewToActiveIframe(ES_selected);
+      }
+    }catch(e){}
+  }, 700);
+}catch(e){ console.warn('activePage watcher failed', e); }
+
 </script>
+<!-- ======= /Theme Manager (Part 1) ======= -->
 
 </body>
 </html>
