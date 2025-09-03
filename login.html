@@ -3,247 +3,83 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login | Sitegen</title>
+  <title>Login - Sitegen Hosting</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-  <style>
-    /* ====== GLOBAL ====== */
-    :root{
-      --bg: #ffffff;
-      --text: #0b0b0b;
-      --muted: #6b7280;
-      --accent: #000000;
-      --accent-strong: #111111;
-      --card: #ffffff;
-    }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:var(--bg); color:var(--text);}
-
-    /* Header */
-    .site-header{width:100%;background:var(--bg);border-bottom:1px solid #efefef;position:sticky;top:0;z-index:60}
-    .header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px}
-    .brand{font-weight:700;font-size:1.25rem}
-    .nav{display:flex;gap:14px;align-items:center}
-    .nav a{color:var(--text);text-decoration:none;padding:8px 12px;border-radius:8px}
-    .nav a:hover{background:#f3f3f3}
-    .cta a{padding:8px 12px;border-radius:8px;text-decoration:none}
-    .btn-outline{border:1px solid var(--accent);color:var(--accent);}
-    .btn-solid{background:var(--accent);color:#fff}
-
-    /* Main */
-    main{min-height:calc(100vh - 250px);display:flex;align-items:center;justify-content:center;padding:28px}
-    .card{width:100%;max-width:460px;background:var(--card);border-radius:18px;padding:28px;box-shadow:0 8px 30px rgba(10,10,10,0.06);}
-    h1{font-size:1.5rem;margin-bottom:8px}
-    p.lead{color:var(--muted);font-size:0.95rem;margin-bottom:18px}
-
-    label{display:block;font-size:0.85rem;margin-bottom:6px;color:var(--muted)}
-    input[type=email],input[type=password]{width:100%;padding:12px 14px;border:1px solid #e6e6e6;border-radius:10px;font-size:1rem}
-    input:focus{outline:none;border-color:var(--accent-strong);box-shadow:0 0 0 3px rgba(0,0,0,0.03)}
-
-    .row{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
-    .row a{font-size:0.9rem;color:var(--accent)}
-
-    .full-btn{width:100%;padding:12px;border-radius:10px;background:var(--accent);color:#fff;border:none;font-weight:600;margin-top:12px;cursor:pointer}
-    .full-btn:hover{background:#111}
-
-    .meta{margin-top:14px;text-align:center;color:var(--muted);font-size:0.95rem}
-
-    /* CTA band */
-    .cta-band{background:#0b0b0b;color:#fff;padding:18px 12px;text-align:center;margin-top:26px;border-radius:12px}
-    .cta-band a{background:#fff;color:#000;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600}
-
-    /* Footer */
-    footer{background:#111; color:#d1d5db;padding:28px 12px;margin-top:28px}
-    .footer-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
-    .footer-inner h4{color:#fff;margin-bottom:8px}
-    .footer-inner a{color:#d1d5db;text-decoration:none}
-
-    /* Modal */
-    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);z-index:80}
-    .modal.show{display:flex}
-    .modal-card{background:#fff;padding:20px;border-radius:12px;min-width:320px;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,0.12)}
-    .modal-card .row{margin-top:12px}
-
-    /* Responsive */
-    @media (max-width:640px){ .header-inner{padding:12px} .card{padding:20px} }
-    .google-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem 1rem;
-  border: 1px solid #000;
-  border-radius: 0.5rem;
-  background: #fff;
-  color: #111;
-  font-weight: 500;
-  transition: all 0.2s ease-in-out;
-  cursor: pointer;
-}
-
-.google-btn:hover {
-  background: #f5f5f5;
-  transform: translateY(-1px);
-}
-
-.google-icon {
-  width: 20px;
-  height: 20px;
-  margin-right: 8px;
-}
-    
-  </style>
 </head>
-<body>
-  <!-- Header -->
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="index.html" class="brand">Sitegen</a>
-      <nav class="nav">
-        <a href="index.html">Home</a>
-        <a href="Sitegen_Hosting/features.html">Features</a>
-        <a href="about.html">About</a>
-        <a href="contact.html">Contact</a>
-        <a href="plans.html">Plans</a>
+<body class="bg-white text-black">
+  <!-- Navbar -->
+  <header class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex justify-between items-center p-4">
+      <h1 class="text-2xl font-bold text-black">Sitegen Hosting</h1>
+      <nav class="space-x-6 hidden md:flex">
+        <a href="plans.html" class="hover:text-black">Plans</a>
+        <a href="features.html" class="hover:text-black">Features</a>
+        <a href="about.html" class="hover:text-black">About</a>
+        <a href="contact.html" class="hover:text-black">Contact</a>
       </nav>
-      <div class="cta">
-        <a href="login.html" class="btn-outline">Login</a>
-        <a href="signup.html" class="btn-solid" style="margin-left:8px;">Get Started</a>
+      <div class="space-x-3">
+        <a href="login.html" class="px-4 py-2 text-sm border border-black text-black rounded-lg hover:bg-gray-100">Login</a>
+        <a href="signup.html" class="px-4 py-2 text-sm bg-black text-white rounded-lg hover:bg-gray-800">Get Started</a>
       </div>
     </div>
   </header>
 
-  <!-- Main -->
-  <main>
-    <div class="card animate__animated animate__fadeInUp">
-      <h1>Welcome back</h1>
-      <p class="lead">Sign in to continue to your Sitegen dashboard.</p>
-
+  <!-- Login Section -->
+  <section class="py-20 bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
+      <h2 class="text-3xl font-bold text-center mb-6">Login</h2>
       <form id="loginForm" class="space-y-4">
         <div>
-          <label for="loginEmail">Email</label>
-          <input id="loginEmail" name="email" type="email" placeholder="you@example.com" required />
+          <label for="loginEmail" class="block text-sm font-medium mb-1">Email</label>
+          <input type="email" id="loginEmail" placeholder="Enter your email" required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"/>
         </div>
-
-        <div style="margin-top:10px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <label for="loginPassword">Password</label>
-            <a href="#" id="forgotPasswordLink">Forgot password?</a>
-          </div>
-          <input id="loginPassword" name="password" type="password" placeholder="••••••••" required />
+        <div>
+          <label for="loginPassword" class="block text-sm font-medium mb-1">Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password" required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"/>
         </div>
-
-        <button type="submit" class="full-btn">Login</button>
-        <!-- Google Login -->
-<div class="mt-6">
-  <button id="googleLoginBtn" 
-    class="google-btn">
-    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="google-icon">
-    Continue with Google
-  </button>
-</div>
-        
+        <button type="submit" class="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition">Login</button>
       </form>
 
-      <p class="meta">Don’t have an account? <a href="signup.html">Sign up</a></p>
+      <a href="#" id="forgotPasswordLink" class="block mt-3 text-sm text-right text-black hover:underline">Forgot Password?</a>
 
-      <div class="cta-band">
-        <div><strong>New to Sitegen?</strong></div>
-        <div style="margin-top:10px"><a href="signup.html">Create your account</a></div>
-      </div>
-    </div>
-  </main>
+      <button id="googleLoginBtn" class="w-full flex items-center justify-center mt-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5 mr-2">
+        Continue with Google
+      </button>
 
-  <!-- Modal: Forgot password -->
-  <div id="forgotModal" class="modal" aria-hidden="true">
-    <div class="modal-card">
-      <h3 style="margin:0 0 8px 0">Reset Password</h3>
-      <p style="color:var(--muted);font-size:0.95rem;margin-bottom:12px">Enter your account email and we'll send a reset link.</p>
-      <input id="resetEmail" type="email" placeholder="your@email.com" style="width:100%;padding:10px;border:1px solid #e6e6e6;border-radius:8px" />
-      <div class="row" style="margin-top:12px">
-        <button id="cancelReset" style="padding:8px 12px;border-radius:8px;background:#f3f3f3;border:none;cursor:pointer">Cancel</button>
-        <button id="sendReset" style="padding:8px 12px;border-radius:8px;background:var(--accent);color:#fff;border:none;cursor:pointer">Send Reset</button>
-      </div>
+      <button id="resendVerifyBtn" class="w-full bg-yellow-400 text-black py-2 rounded-lg mt-4 hover:bg-yellow-300 transition hidden">
+        Resend Verification Email
+      </button>
     </div>
-  </div>
+  </section>
 
   <!-- Footer -->
-  <footer>
-    <div class="footer-inner">
+  <footer class="bg-gray-900 text-gray-300 py-10">
+    <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8">
       <div>
-        <h4>Sitegen</h4>
-        <p style="color:var(--muted)">AI-powered site generation and hosting platform designed for creators and developers.</p>
+        <h4 class="text-xl font-bold text-white mb-3">Sitegen Hosting</h4>
+        <p>Reliable hosting solutions to power your online journey.</p>
       </div>
       <div>
-        <h4>Quick Links</h4>
-        <ul style="list-style:none;padding:0;margin:0;color:var(--muted)">
-          <li><a href="index.html">Home</a></li>
-          <li><a href="Sitegen_Hosting/features.html">Features</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="contact.html">Contact</a></li>
-          <li><a href="plans.html">Plans</a></li>
+        <h5 class="text-lg font-semibold text-white mb-2">Quick Links</h5>
+        <ul class="space-y-1 text-sm">
+          <li><a href="plans.html" class="hover:text-white">Plans</a></li>
+          <li><a href="features.html" class="hover:text-white">Features</a></li>
+          <li><a href="about.html" class="hover:text-white">About Us</a></li>
+          <li><a href="contact.html" class="hover:text-white">Contact</a></li>
         </ul>
       </div>
       <div>
-        <h4>Get in touch</h4>
-        <p style="color:var(--muted)">Email: support@sitegen.com<br/>Phone: +1 (800) 123-4567</p>
+        <h5 class="text-lg font-semibold text-white mb-2">Get in Touch</h5>
+        <p>Email: support@sitegenhosting.com</p>
+        <p>Phone: +1 (800) 123-4567</p>
       </div>
     </div>
+    <div class="mt-8 text-center text-sm text-gray-500">© 2025 Sitegen Hosting. All rights reserved.</div>
   </footer>
 
-  <!-- Scripts (keep your existing logic) -->
-  <script>
-    // Modal open/close + pass reset request to external handler
-    document.addEventListener('DOMContentLoaded', function(){
-      const forgot = document.getElementById('forgotPasswordLink');
-      const modal = document.getElementById('forgotModal');
-      const cancel = document.getElementById('cancelReset');
-      const send = document.getElementById('sendReset');
-
-      forgot && forgot.addEventListener('click', function(e){
-        e.preventDefault();
-        document.getElementById('resetEmail').value = document.getElementById('loginEmail').value || '';
-        modal.classList.add('show');
-      });
-
-      cancel && cancel.addEventListener('click', function(){ modal.classList.remove('show'); });
-
-      send && send.addEventListener('click', function(){
-        const email = (document.getElementById('resetEmail').value || '').trim();
-        if(!email){ alert('Please enter an email'); return; }
-
-        // If your login.js exposes a global function `requestPasswordReset(email)` it will be called.
-        if(typeof window.requestPasswordReset === 'function'){
-          window.requestPasswordReset(email);
-        } else {
-          // otherwise, dispatch an event that login.js can listen to:
-          window.dispatchEvent(new CustomEvent('requestPasswordReset', { detail: { email } }));
-        }
-
-        modal.classList.remove('show');
-        // light feedback, login.js should show proper toast
-        alert('Password reset requested. Check your email if an account exists.');
-      });
-
-      // basic form submission prevention if login.js handles it
-      const form = document.getElementById('loginForm');
-      form && form.addEventListener('submit', function(e){
-        // let external login.js handle authentication — just prevent default here
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value;
-
-        if(typeof window.handleLogin === 'function'){
-          window.handleLogin({ email, password });
-        } else {
-          // fallback: dispatch event
-          window.dispatchEvent(new CustomEvent('submitLogin', { detail: { email, password } }));
-        }
-      });
-    });
-  </script>
-  <script type="module" src="firebase-login.js"></script>
-  <script type="module" src="login.js"></script>
-  <script src="theme-toggle.js"></script>
+  <script type="module" src="./login.js"></script>
 </body>
 </html>
