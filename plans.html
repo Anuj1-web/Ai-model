@@ -68,63 +68,62 @@
 
 <!-- Hero -->
 <section class="hero">
-  <h1>Make Your Own Website in Minutes</h1>
-  <p>Sitegen is a generative tool to create your own site quickly with just a few clicks. Choose a plan and start building instantly.</p>
+  <h1>Choose Your Plan</h1>
+  <p>Select the plan that fits your needs and start building your website instantly with Sitegen.</p>
 </section>
 
 <!-- Plans -->
 <section class="plans-grid">
-  <!-- Plan cards -->
   <div class="plan-card">
     <div>
       <div class="plan-title">Single Site</div>
-      <div class="plan-price">$15</div>
+      <div class="plan-price">₹1,500</div>
       <ul class="plan-features">
         <li>1 Website Template</li>
         <li>Email Support</li>
         <li>Basic Analytics</li>
       </ul>
     </div>
-    <button class="btn btn-black" onclick="payWithRazorpay(15,'Single Site')">Select Plan</button>
+    <button class="btn btn-black" onclick="payWithRazorpay(1500,'Single Site')">Select Plan</button>
   </div>
 
   <div class="plan-card">
     <div>
       <div class="plan-title">Small Bundle</div>
-      <div class="plan-price">$50</div>
+      <div class="plan-price">₹4,500</div>
       <ul class="plan-features">
-        <li>4 Website Templates</li>
+        <li>5 Website Templates</li>
         <li>Priority Email Support</li>
         <li>Basic Analytics</li>
       </ul>
     </div>
-    <button class="btn btn-black" onclick="payWithRazorpay(50,'Small Bundle')">Select Plan</button>
+    <button class="btn btn-black" onclick="payWithRazorpay(4500,'Small Bundle')">Select Plan</button>
   </div>
 
   <div class="plan-card">
     <div>
       <div class="plan-title">Medium Bundle</div>
-      <div class="plan-price">$100</div>
+      <div class="plan-price">₹8,900</div>
       <ul class="plan-features">
         <li>10 Website Templates</li>
         <li>Priority Email & Chat Support</li>
         <li>Advanced Analytics</li>
       </ul>
     </div>
-    <button class="btn btn-black" onclick="payWithRazorpay(100,'Medium Bundle')">Select Plan</button>
+    <button class="btn btn-black" onclick="payWithRazorpay(8900,'Medium Bundle')">Select Plan</button>
   </div>
 
   <div class="plan-card">
     <div>
       <div class="plan-title">Large Bundle</div>
-      <div class="plan-price">$179</div>
+      <div class="plan-price">₹16,000</div>
       <ul class="plan-features">
         <li>20 Website Templates</li>
         <li>Priority Support 24/7</li>
         <li>Advanced Analytics</li>
       </ul>
     </div>
-    <button class="btn btn-black" onclick="payWithRazorpay(179,'Large Bundle')">Select Plan</button>
+    <button class="btn btn-black" onclick="payWithRazorpay(16000,'Large Bundle')">Select Plan</button>
   </div>
 
   <div class="plan-card">
@@ -171,21 +170,20 @@
 <script>
   function payWithRazorpay(amount, planName){
     var options = {
-      "key": "rzp_test_RD3SL1DDd7HzJ0", // Replace with your Razorpay Test Key
+      "key": "rzp_test_RD3SL1DDd7HzJ0", // Your Razorpay Test Key
       "amount": amount * 100, // in paise
-      "currency": "USD",
+      "currency": "INR",
       "name": "Sitegen Hosting",
       "description": planName,
       "handler": function (response){
         alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
       },
-      "theme": {
-        "color": "#111827"
-      }
+      "theme": { "color": "#111827" }
     };
     var rzp = new Razorpay(options);
     rzp.open();
   }
 </script>
+
 </body>
 </html>
