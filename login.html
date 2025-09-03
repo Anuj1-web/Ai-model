@@ -1,140 +1,91 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login | Sitegen</title>
-  <link rel="stylesheet" href="styles.css" />
-  <style>
-    /* Override styles only for login page if needed */
-    .auth-form-box {
-      background: var(--card-bg, #fff);
-      border-radius: 1rem;
-      padding: 2rem;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-      text-align: center;
-      animation: fadeIn 0.6s ease-in-out;
-    }
-
-    .auth-form-box h2 {
-      margin-bottom: 1.5rem;
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: var(--text, #111);
-    }
-
-    .auth-form-box input {
-      width: 100%;
-      padding: 0.75rem;
-      margin: 0.5rem 0;
-      border: 1px solid #ddd;
-      border-radius: 0.5rem;
-      font-size: 1rem;
-      transition: border 0.2s;
-    }
-
-    .auth-form-box input:focus {
-      border: 1px solid var(--accent, #000);
-      outline: none;
-    }
-
-    .btn {
-      display: inline-block;
-      background: var(--accent, #000);
-      color: #fff;
-      padding: 0.75rem 1rem;
-      border-radius: 0.5rem;
-      text-align: center;
-      cursor: pointer;
-      transition: background 0.2s ease-in-out;
-      width: 100%;
-      margin-top: 0.5rem;
-    }
-
-    .btn:hover {
-      background: var(--accent-hover, #333);
-    }
-
-    .or-divider {
-      margin: 1.5rem 0;
-      position: relative;
-      font-size: 0.85rem;
-      color: #666;
-    }
-
-    .or-divider::before,
-    .or-divider::after {
-      content: "";
-      position: absolute;
-      top: 50%;
-      width: 40%;
-      height: 1px;
-      background: #ddd;
-    }
-
-    .or-divider::before { left: 0; }
-    .or-divider::after { right: 0; }
-
-    .auth-links {
-      margin-top: 1rem;
-      font-size: 0.9rem;
-    }
-
-    .auth-links a {
-      color: var(--accent, #000);
-      text-decoration: underline;
-      transition: color 0.2s ease-in-out;
-    }
-
-    .auth-links a:hover {
-      color: var(--accent-hover, #333);
-    }
-
-    /* Animation */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 </head>
-<body>
-  <!-- ✅ Header -->
-  <header class="site-header">
-    <div class="header-container">
-      <a href="index.html" class="site-title">⚡ Sitegen</a>
-      <nav class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="library.html">Dashboard</a>
-        <a href="signup.html">Signup</a>
+<body class="bg-white text-black">
+  <!-- Header -->
+  <header class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex justify-between items-center p-4">
+      <a href="index.html" class="text-2xl font-bold">Sitegen</a>
+      <nav class="space-x-6 hidden md:flex">
+        <a href="index.html" class="hover:underline">Home</a>
+        <a href="Sitegen_Hosting/features.html" class="hover:underline">Features</a>
+        <a href="about.html" class="hover:underline">About</a>
+        <a href="contact.html" class="hover:underline">Contact</a>
+        <a href="plans.html" class="hover:underline">Plans</a>
       </nav>
+      <div class="space-x-3">
+        <a href="login.html" class="px-4 py-2 text-sm border border-black text-black rounded-lg hover:bg-gray-100">Login</a>
+        <a href="signup.html" class="px-4 py-2 text-sm bg-black text-white rounded-lg hover:bg-gray-800">Get Started</a>
+      </div>
     </div>
   </header>
 
-  <!-- ✅ Login Form -->
-  <section class="section-container">
-    <div class="auth-form-box">
-      <h2>Welcome Back</h2>
-      <form id="loginForm">
-        <input type="email" id="loginEmail" placeholder="Email" required />
-        <input type="password" id="loginPassword" placeholder="Password" required />
-        <button type="submit" class="btn">Login</button>
+  <!-- Main -->
+  <main class="min-h-[70vh] flex items-center justify-center px-4">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 animate__animated animate__fadeInUp">
+      <h1 class="text-2xl font-bold mb-2 text-center">Welcome back</h1>
+      <p class="text-sm text-gray-600 mb-6 text-center">Sign in to continue to your Sitegen dashboard.</p>
+
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label for="loginEmail" class="block text-sm mb-1">Email</label>
+          <input id="loginEmail" type="email" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black" placeholder="you@example.com" />
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label for="loginPassword" class="block text-sm">Password</label>
+            <a href="#" id="forgotPasswordLink" class="text-sm underline">Forgot password?</a>
+          </div>
+          <input id="loginPassword" type="password" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black" placeholder="••••••••" />
+        </div>
+        <button type="submit" class="w-full py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-800">Login</button>
       </form>
 
-      <div class="or-divider">OR</div>
+      <p class="mt-4 text-sm text-center">Don’t have an account? <a href="signup.html" class="underline">Sign up</a></p>
+    </div>
+  </main>
 
-      <div class="auth-links">
-        <a href="#" id="forgotPasswordLink">Forgot Password?</a>
-        <p>Don’t have an account? <a href="signup.html">Sign up</a></p>
-      </div>
+  <!-- CTA -->
+  <section class="bg-black text-white py-12">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+      <h3 class="text-xl md:text-2xl font-semibold mb-4">New to Sitegen?</h3>
+      <a href="signup.html" class="inline-block px-6 py-3 bg-white text-black font-semibold rounded-lg hover:bg-gray-200">Create your account</a>
     </div>
   </section>
 
-  <!-- ✅ Toast Container -->
-  <div id="toastContainer" class="toast-container"></div>
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-gray-300 py-10">
+    <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8">
+      <div>
+        <h4 class="text-xl font-bold text-white mb-3">Sitegen</h4>
+        <p>AI-powered site generation and hosting platform designed for creators and developers.</p>
+      </div>
+      <div>
+        <h5 class="text-lg font-semibold text-white mb-2">Quick Links</h5>
+        <ul class="space-y-1 text-sm">
+          <li><a href="index.html" class="hover:text-white">Home</a></li>
+          <li><a href="Sitegen_Hosting/features.html" class="hover:text-white">Features</a></li>
+          <li><a href="about.html" class="hover:text-white">About</a></li>
+          <li><a href="contact.html" class="hover:text-white">Contact</a></li>
+          <li><a href="plans.html" class="hover:text-white">Plans</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5 class="text-lg font-semibold text-white mb-2">Get in Touch</h5>
+        <p>Email: support@sitegen.com</p>
+        <p>Phone: +1 (800) 123-4567</p>
+      </div>
+    </div>
+    <div class="mt-8 text-center text-sm text-gray-500">© 2025 Sitegen. All rights reserved.</div>
+  </footer>
 
-  <!-- ✅ Scripts -->
+  <!-- Scripts -->
   <script type="module" src="firebase-login.js"></script>
   <script type="module" src="login.js"></script>
   <script src="theme-toggle.js"></script>
