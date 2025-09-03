@@ -36,7 +36,7 @@
         <input type="password" id="password" placeholder="Password" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black" required>
 
         <button type="submit" class="w-full py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition">Sign Up</button>
-        <button type="button" id="resendVerificationBtn" class="w-full py-3 border border-black text-black rounded-lg hover:bg-gray-100 transition hidden">Resend Verification</button>
+        <button type="button" id="resendVerificationBtn" class="w-full py-3 border border-black text-white rounded-lg hover:bg-gray-800 transition hidden">Resend Verification</button>
         <button type="button" id="goToLoginBtn" class="w-full py-3 border border-black text-black rounded-lg hover:bg-gray-100 transition">Already have an account? Login</button>
       </form>
 
@@ -83,5 +83,25 @@
   <!-- Scripts -->
   <script type="module" src="firebase-login.js"></script>
   <script type="module" src="signup2.js"></script>
+
+  <!-- Fix Already login and resend styles -->
+  <script type="module">
+    // Already have account redirect
+    document.getElementById('goToLoginBtn').addEventListener('click', () => {
+      window.location.href = '../login.html';
+    });
+
+    // Fix resend verification button text color when cooldown ends
+    const resendBtn = document.getElementById('resendVerificationBtn');
+    const originalText = "Resend Verification";
+    const observer = new MutationObserver(() => {
+      if (resendBtn.textContent === originalText) {
+        resendBtn.style.background = "black";
+        resendBtn.style.color = "white";
+      }
+    });
+    observer.observe(resendBtn, { childList: true, subtree: true });
+  </script>
+
 </body>
 </html>
