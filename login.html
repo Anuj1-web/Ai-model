@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sitegen – Signup</title>
+  <title>Sitegen – Login</title>
   <link rel="stylesheet" href="style.css">
   <style>
     body { margin:0; font-family:ui-sans-serif,system-ui; background:#f7f7f7; color:#111827; }
@@ -30,6 +30,11 @@
     input { width:100%; padding:12px; border-radius:10px; border:1px solid #d1d5db; font-size:1rem; outline:none; }
     input:focus { border-color:#000; box-shadow:0 0 0 3px rgba(0,0,0,.06); }
 
+    /* Links */
+    .auth-links { display:flex; justify-content:space-between; margin-bottom:12px; font-size:.875rem; }
+    .auth-links a { color:#111827; text-decoration:none; font-weight:500; }
+    .auth-links a:hover { text-decoration:underline; }
+
     /* Divider */
     .divider { display:flex; align-items:center; gap:10px; margin:16px 0; color:#9ca3af; font-size:.85rem; }
     .divider span { flex:1; height:1px; background:#e5e7eb; }
@@ -38,7 +43,7 @@
     #toastContainer { position:fixed; top:16px; right:16px; display:flex; flex-direction:column; gap:8px; z-index:100; }
 
     /* Google button */
-    #googleSignupBtn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; }
+    #googleLoginBtn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; }
 
     /* Footer CSS */
     footer { background:#111827; color:#d1d5db; padding:40px 0; }
@@ -68,24 +73,24 @@
     </div>
   </header>
 
-  <!-- Signup Card -->
+  <!-- Login Card -->
   <main>
     <section class="card">
-      <h2 class="title">Create Your Account</h2>
-
-      <form id="signupForm2" novalidate>
-        <div class="field"><input type="text" id="name" placeholder="Full Name" required></div>
-        <div class="field"><input type="email" id="email" placeholder="Email" required></div>
-        <div class="field"><input type="password" id="password" placeholder="Password" required></div>
-
-        <button type="submit" class="btn btn-black">Sign Up</button>
-        <button type="button" id="resendVerificationBtn" class="btn btn-ghost" style="display:none;">Resend Verification</button>
-        <button type="button" id="goToLoginBtn" class="btn btn-ghost">Already have an account? Login</button>
+      <h2 class="title">Welcome Back</h2>
+      <form id="loginForm" novalidate>
+        <div class="field"><input type="email" id="loginEmail" placeholder="Email" required></div>
+        <div class="field"><input type="password" id="loginPassword" placeholder="Password" required></div>
+        <div class="auth-links">
+          <a href="#" id="forgotPasswordLink">Forgot Password?</a>
+          <a href="signup.html">Sign Up</a>
+        </div>
+        <button type="submit" class="btn btn-black w-full">Login</button>
+        <button type="button" id="resendVerifyBtn" class="btn btn-ghost w-full mt-2" style="display:none;">Resend Verification</button>
       </form>
 
       <div class="divider"><span></span> OR <span></span></div>
 
-      <button type="button" id="googleSignupBtn" class="btn btn-ghost">
+      <button type="button" id="googleLoginBtn" class="btn btn-ghost w-full">
         <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width="18" height="18"> Continue with Google
       </button>
     </section>
@@ -121,6 +126,6 @@
 
   <!-- Scripts -->
   <script type="module" src="firebase-login.js"></script>
-  <script type="module" src="signup2.js"></script>
+  <script type="module" src="login.js"></script>
 </body>
 </html>
