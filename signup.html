@@ -62,10 +62,10 @@
       <div>
         <h5 class="text-lg font-semibold text-white mb-2">Quick Links</h5>
         <ul class="space-y-1 text-sm">
-          <li><a href="../plans.html" class="hover:text-white">Plans</a></li>
+          <li><a href="plans.html" class="hover:text-white">Plans</a></li>
           <li><a href="features.html" class="hover:text-white">Features</a></li>
-          <li><a href="../about.html" class="hover:text-white">About Us</a></li>
-          <li><a href="../contact.html" class="hover:text-white">Contact</a></li>
+          <li><a href="about.html" class="hover:text-white">About Us</a></li>
+          <li><a href="contact.html" class="hover:text-white">Contact</a></li>
         </ul>
       </div>
       <div>
@@ -88,7 +88,7 @@
   <script type="module">
     // Already have account redirect
     document.getElementById('goToLoginBtn').addEventListener('click', () => {
-      window.location.href = '../login.html';
+      window.location.href = 'login.html';
     });
 
     // Fix resend verification button text color when cooldown ends
@@ -101,6 +101,9 @@
       }
     });
     observer.observe(resendBtn, { childList: true, subtree: true });
+
+    // Increase resend verification cooldown from 30s to 60s
+    if (window.signupResendTime === undefined) window.signupResendTime = 60; // seconds
   </script>
 
 </body>
