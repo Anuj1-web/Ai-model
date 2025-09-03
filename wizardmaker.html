@@ -719,7 +719,7 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-      <!-- ========== Theme Module (Improved Part 1 with Element Editing & Safe Text) ========== -->
+    <!-- ========== Theme Module (Part 1 – Universal Theme System) ========== -->
 <style>
 #themePanel {
   position: fixed;
@@ -744,24 +744,11 @@ renderLibraryAssets();
 }
 #themePanel .preset-tile:hover { background:#f0f0f0; }
 #themeToggleBtn {
-  position: fixed; bottom: 80px; right: 20px; /* leaves 60px space below */
+  position: fixed; bottom: 80px; right: 20px;
   background:#000; color:#fff; border-radius:50%; width:46px; height:46px;
   display:flex; align-items:center; justify-content:center;
   font-size:20px; cursor:pointer; z-index:10000;
 }
-/* element color editor (floating for individual edits) */
-#elementEditor {
-  position: fixed;
-  bottom: 140px; right: 20px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-  padding: 10px;
-  display: none;
-  z-index: 10001;
-}
-#elementEditor input[type=color] { width: 40px; height: 28px; border: none; cursor: pointer; }
-#elementEditor label { font-size: 13px; margin-right: 6px; }
 </style>
 
 <div id="themePanel">
@@ -776,17 +763,9 @@ renderLibraryAssets();
 </div>
 <div id="themeToggleBtn">🎨</div>
 
-<!-- element editor -->
-<div id="elementEditor">
-  <div style="margin-bottom:6px;font-weight:600;">Element Editor</div>
-  <div><label>BG</label><input type="color" id="elBg"></div>
-  <div><label>Text</label><input type="color" id="elColor"></div>
-  <button id="applyElementChange" style="margin-top:6px;">Apply</button>
-</div>
-
 <script>
 (function(){
-  // ----------------- Themes -----------------
+  // ----------------- Theme Presets -----------------
   const themePresets = [
     {name:'Oceanic', primary:'#0b79ff', accent:'#06b6d4', bg:'#f6fbff'},
     {name:'Midnight', primary:'#7c3aed', accent:'#06b6d4', bg:'#071026'},
@@ -825,25 +804,57 @@ renderLibraryAssets();
     if(!iframe) return alert("No active page loaded.");
     const doc = iframe.contentDocument || iframe.contentWindow.document;
 
+    // Define theme variables with safe text colors
     const css = `
-      body { background:${theme.bg}; color:${safeText(theme.bg)}; }
-      h1,h2,h3,h4,h5,h6,p,span,li { color:${safeText(theme.bg)}; }
-      a { color:${theme.primary}; }
-      header, .header, nav, .nav, .navbar { background:${theme.primary}; color:${safeText(theme.primary)}; }
-      footer, .footer { background:${theme.accent}; color:${safeText(theme.accent)}; }
-      button, .btn, .button, input[type="submit"] {
-        background:${theme.primary}; color:${safeText(theme.primary)};
+      :root {
+        --primary: ${theme.primary};
+        --accent: ${theme.accent};
+        --bg: ${theme.bg};
+        --text: ${safeText(theme.bg)};
+        --textOnPrimary: ${safeText(theme.primary)};
+        --textOnAccent: ${safeText(theme.accent)};
+      }
+      body {
+        background: var(--bg) !important;
+        color: var(--text) !important;
+      }
+      header, .header, nav, .nav, .navbar {
+        background: var(--primary) !important;
+        color: var(--textOnPrimary) !important;
+      }
+      footer, .footer, .site-footer {
+        background: var(--accent) !important;
+        color: var(--textOnAccent) !important;
+      }
+      h1,h2,h3,h4,h5,h6,p,span,li {
+        color: var(--text) !important;
+      }
+      a {
+        color: var(--primary) !important;
+      }
+      button, .btn, .button, input[type="submit"], .action-btn, .cta {
+        background: var(--primary) !important;
+        color: var(--textOnPrimary) !important;
         border-radius:6px; padding:8px 14px;
       }
-      .card, .panel, .tile, .box { background:#fff; border:1px solid ${theme.primary}44; color:#111; border-radius:12px; }
+      .card, .panel, .tile, .box, .content-card, .card-body {
+        background: #fff !important;
+        border: 1px solid var(--primary)44 !important;
+        color: var(--text) !important;
+        border-radius: 12px;
+      }
       input, select, textarea {
-        border:1px solid ${theme.primary}88; border-radius:6px; padding:6px;
+        border: 1px solid var(--primary)88 !important;
+        border-radius: 6px;
+        padding: 6px;
+        color: var(--text) !important;
       }
       input:focus, select:focus, textarea:focus {
-        outline:2px solid ${theme.accent};
+        outline: 2px solid var(--accent) !important;
       }
       .section, .container, .hero, .banner {
-        background: linear-gradient(180deg, ${theme.bg}, ${theme.bg}cc);
+        background: linear-gradient(180deg, var(--bg), var(--bg)cc) !important;
+        color: var(--text) !important;
       }
     `;
 
@@ -871,6 +882,21 @@ renderLibraryAssets();
         html = html.replace(/<\/head>/i, `<style id="__wizard_theme">${css}</style></head>`);
       }
       editedContents[activePage] = html;
+    }
+
+    // Save to first CSS file if present
+    const cssFile = Object.keys(otherFiles).find(f=>f.endsWith(".css"));
+    if(cssFile){
+      const decoder = new TextDecoder();
+      const encoder = new TextEncoder();
+      let cssText = decoder.decode(otherFiles[cssFile]);
+      if(cssText.includes("/* WizardMaker Theme */")){
+        cssText = cssText.replace(/\/\* WizardMaker Theme \*\/([\s\S]*?)\/\* End Theme \*\//,
+          `/* WizardMaker Theme */\n${css}\n/* End Theme */`);
+      } else {
+        cssText += `\n/* WizardMaker Theme */\n${css}\n/* End Theme */`;
+      }
+      otherFiles[cssFile] = encoder.encode(cssText);
     }
   }
 
@@ -900,50 +926,9 @@ renderLibraryAssets();
     const t={name:"Custom", primary:primaryColor.value, accent:accentColor.value, bg:bgColor.value};
     applyTheme(t);
   };
-
-  // ----------------- Element Editor -----------------
-  let selectedEl = null;
-  const elEditor = document.getElementById("elementEditor");
-  const elBg = document.getElementById("elBg");
-  const elColor = document.getElementById("elColor");
-  const applyElBtn = document.getElementById("applyElementChange");
-
-  // click inside preview to pick element
-  window.addEventListener("message",(e)=>{
-    if(e.data && e.data.type==="ELEMENT_CLICK"){
-      const {selector, bg, color} = e.data;
-      selectedEl = selector;
-      elBg.value = bg || "#ffffff";
-      elColor.value = color || "#000000";
-      elEditor.style.display="block";
-    }
-  });
-
-  applyElBtn.onclick=()=>{
-    if(!selectedEl) return;
-    const iframe = iframeRefs[activePage];
-    if(!iframe) return;
-    const doc = iframe.contentDocument;
-    const el = doc.querySelector(selectedEl);
-    if(el){
-      el.style.backgroundColor = elBg.value;
-      el.style.color = elColor.value;
-      // save into html string
-      let html = editedContents[activePage];
-      if(html){
-        const reg = new RegExp(`(<[^>]*${selectedEl}[^>]*style=")([^"]*)(")`);
-        if(reg.test(html)){
-          html = html.replace(reg, `$1$2;background:${elBg.value};color:${elColor.value}$3`);
-        }
-        editedContents[activePage] = html;
-      }
-    }
-    elEditor.style.display="none";
-  };
 })();
 </script>
 <!-- ========== /Theme Module ========== -->
-
 
 </body>
 </html>
