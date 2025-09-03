@@ -59,9 +59,9 @@
     margin:40px auto;
     padding:0 24px;
   }
- .card {
-  background:#1e293b; /* dark slate */
-  color:#f8fafc;       /* light text */
+/* Keep all previous card sizes intact */
+.card {
+  background:#1e293b;   /* dark slate */
   border-radius:16px;
   overflow:hidden;
   box-shadow:0 10px 24px rgba(0,0,0,.06);
@@ -69,8 +69,19 @@
   transition:transform 0.2s, box-shadow 0.2s;
   text-align:center;
 }
+
+/* Ensure images remain the same size */
+.card img {
+  width:100%;
+  height:200px;   /* keep fixed height */
+  object-fit:cover;
+}
+
+/* Optional: card title inside card */
 .card .card-title {
-  color:#f8fafc;       /* ensure title text is readable */
+  color:#f8fafc;   /* light text */
+  font-weight:600;
+  margin:12px 0;
 }
 
  .card:hover { 
