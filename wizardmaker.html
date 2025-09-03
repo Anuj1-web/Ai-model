@@ -719,7 +719,7 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-    <!-- ========== Theme Module (Part 1 – Universal Theme System) ========== -->
+    <!-- ========== Theme Module (Part 1 – Universal Theme System, Fixed) ========== -->
 <style>
 #themePanel {
   position: fixed;
@@ -804,7 +804,9 @@ renderLibraryAssets();
     if(!iframe) return alert("No active page loaded.");
     const doc = iframe.contentDocument || iframe.contentWindow.document;
 
-    // Define theme variables with safe text colors
+    // Generate card background (lighter or darker than bg)
+    const cardBg = adjustCardBg(theme.bg);
+
     const css = `
       :root {
         --primary: ${theme.primary};
@@ -813,6 +815,8 @@ renderLibraryAssets();
         --text: ${safeText(theme.bg)};
         --textOnPrimary: ${safeText(theme.primary)};
         --textOnAccent: ${safeText(theme.accent)};
+        --cardBg: ${cardBg};
+        --cardText: ${safeText(cardBg)};
       }
       body {
         background: var(--bg) !important;
@@ -838,9 +842,9 @@ renderLibraryAssets();
         border-radius:6px; padding:8px 14px;
       }
       .card, .panel, .tile, .box, .content-card, .card-body {
-        background: #fff !important;
+        background: var(--cardBg) !important;
         border: 1px solid var(--primary)44 !important;
-        color: var(--text) !important;
+        color: var(--cardText) !important;
         border-radius: 12px;
       }
       input, select, textarea {
@@ -884,7 +888,6 @@ renderLibraryAssets();
       editedContents[activePage] = html;
     }
 
-    // Save to first CSS file if present
     const cssFile = Object.keys(otherFiles).find(f=>f.endsWith(".css"));
     if(cssFile){
       const decoder = new TextDecoder();
@@ -916,6 +919,19 @@ renderLibraryAssets();
     const L=luminance(bg);
     return L>0.55 ? "#000" : "#fff";
   }
+  function adjustCardBg(bg){
+    const L=luminance(bg);
+    return L>0.55 ? darken(bg,20) : lighten(bg,20);
+  }
+  function darken(hex, amt){ return adjustColor(hex, -amt); }
+  function lighten(hex, amt){ return adjustColor(hex, amt); }
+  function adjustColor(hex, amt){
+    let {r,g,b}=hexToRgb(hex);
+    r=Math.min(255,Math.max(0,r+amt));
+    g=Math.min(255,Math.max(0,g+amt));
+    b=Math.min(255,Math.max(0,b+amt));
+    return `rgb(${r},${g},${b})`;
+  }
 
   // ----------------- Toggle -----------------
   document.getElementById("themeToggleBtn").onclick=()=>{
@@ -929,6 +945,7 @@ renderLibraryAssets();
 })();
 </script>
 <!-- ========== /Theme Module ========== -->
+
 
 </body>
 </html>
