@@ -1,62 +1,98 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login - Sitegen Hosting</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sitegen – Signup</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { margin:0; font-family:ui-sans-serif,system-ui; background:#f7f7f7; color:#111827; }
+
+    /* Header */
+    header { background:#fff; border-bottom:1px solid #e5e7eb; position:sticky; top:0; z-index:50; }
+    .header-inner { max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding:16px 24px; }
+    .brand { font-weight:700; font-size:1.5rem; }
+    nav a { margin-left:16px; text-decoration:none; color:#111827; font-weight:500; }
+    .btn { padding:10px 16px; border-radius:8px; font-weight:600; cursor:pointer; border:none; transition:0.2s; }
+    .btn-black { background:#000; color:#fff; }
+    .btn-black:hover { opacity:0.9; transform:translateY(-1px); }
+    .btn-ghost { background:transparent; border:1px solid #d1d5db; color:#111827; }
+    .btn-ghost:hover { background:#f3f4f6; }
+
+    /* Main card */
+    main { display:flex; justify-content:center; align-items:center; min-height:calc(100vh - 72px); padding:24px; }
+    .card { background:#fff; border-radius:16px; padding:32px; max-width:400px; width:100%; box-shadow:0 10px 24px rgba(0,0,0,.06); transition:transform 0.2s; }
+    .card:hover { transform:translateY(-2px); box-shadow:0 18px 40px rgba(0,0,0,.12); }
+
+    /* Typography */
+    .title { font-size:1.75rem; font-weight:800; text-align:center; margin-bottom:16px; }
+    .field { margin-bottom:12px; }
+    input { width:100%; padding:12px; border-radius:10px; border:1px solid #d1d5db; font-size:1rem; outline:none; }
+    input:focus { border-color:#000; box-shadow:0 0 0 3px rgba(0,0,0,.06); }
+
+    /* Divider */
+    .divider { display:flex; align-items:center; gap:10px; margin:16px 0; color:#9ca3af; font-size:.85rem; }
+    .divider span { flex:1; height:1px; background:#e5e7eb; }
+
+    /* Toast container */
+    #toastContainer { position:fixed; top:16px; right:16px; display:flex; flex-direction:column; gap:8px; z-index:100; }
+
+    /* Google button */
+    #googleSignupBtn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; }
+
+    /* Footer CSS */
+    footer { background:#111827; color:#d1d5db; padding:40px 0; }
+    footer h4, footer h5 { color:#fff; margin-bottom:12px; }
+    footer ul { list-style:none; padding:0; }
+    footer ul li a { color:#d1d5db; text-decoration:none; }
+    footer ul li a:hover { color:#fff; }
+    footer .text-center { text-align:center; margin-top:20px; font-size:.875rem; color:#9ca3af; }
+    footer div { margin-bottom:16px; }
+  </style>
 </head>
-<body class="bg-white text-black">
-  <!-- Navbar -->
-  <header class="bg-white shadow-md sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto flex justify-between items-center py-4 px-4">
-      <h1 class="text-2xl font-bold text-black pl-4">Sitegen Hosting</h1>
-      <nav class="space-x-6 hidden md:flex">
-        <a href="plans.html" class="hover:text-black">Plans</a>
-        <a href="features.html" class="hover:text-black">Features</a>
-        <a href="about.html" class="hover:text-black">About</a>
-        <a href="contact.html" class="hover:text-black">Contact</a>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <div class="brand">Sitegen Hosting</div>
+      <nav>
+        <a href="plans.html">Plans</a>
+        <a href="features.html">Features</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
       </nav>
-      <div class="space-x-3 pr-4">
-        <a href="login.html" class="px-4 py-2 text-sm border border-black text-black rounded-lg hover:bg-gray-100">Login</a>
-        <a href="signup.html" class="px-4 py-2 text-sm bg-black text-white rounded-lg hover:bg-gray-800">Get Started</a>
+      <div>
+        <a href="login.html" class="btn btn-ghost">Login</a>
+        <a href="signup.html" class="btn btn-black">Get Started</a>
       </div>
     </div>
   </header>
 
-  <!-- Login Section -->
-  <section class="py-20 bg-white min-h-screen flex items-center justify-center">
-    <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-      <h2 class="text-3xl font-bold text-center mb-6">Login</h2>
-      <form id="loginForm" class="space-y-4">
-        <div>
-          <label for="loginEmail" class="block text-sm font-medium mb-1">Email</label>
-          <input type="email" id="loginEmail" placeholder="Enter your email" required
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"/>
-        </div>
-        <div>
-          <label for="loginPassword" class="block text-sm font-medium mb-1">Password</label>
-          <input type="password" id="loginPassword" placeholder="Enter your password" required
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"/>
-        </div>
-        <button type="submit" class="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition">Login</button>
+  <!-- Signup Card -->
+  <main>
+    <section class="card">
+      <h2 class="title">Create Your Account</h2>
+
+      <form id="signupForm2" novalidate>
+        <div class="field"><input type="text" id="name" placeholder="Full Name" required></div>
+        <div class="field"><input type="email" id="email" placeholder="Email" required></div>
+        <div class="field"><input type="password" id="password" placeholder="Password" required></div>
+
+        <button type="submit" class="btn btn-black">Sign Up</button>
+        <button type="button" id="resendVerificationBtn" class="btn btn-ghost" style="display:none;">Resend Verification</button>
+        <button type="button" id="goToLoginBtn" class="btn btn-ghost">Already have an account? Login</button>
       </form>
 
-      <a href="#" id="forgotPasswordLink" class="block mt-3 text-sm text-right text-black hover:underline">Forgot Password?</a>
+      <div class="divider"><span></span> OR <span></span></div>
 
-      <button id="googleLoginBtn" class="w-full flex items-center justify-center mt-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5 mr-2">
-        Continue with Google
+      <button type="button" id="googleSignupBtn" class="btn btn-ghost">
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width="18" height="18"> Continue with Google
       </button>
-
-      <button id="resendVerifyBtn" class="w-full bg-yellow-400 text-black py-2 rounded-lg mt-4 hover:bg-yellow-300 transition hidden">
-        Resend Verification Email
-      </button>
-    </div>
-  </section>
+    </section>
+  </main>
 
   <!-- Footer -->
-  <footer class="bg-gray-900 text-gray-300 py-10">
+  <footer>
     <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8">
       <div>
         <h4 class="text-xl font-bold text-white mb-3">Sitegen Hosting</h4>
@@ -77,9 +113,14 @@
         <p>Phone: +1 (800) 123-4567</p>
       </div>
     </div>
-    <div class="mt-8 text-center text-sm text-gray-500">© 2025 Sitegen Hosting. All rights reserved.</div>
+    <div class="text-center">© 2025 Sitegen Hosting. All rights reserved.</div>
   </footer>
 
-  <script type="module" src="./login.js"></script>
+  <!-- Toasts -->
+  <div id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script type="module" src="firebase-login.js"></script>
+  <script type="module" src="signup2.js"></script>
 </body>
 </html>
