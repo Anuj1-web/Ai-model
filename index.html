@@ -1,93 +1,151 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home - Sitegen</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/png" href="https://www.favicon.cc/logo3d/147380.png">
   <style>
-    body { background: #fff; color: #000; }
-    .card { cursor: pointer; transition: transform 0.2s ease; }
-    .card:hover { transform: scale(1.02); }
+    body { margin:0; font-family:ui-sans-serif,system-ui; background:#f7f7f7; color:#111827; display:flex; flex-direction:column; min-height:100vh; }
+
+    /* Header */
+    header { background:#fff; border-bottom:1px solid #e5e7eb; position:sticky; top:0; z-index:50; }
+    .header-inner { max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding:16px 24px; }
+    .brand { font-weight:700; font-size:1.5rem; }
+    nav a { margin-left:16px; text-decoration:none; color:#111827; font-weight:500; }
+    .btn { padding:10px 16px; border-radius:8px; font-weight:600; cursor:pointer; border:none; transition:0.2s; }
+    .btn-black { background:#000; color:#fff; }
+    .btn-black:hover { opacity:0.9; transform:translateY(-1px); }
+    .btn-ghost { background:transparent; border:1px solid #d1d5db; color:#111827; }
+    .btn-ghost:hover { background:#f3f4f6; }
+
+    /* Hero Section */
+    .hero { text-align:center; padding:80px 24px; background:#111827; color:#fff; }
+    .hero h1 { font-size:2.5rem; font-weight:800; margin-bottom:16px; }
+    .hero p { font-size:1.25rem; margin-bottom:24px; }
+    .hero .cta-buttons { display:flex; justify-content:center; gap:16px; flex-wrap:wrap; }
+
+    /* Templates Grid */
+    #libraryGrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:24px; padding:24px; }
+
+    .card { background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.08); cursor:pointer; transition:transform 0.2s, box-shadow 0.2s; display:flex; flex-direction:column; }
+    .card:hover { transform:translateY(-4px); box-shadow:0 16px 40px rgba(0,0,0,0.12); }
+    .card img { width:100%; height:160px; object-fit:cover; }
+    .card-title { font-weight:700; font-size:1.1rem; padding:12px; text-align:center; }
+
+    /* Footer */
+    footer { background:#111827; color:#d1d5db; padding:40px 0; margin-top:auto; }
+    .footer-grid { display:flex; flex-wrap:wrap; max-width:1200px; margin:0 auto; padding:0 24px; gap:24px; justify-content:space-between; }
+    .footer-grid > div { flex:1 1 250px; min-width:200px; }
+    footer h4, footer h5 { color:#fff; margin-bottom:12px; }
+    footer ul { list-style:none; padding:0; }
+    footer ul li a { color:#d1d5db; text-decoration:none; }
+    footer ul li a:hover { color:#fff; }
+    footer .text-center { text-align:center; margin-top:20px; font-size:.875rem; color:#9ca3af; }
   </style>
 </head>
-<body class="p-6">
+<body>
 
-  <!-- Header -->
-<div class="flex justify-between items-center mb-6">
-  <!-- Left side -->
-  <h1 class="text-3xl font-bold">Sitegen</h1>
-
-  <!-- Right side -->
-  <div class="flex space-x-4 mr-8">
-    <a href="dashboard.html" 
-       class="px-4 py-2 bg-black text-white rounded-lg shadow hover:opacity-80">
-      Dashboard
-    </a>
-    <a href="signup.html" 
-       class="px-4 py-2 bg-black text-white rounded-lg shadow hover:opacity-80">
-      Signup
-    </a>
-    <a href="login.html" 
-       class="px-4 py-2 bg-black text-white rounded-lg shadow hover:opacity-80">
-      Login
-    </a>
-    <!-- Place this where you want the button on your index.html -->
-<a href="Sitegen_Hosting/hosting.html">
-  <button style="background-color: black; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
-    Visit Hosting
-  </button>
-</a>
-    
+<!-- Header -->
+<header>
+  <div class="header-inner">
+    <div class="brand">Sitegen Hosting</div>
+    <nav>
+      <a href="plans.html">Plans</a>
+      <a href="features.html">Features</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+    <div>
+      <a href="login.html" class="btn btn-ghost">Login</a>
+      <a href="signup.html" class="btn btn-black">Get Started</a>
+      <a href="Sitegen_Hosting/hosting.html" class="btn btn-black">Visit Hosting</a>
+    </div>
   </div>
-</div>
+</header>
 
-  <!-- Templates Grid -->
-  <div id="libraryGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+<!-- Hero Section -->
+<section class="hero">
+  <h1>Make your own site in minutes</h1>
+  <p>Sitegen allows you to create your website easily with just a few clicks.</p>
+  <div class="cta-buttons">
+    <a href="signup.html" class="btn btn-black">Get Started</a>
+    <a href="library.html" class="btn btn-ghost">Browse Templates</a>
+  </div>
+</section>
 
-  <script>
-    // Load templates from localStorage (set in library.html)
-    let library = JSON.parse(localStorage.getItem("sitegenLibrary") || "[]");
-    const libraryGrid = document.getElementById("libraryGrid");
+<!-- Templates Grid -->
+<div id="libraryGrid"></div>
 
-    // Save chosen template and open wizard
-    function openInWizard(zipBlob) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        localStorage.setItem("wizardTemplate", reader.result); // base64 string
-        window.location.href = "wizardmaker.html"; // no long query params
-      };
-      reader.readAsDataURL(zipBlob);
-    }
+<!-- Footer -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <h4>Sitegen Hosting</h4>
+      <p>Reliable hosting solutions to power your online journey.</p>
+    </div>
+    <div>
+      <h5>Quick Links</h5>
+      <ul>
+        <li><a href="plans.html">Plans</a></li>
+        <li><a href="features.html">Features</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>Get in Touch</h5>
+      <p>Email: support@sitegenhosting.com</p>
+      <p>Phone: +1 (800) 123-4567</p>
+    </div>
+  </div>
+  <div class="text-center">© 2025 Sitegen Hosting. All rights reserved.</div>
+</footer>
 
-    // Render template cards
-    function renderTemplates() {
-      libraryGrid.innerHTML = "";
-      library.forEach((item) => {
-        if (item.type === "template") {
-          const card = document.createElement("div");
-          card.className = "card border rounded shadow overflow-hidden";
+<script>
+  // Load templates from localStorage (unchanged)
+  let library = JSON.parse(localStorage.getItem("sitegenLibrary") || "[]");
+  const libraryGrid = document.getElementById("libraryGrid");
 
-          const img = document.createElement("img");
-          img.src = item.thumbnail || "https://via.placeholder.com/400x200?text=No+Thumbnail";
-          img.className = "w-full h-48 object-cover";
-          card.appendChild(img);
+  function openInWizard(zipBlob) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      localStorage.setItem("wizardTemplate", reader.result);
+      window.location.href = "wizardmaker.html";
+    };
+    reader.readAsDataURL(zipBlob);
+  }
 
-          // Open in wizard on click
-          card.onclick = async () => {
-            const response = await fetch(item.content); // item.content is base64 zip
-            const blob = await response.blob();
-            openInWizard(blob);
-          };
+  function renderTemplates() {
+    libraryGrid.innerHTML = "";
+    library.forEach((item) => {
+      if (item.type === "template") {
+        const card = document.createElement("div");
+        card.className = "card";
 
-          libraryGrid.appendChild(card);
-        }
-      });
-    }
+        const img = document.createElement("img");
+        img.src = item.thumbnail || "https://via.placeholder.com/400x200?text=No+Thumbnail";
+        card.appendChild(img);
 
-    renderTemplates();
-  </script>
+        const title = document.createElement("div");
+        title.className = "card-title";
+        title.textContent = item.name || "Untitled Template";
+        card.appendChild(title);
+
+        card.onclick = async () => {
+          const response = await fetch(item.content);
+          const blob = await response.blob();
+          openInWizard(blob);
+        };
+
+        libraryGrid.appendChild(card);
+      }
+    });
+  }
+
+  renderTemplates();
+</script>
 
 </body>
 </html>
