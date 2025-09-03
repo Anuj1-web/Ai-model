@@ -188,22 +188,24 @@
       z-index:100;
     }
   </style>
-</head>
-<body>
 
-  <!-- Header -->
-  <header class="sg-header">
-    <div class="sg-header__inner">
-      <h1 class="sg-brand">Sitegen</h1>
-      <nav class="sg-nav">
-        <a href="index.html">Home</a>
-        <a href="library.html">Dashboard</a>
-        <a href="login.html">Login</a>
-        <a href="signup.html" aria-current="page">Signup</a>
+<body class="bg-white text-black">
+  <!-- Navbar -->
+  <header class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex justify-between items-center py-4 px-4">
+      <h1 class="text-2xl font-bold text-black pl-4">Sitegen Hosting</h1>
+      <nav class="space-x-6 hidden md:flex">
+        <a href="plans.html" class="hover:text-black">Plans</a>
+        <a href="features.html" class="hover:text-black">Features</a>
+        <a href="about.html" class="hover:text-black">About</a>
+        <a href="contact.html" class="hover:text-black">Contact</a>
       </nav>
+      <div class="space-x-3 pr-4">
+        <a href="login.html" class="px-4 py-2 text-sm border border-black text-black rounded-lg hover:bg-gray-100">Login</a>
+        <a href="signup.html" class="px-4 py-2 text-sm bg-black text-white rounded-lg hover:bg-gray-800">Get Started</a>
+      </div>
     </div>
   </header>
-
   <!-- Main -->
   <main class="sg-main">
     <div class="sg-stack">
