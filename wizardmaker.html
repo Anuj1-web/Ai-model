@@ -1,30 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Wizard Maker — Full Editor (patched)</title>
-
-  <!-- External libs -->
+  <meta charset="UTF-8">
+  <title>Wizard Maker — Button Fix (v11 UI + Placeholder)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
   <style>
-    /* =========================
-       Editor UI styles (untrimmed)
-       ========================= */
-    :root{
-      --primary: #0b79ff;
-      --accent: #06b6d4;
-      --bg: #ffffff;
-      --text-color: #111;
-      --button-bg: var(--primary);
-      --button-text: #fff;
-      --card-bg: #fff;
-      --card-text: #111;
-      --nav-link: var(--primary);
-    }
-    html,body{height:100%}
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -32,7 +13,6 @@
       background: #f0f2f5;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
     }
     .card {
       background: #fff;
@@ -42,81 +22,201 @@
       max-width: 1100px;
       width: 100%;
     }
-    h1 { font-size: 1.5rem; margin-bottom:.25rem; }
-    p { font-size: .9rem; color: #555; margin-bottom:1rem; }
-    .topbar { display:flex; gap:.5rem; align-items:center; margin-bottom:1rem; }
-    input[type="file"]{ padding:.4rem; border:1px solid #ccc; border-radius:.5rem; }
-    button{ padding:.5rem .9rem; border:none; border-radius:.5rem; background:#111; color:#fff; cursor:pointer; font-size:.9rem; }
-    button:hover{ background:#333; }
-    .tabs{ display:flex; gap:.5rem; flex-wrap:wrap; margin:1rem 0; }
-    .tab { padding:.25rem .75rem; border:1px solid #ccc; border-radius:.5rem; background:#f3f4f6; cursor:pointer; font-size:.85rem; }
-    .tab.active{ background:#e5e7eb; font-weight:bold; }
-    #iframeContainer{ width:100%; height:600px; border:1px solid #ccc; border-radius:.5rem; background:#fff; overflow:hidden; position:relative; }
-    iframe { width:100%; height:100%; border:0; display:block; }
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.0); display: none; z-index: 50; pointer-events: none; }
-    .modal { position:absolute; background: #fff; padding: 1rem; border-radius: 1rem; max-width: 420px; width: 100%; box-shadow: 0 6px 20px rgba(0,0,0,.25); pointer-events: auto; }
-    .modal h2{ margin-bottom:1rem; font-size:1.2rem; }
-    .mb-2{margin-bottom:.5rem} .mb-3{margin-bottom:.75rem} .mb-4{margin-bottom:1rem}
-    input, select { padding:.5rem; border:1px solid #ccc; border-radius:.5rem; width:100%; font-size:.9rem; }
-    .actions { display:flex; justify-content:flex-end; gap:.5rem; }
-    #cancelBtn { background:#e5e7eb; color:#111; } #cancelBtn:hover{ background:#d1d5db; }
-
-    /* Wizard Maker Library Sidebar */
-    #librarySidebar { position: fixed; right:0; top:0; height:100vh; width:280px; background:#f9fafb; border-left:1px solid #ccc; padding:1rem; overflow-y:auto; box-shadow:-4px 0 12px rgba(0,0,0,0.05); z-index:100; display:flex; flex-direction:column; gap:1rem; font-size:0.85rem; }
-    #librarySidebar h3{ margin:0 0 .5rem 0; font-size:.95rem; font-weight:bold; }
-    .library-category{ margin-bottom:1rem; }
-    .library-item{ padding:.35rem .5rem; border:1px solid #ddd; border-radius:.4rem; margin-bottom:.35rem; cursor:grab; background:#fff; }
-    .library-item:hover{ background:#e5e7eb; }
-    .library-item.dragging{ opacity:.6; }
-    #pageNavContainer{ position: fixed; bottom:0; left:50%; transform:translateX(-50%); display:flex; gap:.5rem; background:rgba(255,255,255,0.95); padding:.5rem 1rem; border-radius:.5rem .5rem 0 0; box-shadow:0 -2px 6px rgba(0,0,0,0.1); z-index:90; }
-    #pageNavContainer button{ padding:.4rem .7rem; border-radius:.4rem; border:1px solid #ccc; background:#f3f4f6; cursor:pointer; font-size:.85rem; }
-    #pageNavContainer button.active{ font-weight:bold; background:#e5e7eb; }
-
-    /* Inline small editor */
-    #inlineEditorSmall {
-      position: absolute;
-      display: none;
-      z-index: 1200;
-      background: #fff;
-      border: 1px solid #ccc;
-      padding: 8px;
-      border-radius: 8px;
-      box-shadow: 0 6px 24px rgba(0,0,0,0.18);
-      width: 260px;
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: .25rem;
     }
-    #inlineEditorSmall input[type="text"], #inlineEditorSmall input[type="color"] { width: 100%; margin-bottom:6px; }
+    p {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 1rem;
+    }
+    .topbar {
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    input[type="file"] {
+      padding: .4rem;
+      border: 1px solid #ccc;
+      border-radius: .5rem;
+    }
+    button {
+      padding: .5rem .9rem;
+      border: none;
+      border-radius: .5rem;
+      background: #111; /* BLACK EXPORT BUTTON */
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    button:hover {
+      background: #333;
+    }
+    .tabs {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      margin: 1rem 0;
+    }
+    .tab {
+      padding: .25rem .75rem;
+      border: 1px solid #ccc;
+      border-radius: .5rem;
+      background: #f3f4f6;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .tab.active {
+      background: #e5e7eb;
+      font-weight: bold;
+    }
+    iframe {
+      width: 100%;
+      height: 600px;
+      border: 1px solid #ccc;
+      border-radius: .5rem;
+      background: #fff;
+    }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .modal {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 6px 20px rgba(0,0,0,.25);
+    }
+    .modal h2 {
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+    .mb-2 { margin-bottom: .5rem; }
+    .mb-3 { margin-bottom: .75rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    input, select {
+      padding: .5rem;
+      border: 1px solid #ccc;
+      border-radius: .5rem;
+      width: 100%;
+      font-size: .9rem;
+    }
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: .5rem;
+    }
+    .actions button {
+      flex: 0 0 auto;
+    }
+    #cancelBtn {
+      background: #e5e7eb;
+      color: #111;
+    }
+    #cancelBtn:hover {
+      background: #d1d5db;
+    }
+ /* Wizard Maker Library Sidebar */
+#librarySidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  width: 280px;
+  background: #f9fafb;
+  border-left: 1px solid #ccc;
+  padding: 1rem;
+  overflow-y: auto;
+  box-shadow: -4px 0 12px rgba(0,0,0,0.05);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
 
-    /* Theme Panel */
-    #themePanel { position: fixed; bottom:70px; right:20px; width:320px; background:#fff; border-radius:12px; padding:12px; box-shadow:0 12px 30px rgba(0,0,0,0.12); z-index:9999; display:none; }
-    #themePanel h3{ margin:0 0 10px 0; font-size:16px; }
-    #themePanel .preset-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; max-height:200px; overflow:auto; }
-    #themePanel .preset-tile { border:1px solid #eee; padding:8px; border-radius:8px; cursor:pointer; text-align:center; font-size:12px; background:#fafafa; }
-    #themeToggleBtn{ position: fixed; bottom:80px; right:20px; background:#000; color:#fff; border-radius:50%; width:46px; height:46px; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; z-index:10000; }
+#librarySidebar h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+  font-weight: bold;
+}
 
-    .hidden { display:none !important; }
+.library-category {
+  margin-bottom: 1rem;
+}
+
+.library-item {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 0.4rem;
+  margin-bottom: 0.35rem;
+  cursor: grab;
+  background: #fff;
+}
+
+.library-item:hover {
+  background: #e5e7eb;
+}
+
+.library-item.dragging {
+  opacity: 0.6;
+}
+
+#pageNavContainer {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(255,255,255,0.95);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
+  z-index: 90;
+}
+
+#pageNavContainer button {
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.4rem;
+  border: 1px solid #ccc;
+  background: #f3f4f6;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+#pageNavContainer button.active {
+  font-weight: bold;
+  background: #e5e7eb;
+}
   </style>
 </head>
 <body>
   <div class="card">
     <h1>Wizard Maker — Button Fix (v11)</h1>
-    <p>Upload multi-page site zip. Double-click elements to edit. Cancel restores original snapshot.</p>
+    <p>Upload EduPro (multi-page). Double-click or double-tap buttons/links/inputs to edit. Cancel fully restores. Fonts untouched.</p>
 
     <div class="topbar">
       <input type="file" id="zipInput" accept=".zip">
       <button id="exportBtn">⬇ Export ZIP</button>
-      <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
-        <button id="openLibraryBtnMini" title="Open Library">Library</button>
-        <button id="themeToggleBtnMini" title="Themes">Themes</button>
-      </div>
     </div>
 
     <div class="tabs" id="tabs"></div>
     <div id="iframeContainer"></div>
   </div>
 
-  <!-- Large modal (used when we can't position small inline editor) -->
+  <!-- Modal -->
   <div id="modalBackdrop" class="modal-backdrop" style="display:none;">
-    <div class="modal" id="modal" style="position:absolute;">
+    <div class="modal">
       <h2>Edit Element</h2>
       <div id="textSection" class="mb-4">
         <label class="mb-2">Text / Placeholder</label>
@@ -136,7 +236,7 @@
       </div>
       <div class="mb-4">
         <label class="mb-2">Replace Image</label>
-        <input type="url" id="imageUrl" placeholder="Image URL" style="width:100%;margin-bottom:6px;">
+        <input type="url" id="imageUrl" placeholder="Image URL">
         <input type="file" id="imageFile" accept="image/*">
       </div>
       <div class="actions">
@@ -146,69 +246,13 @@
     </div>
   </div>
 
-  <!-- Inline small editor (for small elements) -->
-  <div id="inlineEditorSmall" role="dialog" aria-hidden="true">
-    <div style="font-weight:bold; margin-bottom:6px;">Edit</div>
-    <input id="smallText" placeholder="Text / Placeholder">
-    <div style="display:flex; gap:6px; margin-bottom:6px;">
-      <input id="smallColor" type="color" title="Text color">
-      <input id="smallBg" type="color" title="Background color">
-    </div>
-    <div style="display:flex; justify-content:flex-end; gap:6px;">
-      <button id="smallCancel" style="background:#e5e7eb;color:#111;">Cancel</button>
-      <button id="smallSave">Save</button>
-    </div>
-  </div>
-
-  <!-- Floating black + button -->
-  <button id="openLibraryBtn" style="
-    position: fixed; bottom: 20px; right: 20px;
-    width: 50px; height: 50px; border-radius: 50%;
-    background: #111; color: #fff; font-size: 2rem;
-    border: none; cursor: pointer; z-index: 2000;">+</button>
-
-  <!-- Library Sidebar -->
-  <div id="librarySidebar" style="display:none;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-      <h3 style="margin:0;color:#fff;">Library Assets</h3>
-      <button id="closeLibraryBtn" style="background:none;color:#fff;font-size:1.2rem;border:none;cursor:pointer;">✖</button>
-    </div>
-    <input type="text" id="librarySearch" placeholder="Search..." style="width:100%;padding:0.3rem;margin-bottom:0.5rem;border-radius:0.25rem;border:none;background:#333;color:#fff;">
-    <div id="libraryContainer" style="overflow-y:auto; flex:1;"></div>
-    <hr style="border-color:#444;margin:0.5rem 0;">
-    <button id="addPageBtnSidebar" style="padding:0.4rem;background:#222;color:#fff;border:none;border-radius:0.25rem;cursor:pointer;">+ Add Blank Page</button>
-  </div>
-
-  <!-- Theme panel -->
-  <div id="themePanel">
-    <h3>🎨 Themes</h3>
-    <div class="preset-grid" id="themeGrid"></div>
-    <div style="margin-top:10px; display:flex; gap:6px;">
-      <input type="color" id="primaryColor" value="#0b79ff">
-      <input type="color" id="accentColor" value="#06b6d4">
-      <input type="color" id="bgColor" value="#ffffff">
-      <button id="applyCustomTheme">Apply</button>
-    </div>
-  </div>
-  <div id="themeToggleBtn">🎨</div>
-    <script>
-    /****************************************************************
-     * Main editor logic (core)
-     * - ZIP loading (JSZip)
-     * - Blob URL mapping (Fix #1)
-     * - Iframe rendering + bridge injection (DOMParser injection, Fix #4)
-     * - Modal & small inline editor handling (Fix #2)
-     * - Theme vars (Fix #3)
-     ****************************************************************/
-
-    // UI refs
+  <script>
     const zipInput = document.getElementById("zipInput");
     const exportBtn = document.getElementById("exportBtn");
     const tabsEl = document.getElementById("tabs");
     const iframeContainer = document.getElementById("iframeContainer");
 
     const modalBackdrop = document.getElementById("modalBackdrop");
-    const modal = document.getElementById("modal");
     const modalText = document.getElementById("modalText");
     const modalColor = document.getElementById("modalColor");
     const colorTargetSel = document.getElementById("colorTarget");
@@ -217,311 +261,17 @@
     const cancelBtn = document.getElementById("cancelBtn");
     const saveBtn = document.getElementById("saveBtn");
 
-    const inlineEditorSmall = document.getElementById("inlineEditorSmall");
-    const smallText = document.getElementById("smallText");
-    const smallColor = document.getElementById("smallColor");
-    const smallBg = document.getElementById("smallBg");
-    const smallCancel = document.getElementById("smallCancel");
-    const smallSave = document.getElementById("smallSave");
-
-    // State
     let pages = [];
     let pageContents = {};
     let editedContents = {};
     let otherFiles = {};
     let activePage = "";
     let iframeRefs = {};
-    let blobUrlMap = {}; // filename/path -> blob URL
 
     let modalTarget = { page: "", id: "", hasText: false, hasPlaceholder: false };
     let originalSnapshot = null;
 
-    // normalize keys
-    function normKey(k){ return (k||'').replace(/^\\/+/, '').trim(); }
-
-    // --- Fix #1: rewriteResourceLinks using DOMParser ---
-    function rewriteResourceLinks(html) {
-      try {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
-
-        // rewrite link rel=stylesheet
-        doc.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
-          const href = link.getAttribute("href") || "";
-          const candidates = [href, href.split("/").pop()];
-          for (const c of candidates) {
-            if (!c) continue;
-            const found = blobUrlMap[normKey(c)];
-            if (found) { link.setAttribute("href", found); break; }
-          }
-        });
-
-        // rewrite scripts
-        doc.querySelectorAll('script[src]').forEach(script => {
-          const src = script.getAttribute("src") || "";
-          const candidates = [src, src.split("/").pop()];
-          for (const c of candidates) {
-            if (!c) continue;
-            const found = blobUrlMap[normKey(c)];
-            if (found) { script.setAttribute("src", found); break; }
-          }
-        });
-
-        // rewrite imgs
-        doc.querySelectorAll('img[src]').forEach(img => {
-          const src = img.getAttribute("src") || "";
-          const candidates = [src, src.split("/").pop()];
-          for (const c of candidates) {
-            if (!c) continue;
-            const found = blobUrlMap[normKey(c)];
-            if (found) { img.setAttribute("src", found); break; }
-          }
-        });
-
-        // rewrite sources
-        doc.querySelectorAll('source[src]').forEach(s => {
-          const src = s.getAttribute("src") || "";
-          const candidates = [src, src.split("/").pop()];
-          for (const c of candidates) {
-            if (!c) continue;
-            const found = blobUrlMap[normKey(c)];
-            if (found) { s.setAttribute("src", found); break; }
-          }
-        });
-
-        return "<!DOCTYPE html>\\n" + doc.documentElement.outerHTML;
-      } catch (err) {
-        console.warn("rewriteResourceLinks failed:", err);
-        return html;
-      }
-    }
-
-    // --- Fix #4: injectEditingBridge using DOMParser & appendChild(script) ---
-    function injectEditingBridge(html, pageName) {
-      try {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
-
-        const script = doc.createElement("script");
-        script.textContent = `(function(){
-          var EDIT_ATTR='data-edit-id';
-          function ensureId(el){ if(!el.getAttribute(EDIT_ATTR)) el.setAttribute(EDIT_ATTR,'e'+Math.random().toString(36).slice(2,9)); return el.getAttribute(EDIT_ATTR); }
-          function buildSnapshot(el){ return {
-            html: el.innerHTML || '',
-            text: el.innerText || '',
-            placeholder: ('placeholder' in el ? el.placeholder || undefined : undefined),
-            src: (el.tagName==='IMG'?(el.getAttribute('src')||el.src||''):undefined),
-            inline:{color:el.style.color || '', backgroundColor:el.style.backgroundColor || ''}
-          }; }
-          document.addEventListener('dblclick',function(e){
-            try{
-              var el=e.target;if(!el)return;
-              var id=ensureId(el);
-              var snap=buildSnapshot(el);
-              var rect=el.getBoundingClientRect();
-              parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,
-                hasText:!!el.innerText,
-                hasPlaceholder:('placeholder' in el),
-                rect:{top:rect.top,left:rect.left,bottom:rect.bottom,right:rect.right,width:rect.width,height:rect.height},
-                ...snap},'*');
-            }catch(err){console.warn('bridge dblclick err',err)}
-          },true);
-
-          document.addEventListener('click',function(e){
-            try{
-              var el=e.target;if(!el)return;
-              var tn=(el.tagName||'').toUpperCase();
-              if(tn==='A'||tn==='BUTTON'||tn==='INPUT'||tn==='TEXTAREA'){
-                ensureId(el);
-              }
-            }catch(err){ }
-          },true);
-
-          window.addEventListener('message',function(ev){
-            var d=ev.data||{};
-            var selector='['+EDIT_ATTR+'=\"'+(d.id||'')+'\"]';
-            var el=document.querySelector(selector);
-            if(!el) return;
-            try{
-              if(d.type==='APPLY_TEXT'){
-                if('placeholder' in el) el.placeholder = d.text || ''; else el.innerText = d.text || '';
-              }
-              if(d.type==='APPLY_COLOR'){
-                var target = d.target || 'text';
-                if(target==='background') el.style.backgroundColor = d.color;
-                else el.style.color = d.color;
-                try{
-                  var styleTag = document.getElementById('__wm_override_'+d.id);
-                  if(!styleTag){
-                    styleTag=document.createElement('style'); styleTag.id='__wm_override_'+d.id;
-                    document.head.appendChild(styleTag);
-                  }
-                  var rule = '['+EDIT_ATTR+'=\"'+d.id+'\"] { '+ (target==='background' ? 'background-color' : 'color') + ': '+ d.color + ' !important; }';
-                  styleTag.innerHTML = rule;
-                }catch(err){}
-              }
-              if(d.type==='APPLY_IMAGE' && el.tagName==='IMG'){
-                el.src = d.src;
-              }
-              if(d.type==='RESTORE_ELEMENT' && d.snapshot){
-                if(d.snapshot.html!==undefined && !('placeholder' in el)) el.innerHTML = d.snapshot.html;
-                if(d.snapshot.placeholder!==undefined && 'placeholder' in el) el.placeholder = d.snapshot.placeholder;
-                if(d.snapshot.src!==undefined && el.tagName==='IMG') el.src = d.snapshot.src;
-                if(d.snapshot.inline){
-                  el.style.color = d.snapshot.inline.color || '';
-                  el.style.backgroundColor = d.snapshot.inline.backgroundColor || '';
-                  var override = document.getElementById('__wm_override_'+(el.getAttribute(EDIT_ATTR)||''));
-                  if(override) override.remove();
-                }
-              }
-            }catch(err){console.warn('bridge apply err',err)}
-          });
-        })();`;
-
-        // append script safely
-        if (doc.body) {
-          doc.body.appendChild(script);
-        } else {
-          // fallback: append to html element
-          doc.documentElement.appendChild(script);
-        }
-
-        return "<!DOCTYPE html>\\n" + doc.documentElement.outerHTML;
-      } catch (err) {
-        console.warn("injectEditingBridge error:", err);
-        // fallback — return original html to avoid breaking
-        return html;
-      }
-    }
-
-    // --- renderIframes (uses rewriteResourceLinks + injectEditingBridge) ---
-    function renderIframes() {
-      iframeContainer.innerHTML = "";
-      if (!activePage) return;
-      const iframe = document.createElement("iframe");
-      const rawHtml = editedContents[activePage] || pageContents[activePage] || "";
-      const withResources = rewriteResourceLinks(rawHtml);
-      // inject bridge safely
-      iframe.srcdoc = injectEditingBridge(withResources, activePage);
-      iframeContainer.appendChild(iframe);
-      iframeRefs[activePage] = iframe;
-
-      // enable drop when loaded
-      iframe.addEventListener("load", () => enableDropForIframe(activePage));
-    }
-
-    // --- handle OPEN_EDITOR postMessage from iframe ---
-    window.addEventListener("message", (event) => {
-      const d = event.data || {};
-      if (d.type === "OPEN_EDITOR") {
-        modalTarget = { page: d.page, id: d.id, hasText: !!d.hasText, hasPlaceholder: !!d.hasPlaceholder };
-        modalText.value = d.hasPlaceholder ? d.placeholder || "" : (d.text || "");
-        modalColor.value = "#000000";
-        originalSnapshot = d;
-
-        // position modal (smart) near element
-        const iframe = iframeRefs[d.page];
-        if (!iframe) {
-          modalBackdrop.style.display = "flex";
-          return;
-        }
-        try {
-          const iframeRect = iframe.getBoundingClientRect();
-          const rect = d.rect || { top: 0, left: 0, bottom: 0, right: 0, width: 0, height: 0 };
-          // default below element
-          const modalEl = modal;
-          modalEl.style.display = "block";
-          modalBackdrop.style.display = "block";
-          modalEl.style.position = "absolute";
-
-          let top = iframeRect.top + rect.bottom + window.scrollY + 8;
-          let left = iframeRect.left + rect.left + window.scrollX;
-
-          const modalH = modalEl.offsetHeight || 220;
-          const modalW = modalEl.offsetWidth || 380;
-          if (top + modalH > window.innerHeight) {
-            top = iframeRect.top + rect.top + window.scrollY - modalH - 8;
-          }
-          if (left + modalW > window.innerWidth) {
-            left = window.innerWidth - modalW - 8;
-          }
-          if (left < 8) left = 8;
-          if (top < 8) top = 8;
-          modalEl.style.left = left + "px";
-          modalEl.style.top = top + "px";
-
-          document.getElementById("textSection").style.display = (d.hasText || d.hasPlaceholder) ? "block" : "none";
-        } catch (err) {
-          console.warn("position error", err);
-          modalBackdrop.style.display = "flex";
-        }
-      }
-    });
-
-    // Live updates to iframe element
-    modalText.addEventListener("input", () => {
-      const {page,id} = modalTarget;
-      const iframe = iframeRefs[page];
-      if (iframe) iframe.contentWindow.postMessage({type:"APPLY_TEXT",id,text:modalText.value},"*");
-    });
-
-    modalColor.addEventListener("input", () => {
-      const {page,id,hasText} = modalTarget;
-      const target = colorTargetSel.value==="auto" ? (hasText ? "text" : "background") : colorTargetSel.value;
-      const iframe = iframeRefs[page];
-      if (iframe) iframe.contentWindow.postMessage({type:"APPLY_COLOR",id,color:modalColor.value,target},"*");
-    });
-
-    imageUrl.addEventListener("input", () => {
-      const {page,id} = modalTarget;
-      const iframe = iframeRefs[page];
-      if (iframe) iframe.contentWindow.postMessage({type:"APPLY_IMAGE",id,src:imageUrl.value},"*");
-    });
-
-    imageFile.addEventListener("change", (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const {page,id} = modalTarget;
-        const iframe = iframeRefs[page];
-        if (iframe) iframe.contentWindow.postMessage({type:"APPLY_IMAGE",id,src:reader.result},"*");
-      };
-      reader.readAsDataURL(file);
-    });
-    // Save/Cancel
-    saveBtn.onclick = () => {
-      const {page} = modalTarget;
-      const iframe = iframeRefs[page];
-      if (iframe?.contentDocument) {
-        const html = "<!DOCTYPE html>" + iframe.contentDocument.documentElement.outerHTML;
-        editedContents[page] = html;
-      }
-      modalBackdrop.style.display = "none";
-    };
-
-    cancelBtn.onclick = () => {
-      const {page,id} = modalTarget;
-      const iframe = iframeRefs[page];
-      if (iframe?.contentWindow && originalSnapshot) {
-        iframe.contentWindow.postMessage({type:"RESTORE_ELEMENT",id,snapshot:originalSnapshot},"*");
-      }
-      modalBackdrop.style.display = "none";
-    };
-
-    // --- Inline small editor handlers ---
-    smallCancel.addEventListener('click', ()=>{ inlineEditorSmall.style.display='none'; });
-    smallSave.addEventListener('click', ()=>{
-      inlineEditorSmall.style.display='none';
-      const {page,id} = modalTarget;
-      const iframe = iframeRefs[page];
-      if(!iframe) return;
-      iframe.contentWindow.postMessage({type:"APPLY_TEXT", id, text: smallText.value}, "*");
-      iframe.contentWindow.postMessage({type:"APPLY_COLOR", id, color: smallColor.value, target: "text"}, "*");
-      iframe.contentWindow.postMessage({type:"APPLY_COLOR", id, color: smallBg.value, target: "background"}, "*");
-    });
-
-    // --- ZIP input handler ---
+    // --- File handling ---
     zipInput.addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -533,8 +283,7 @@
       await Promise.all(Object.keys(zip.files).map(async (filename) => {
         const entry = zip.files[filename];
         if (entry.dir) return;
-        const low = filename.toLowerCase();
-        if (low.endsWith(".html") || low.endsWith(".htm")) {
+        if (filename.toLowerCase().endsWith(".html")) {
           const data = await entry.async("string");
           newPages.push(filename);
           newContents[filename] = data;
@@ -558,38 +307,152 @@
       otherFiles = other;
       activePage = newPages[0] || "";
 
-      // Build blobUrlMap
-      blobUrlMap = {};
-      Object.keys(otherFiles).forEach((filename) => {
-        try {
-          const blob = new Blob([otherFiles[filename]]);
-          const url = URL.createObjectURL(blob);
-          const fullKey = normKey(filename);
-          blobUrlMap[fullKey] = url;
-          const fname = filename.split("/").pop();
-          blobUrlMap[normKey(fname)] = url;
-        } catch (err) {
-          console.warn("Blob creation failed for", filename, err);
-        }
-      });
-
       renderTabs();
       renderIframes();
     });
 
-    // --- renderTabs ---
-    function renderTabs(){
+    function renderTabs() {
       tabsEl.innerHTML = "";
-      pages.forEach(p=>{
+      pages.forEach((p) => {
         const tab = document.createElement("div");
         tab.className = "tab" + (p === activePage ? " active" : "");
         tab.textContent = p;
-        tab.onclick = ()=>{ activePage = p; renderTabs(); renderIframes(); };
+        tab.onclick = () => { activePage = p; renderTabs(); renderIframes(); };
         tabsEl.appendChild(tab);
       });
     }
 
-    // --- Export ---
+    function injectEditingBridge(html, pageName) {
+      const bridge = `<script>(function(){
+        var EDIT_ATTR='data-edit-id';
+        var clickTimers={};
+        function ensureId(el){if(!el.getAttribute(EDIT_ATTR)) el.setAttribute(EDIT_ATTR,'e'+Math.random().toString(36).slice(2,9));return el.getAttribute(EDIT_ATTR);}
+        function buildSnapshot(el){return {
+          html: el.innerHTML || '',
+          text: el.innerText || '',
+          placeholder: ('placeholder' in el ? el.placeholder || undefined : undefined),
+          src: (el.tagName==='IMG'?(el.getAttribute('src')||el.src||''):undefined),
+          inline:{color:el.style.color,backgroundColor:el.style.backgroundColor}
+        };}
+        document.addEventListener('click',function(e){
+          var el=e.target;if(!el)return;
+          var tn=(el.tagName||'').toUpperCase();
+          if(tn==='A'||tn==='BUTTON'||tn==='INPUT'||tn==='TEXTAREA'){
+            var id=ensureId(el);
+            e.preventDefault();e.stopPropagation();
+            if(clickTimers[id]){
+              clearTimeout(clickTimers[id]);clickTimers[id]=null;
+              var snap=buildSnapshot(el);
+              parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,
+                hasText:!!el.innerText,
+                hasPlaceholder:('placeholder' in el),
+                ...snap},'*');
+            }else{
+              clickTimers[id]=setTimeout(function(){
+                clickTimers[id]=null;
+                var href=(el.tagName==='A'&&el.href)?el.href:null;
+                if(href) window.location.href=href; else el.click();
+              },300);
+            }
+          }
+        },true);
+        document.addEventListener('dblclick',function(e){
+          var el=e.target;if(!el)return;
+          e.preventDefault();e.stopPropagation();
+          var id=ensureId(el);
+          var snap=buildSnapshot(el);
+          parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,
+            hasText:!!el.innerText,
+            hasPlaceholder:('placeholder' in el),
+            ...snap},'*');
+        },true);
+        window.addEventListener('message',function(ev){
+          var d=ev.data||{};
+          var el=document.querySelector('['+EDIT_ATTR+'="'+d.id+'"]');
+          if(!el)return;
+          if(d.type==='APPLY_TEXT'){
+            if('placeholder' in el) el.placeholder=d.text||''; else el.innerText=d.text||'';
+          }
+          if(d.type==='APPLY_COLOR'){if(d.target==='background')el.style.backgroundColor=d.color;else el.style.color=d.color;}
+          if(d.type==='APPLY_IMAGE'&&el.tagName==='IMG')el.src=d.src;
+          if(d.type==='RESTORE_ELEMENT'&&d.snapshot){
+            if(d.snapshot.html!==undefined && !('placeholder' in el)) el.innerHTML=d.snapshot.html;
+            if(d.snapshot.placeholder!==undefined && 'placeholder' in el) el.placeholder=d.snapshot.placeholder;
+            if(d.snapshot.src!==undefined&&el.tagName==='IMG')el.src=d.snapshot.src;
+            if(d.snapshot.inline){el.style.color=d.snapshot.inline.color||'';el.style.backgroundColor=d.snapshot.inline.backgroundColor||'';}
+          }
+        });
+      })();<\/script>`;
+      return html.replace(/<\/body>/i, bridge + "</body>");
+    }
+
+    function renderIframes() {
+      iframeContainer.innerHTML = "";
+      if (!activePage) return;
+      const iframe = document.createElement("iframe");
+      iframe.srcdoc = injectEditingBridge(editedContents[activePage] || pageContents[activePage] || "", activePage);
+      iframeContainer.appendChild(iframe);
+      iframeRefs[activePage] = iframe;
+    }
+
+    window.addEventListener("message", (event) => {
+      const d = event.data || {};
+      if (d.type === "OPEN_EDITOR") {
+        modalTarget = { page: d.page, id: d.id, hasText: !!d.hasText, hasPlaceholder: !!d.hasPlaceholder };
+        modalText.value = d.hasPlaceholder ? d.placeholder || "" : (d.text || "");
+        modalColor.value = "#000000";
+        originalSnapshot = d;
+        modalBackdrop.style.display = "flex";
+        document.getElementById("textSection").style.display = (d.hasText || d.hasPlaceholder) ? "block" : "none";
+      }
+    });
+
+    modalText.addEventListener("input", () => {
+      const {page,id} = modalTarget;
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_TEXT",id,text:modalText.value},"*");
+    });
+
+    modalColor.addEventListener("input", () => {
+      const {page,id,hasText} = modalTarget;
+      const target = colorTargetSel.value==="auto" ? (hasText ? "color" : "background") : colorTargetSel.value;
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_COLOR",id,color:modalColor.value,target},"*");
+    });
+
+    imageUrl.addEventListener("input", () => {
+      const {page,id} = modalTarget;
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:imageUrl.value},"*");
+    });
+
+    imageFile.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const {page,id} = modalTarget;
+        iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:reader.result},"*");
+      };
+      reader.readAsDataURL(file);
+    });
+
+    saveBtn.onclick = () => {
+      const {page} = modalTarget;
+      const iframe = iframeRefs[page];
+      if (iframe.contentDocument) {
+        const html = "<!DOCTYPE html>" + iframe.contentDocument.documentElement.outerHTML;
+        editedContents[page] = html;
+      }
+      modalBackdrop.style.display = "none";
+    };
+
+    cancelBtn.onclick = () => {
+      const {page,id} = modalTarget;
+      const iframe = iframeRefs[page];
+      if (iframe?.contentWindow && originalSnapshot) {
+        iframe.contentWindow.postMessage({type:"RESTORE_ELEMENT",id,snapshot:originalSnapshot},"*");
+      }
+      modalBackdrop.style.display = "none";
+    };
+
     exportBtn.addEventListener("click", async () => {
       const zip = new JSZip();
       pages.forEach((filename) => {
@@ -602,247 +465,472 @@
       const blob = await zip.generateAsync({type:"blob"});
       saveAs(blob, "custom-site.zip");
     });
-
-    /**********************
-      Library Sidebar logic (kept full)
-    ***********************/
-    function getLibraryData(){
-      try { return JSON.parse(localStorage.getItem("sitegenLibrary") || "[]"); } catch { return []; }
-    }
-    let allAssets = getLibraryData();
-    allAssets = allAssets.filter(item => item.type !== "template");
-
-    function renderLibraryAssets(filter=""){
-      const container=document.getElementById('libraryContainer');
-      container.innerHTML='';
-
-      const categories={};
-      allAssets.forEach(item=>{
-        const cat=item.type || "misc";
-        const sub=item.subcategory || "General";
-        if(!categories[cat]) categories[cat]={};
-        if(!categories[cat][sub]) categories[cat][sub]=[];
-        categories[cat][sub].push(item);
-      });
-
-      Object.keys(categories).forEach(cat=>{
-        const catDiv=document.createElement('div');
-        catDiv.className='library-category';
-        catDiv.textContent=cat.charAt(0).toUpperCase()+cat.slice(1);
-        container.appendChild(catDiv);
-
-        Object.keys(categories[cat]).forEach(sub=>{
-          const subDiv=document.createElement('div');
-          subDiv.className='library-subcategory';
-          subDiv.textContent=sub.charAt(0).toUpperCase()+sub.slice(1);
-          container.appendChild(subDiv);
-
-          categories[cat][sub].forEach(item=>{
-            if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
-            const div=document.createElement('div');
-            div.className='library-item';
-            const thumb=document.createElement('div');
-            thumb.className='library-thumb';
-            if(item.thumbnail){
-              const img=document.createElement('img');
-              img.src=item.thumbnail;
-              thumb.appendChild(img);
-            } else {
-              const preview=document.createElement('div');
-              preview.innerHTML=item.content || "";
-              preview.style.transform="scale(0.4)";
-              preview.style.transformOrigin="top left";
-              preview.style.height="80px";
-              preview.style.overflow="hidden";
-              thumb.appendChild(preview);
-            }
-            const title=document.createElement('div');
-            title.className='library-title';
-            title.innerText=item.name.replace(/[_-]/g," ");
-            div.appendChild(thumb);
-            div.appendChild(title);
-
-            if(item.type==="page"){
-              div.addEventListener("click",()=>{
-                const filename=item.name.toLowerCase().replace(/\s+/g,'_')+".html";
-                pages.push(filename);
-                pageContents[filename]=item.content;
-                editedContents[filename]=item.content;
-                activePage=filename;
-                renderTabs();
-                renderIframes();
-              });
-            } else {
-              div.addEventListener("click",()=>{
-                const iframe=iframeRefs[activePage];
-                if(!iframe) return;
-                try{
-                  const doc=iframe.contentDocument||iframe.contentWindow.document;
-                  let insertTarget = doc.activeElement && doc.body.contains(doc.activeElement) ? doc.activeElement : doc.body;
-                  const temp=document.createElement('div');
-                  temp.innerHTML=item.content;
-                  insertTarget.appendChild(temp.firstChild);
-                  editedContents[activePage]="<!DOCTYPE html>"+doc.documentElement.outerHTML;
-                }catch(err){console.warn('insert asset err',err)}
-              });
-              div.draggable=true;
-              div.addEventListener('dragstart', e=>{
-                e.dataTransfer.setData('text/html', item.content);
-                div.classList.add('dragging');
-              });
-              div.addEventListener('dragend', ()=>div.classList.remove('dragging'));
-            }
-
-            container.appendChild(div);
-          });
-        });
-      });
-    }
-
-    document.getElementById("librarySearch").addEventListener("input",e=>{ renderLibraryAssets(e.target.value); });
-    document.getElementById('openLibraryBtn').onclick=()=>{document.getElementById('librarySidebar').style.display='flex';};
-    document.getElementById('closeLibraryBtn').onclick=()=>{document.getElementById('librarySidebar').style.display='none';};
-    document.getElementById('openLibraryBtnMini').onclick=()=>{document.getElementById('librarySidebar').style.display='flex';};
-    document.getElementById('themeToggleBtnMini').onclick=()=>{ document.getElementById('themePanel').style.display = (document.getElementById('themePanel').style.display === 'block') ? 'none' : 'block'; };
-
-    function enableDropForIframe(pageName){
-      const iframe=iframeRefs[pageName];
-      if(!iframe) return;
-      try{
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        doc.body.addEventListener("dragover", e=>e.preventDefault());
-        doc.body.addEventListener("drop", e=>{
-          e.preventDefault();
-          const html=e.dataTransfer.getData("text/html");
-          if(html){
-            const temp=document.createElement("div");
-            temp.innerHTML=html;
-            doc.body.appendChild(temp.firstChild);
-            editedContents[pageName]="<!DOCTYPE html>"+doc.documentElement.outerHTML;
-          }
-        });
-      }catch(err){console.warn('enableDrop err',err)}
-    }
-
-    document.getElementById('addPageBtnSidebar').onclick=()=>{
-      const name=prompt('Enter new page name:');
-      if(!name) return;
-      const filename=name.replace(/\s+/g,'_').toLowerCase()+'.html';
-      const html=`<!DOCTYPE html><html><head><title>${name}</title></head><body><h1>${name}</h1></body></html>`;
-      pages.push(filename);
-      pageContents[filename]=html;
-      editedContents[filename]=html;
-      activePage=filename;
-      renderTabs();
-      renderIframes();
-    };
-
-    renderLibraryAssets();
-
-    /**********************
-     * Theme engine (Fix #3)
-     **********************/
-    (function(){
-      const themePresets = [
-        {name:'Oceanic', primary:'#0b79ff', accent:'#06b6d4', bg:'#f6fbff'},
-        {name:'Midnight', primary:'#7c3aed', accent:'#06b6d4', bg:'#071026'},
-        {name:'Sunset', primary:'#ff6b6b', accent:'#ff9a00', bg:'#fff7f2'},
-        {name:'Forest', primary:'#0b8457', accent:'#34d399', bg:'#f3fbf6'},
-        {name:'Corporate', primary:'#0b3d91', accent:'#06b6d4', bg:'#fbfdff'},
-        {name:'Warm', primary:'#d97706', accent:'#fb923c', bg:'#fffaf0'},
-        {name:'Violet', primary:'#6b21a8', accent:'#8b5cf6', bg:'#fbf7ff'},
-        {name:'Candy', primary:'#ff6bcb', accent:'#ffd166', bg:'#fff7fb'},
-        {name:'Grayscale', primary:'#111827', accent:'#6b7280', bg:'#ffffff'}
-      ];
-      const grid = document.getElementById('themeGrid');
-      themePresets.forEach(t=>{
-        const tile=document.createElement('div'); tile.className='preset-tile';
-        tile.style.background = `linear-gradient(90deg, ${t.primary}, ${t.accent})`;
-        tile.innerHTML = `<div style="color:#fff;padding:6px 0;font-size:12px">${t.name}</div>`;
-        tile.onclick = ()=> applyTheme(t);
-        grid.appendChild(tile);
-      });
-
-      function hexToRgb(hex){
-        hex=hex.replace('#','');
-        if(hex.length===3) hex=hex.split('').map(c=>c+c).join('');
-        return { r: parseInt(hex.slice(0,2),16), g: parseInt(hex.slice(2,4),16), b: parseInt(hex.slice(4,6),16) };
-      }
-      function brightness(hex){
-        const c = hexToRgb(hex);
-        return (c.r*299 + c.g*587 + c.b*114)/1000;
-      }
-      function contrastText(hex){
-        return brightness(hex) > 128 ? '#000' : '#fff';
-      }
-
-      function applyTheme(theme){
-        const primary = theme.primary || '#0b79ff';
-        const accent = theme.accent || '#06b6d4';
-        const bg = theme.bg || '#ffffff';
-        const cardBg = (brightness(bg) > 180) ? '#f8f9fb' : '#ffffff';
-
-        const css = `
-          :root{
-            --primary: ${primary};
-            --accent: ${accent};
-            --bg: ${bg};
-            --text-color: ${contrastText(bg)};
-            --button-bg: ${primary};
-            --button-text: ${contrastText(primary)};
-            --card-bg: ${cardBg};
-            --card-text: ${contrastText(cardBg)};
-            --nav-link: ${contrastText(primary)};
-          }
-        `;
-
-        // apply to editor UI
-        document.documentElement.style.setProperty('--primary', primary);
-        document.documentElement.style.setProperty('--accent', accent);
-        document.documentElement.style.setProperty('--bg', bg);
-        document.documentElement.style.setProperty('--text-color', contrastText(bg));
-        document.documentElement.style.setProperty('--button-bg', primary);
-        document.documentElement.style.setProperty('--button-text', contrastText(primary));
-        document.documentElement.style.setProperty('--card-bg', cardBg);
-        document.documentElement.style.setProperty('--card-text', contrastText(cardBg));
-        document.documentElement.style.setProperty('--nav-link', contrastText(primary));
-
-        // inject into every loaded iframe and update editedContents
-        Object.keys(iframeRefs).forEach(page=>{
-          try{
-            const frame = iframeRefs[page];
-            const doc = frame.contentDocument || frame.contentWindow.document;
-            if(!doc) return;
-            let style = doc.getElementById('__wizard_theme');
-            if(!style){
-              style = doc.createElement('style'); style.id='__wizard_theme';
-              doc.head.appendChild(style);
-            }
-            style.innerHTML = css;
-            // save into editedContents (best-effort)
-            if(editedContents[page]){
-              if(/<style id=\\\"__wizard_theme\\\">[\\s\\S]*?<\\/style>/i.test(editedContents[page])){
-                editedContents[page] = editedContents[page].replace(/<style id=\\\"__wizard_theme\\\">[\\s\\S]*?<\\/style>/i, `<style id=\\\"__wizard_theme\\\">${css}</style>`);
-              } else if(/<head[\\s\\S]*?>/i.test(editedContents[page])){
-                editedContents[page] = editedContents[page].replace(/<\\/head>/i, `<style id=\\\"__wizard_theme\\\">${css}</style></head>`);
-              } else {
-                editedContents[page] = `<!DOCTYPE html><head><style id=\\\"__wizard_theme\\\">${css}</style></head>` + editedContents[page];
-              }
-            }
-          }catch(err){/*ignore*/ }
-        });
-      }
-
-      document.getElementById('applyCustomTheme').addEventListener('click', ()=>{
-        applyTheme({ primary: document.getElementById('primaryColor').value, accent: document.getElementById('accentColor').value, bg: document.getElementById('bgColor').value });
-      });
-
-      document.getElementById('themeToggleBtn').addEventListener('click', ()=>{
-        const p = document.getElementById('themePanel');
-        p.style.display = (p.style.display==='block') ? 'none' : 'block';
-      });
-    })();
-
   </script>
+<script>
+  function autoLoadTemplate() {
+    const templateData = localStorage.getItem("wizardTemplate");
+    if (!templateData) return;
+
+    try {
+      // Decode base64 zip string back into a Blob
+      const binary = atob(templateData.split(',')[1]);
+      const array = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        array[i] = binary.charCodeAt(i);
+      }
+      const blob = new Blob([array], { type: "application/zip" });
+      const file = new File([blob], "template.zip", { type: "application/zip" });
+
+      // Feed the file into zipInput
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      const zipInput = document.getElementById("zipInput");
+      zipInput.files = dataTransfer.files;
+
+      // Trigger the change event to load into editor
+      zipInput.dispatchEvent(new Event("change", { bubbles: true }));
+
+      // Clear storage so it doesn’t auto-load next time accidentally
+      localStorage.removeItem("wizardTemplate");
+    } catch (err) {
+      console.error("Template auto-load failed:", err);
+    }
+  }
+   autoLoadTemplate();
+</script>  <!-- ✅ properly close the previous script -->
+
+<!-- ================== LIBRARY SIDEBAR FETCH FROM LIBRARY ================== -->
+
+<!-- Floating black + button -->
+<button id="openLibraryBtn" style="
+  position: fixed; bottom: 20px; right: 20px;
+  width: 50px; height: 50px; border-radius: 50%;
+  background: #111; color: #fff; font-size: 2rem;
+  border: none; cursor: pointer; z-index: 2000;">+</button>
+
+<!-- Sidebar -->
+<div id="librarySidebar" style="display:none;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+    <h3 style="margin:0;color:#fff;">Library Assets</h3>
+    <button id="closeLibraryBtn" style="background:none;color:#fff;font-size:1.2rem;border:none;cursor:pointer;">✖</button>
+  </div>
+
+  <!-- Search -->
+  <input type="text" id="librarySearch" placeholder="Search..."
+         style="width:100%;padding:0.3rem;margin-bottom:0.5rem;border-radius:0.25rem;border:none;background:#333;color:#fff;">
+
+  <!-- Container -->
+  <div id="libraryContainer" style="overflow-y:auto; flex:1;"></div>
+
+  <hr style="border-color:#444;margin:0.5rem 0;">
+
+  <button id="addPageBtnSidebar"
+          style="padding:0.4rem;background:#222;color:#fff;border:none;border-radius:0.25rem;cursor:pointer;">
+    + Add Blank Page
+  </button>
+</div>
+
+<style>
+#librarySidebar {
+  position: fixed;
+  top: 0; right: 0;
+  width: 320px; height: 100vh;
+  background: #111; padding: 1rem;
+  box-shadow: -4px 0 12px rgba(0,0,0,0.5);
+  z-index: 1500;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+.library-category {
+  font-weight: bold;
+  margin-top: 1rem;
+  color: #fff;
+}
+.library-subcategory {
+  font-style: italic;
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+  color: #ccc;
+}
+.library-item {
+  padding: 0.5rem;
+  margin-bottom: 0.6rem;
+  border-radius: 0.3rem;
+  background: #222;
+  cursor: pointer;
+  color: #fff;
+  text-align: center;
+}
+.library-item:hover { background: #333; }
+.library-thumb { max-height: 80px; overflow:hidden; margin-bottom:0.3rem; }
+.library-thumb img { max-width: 100%; border-radius:4px; }
+.library-title { font-size:0.8rem; color:#ddd; }
+</style>
+
+<script>
+// ===== Fetch assets from localStorage.sitegenLibrary =====
+function getLibraryData(){
+  try {
+    return JSON.parse(localStorage.getItem("sitegenLibrary") || "[]");
+  } catch { return []; }
+}
+
+let allAssets = getLibraryData();
+// Filter out templates
+allAssets = allAssets.filter(item => item.type !== "template");
+
+// Render Sidebar
+function renderLibraryAssets(filter=""){
+  const container=document.getElementById('libraryContainer');
+  container.innerHTML='';
+
+  // Group by type + subcategory
+  const categories={};
+  allAssets.forEach(item=>{
+    const cat=item.type; // asset/page/theme/subscription
+    const sub=item.subcategory || "General";
+    if(!categories[cat]) categories[cat]={};
+    if(!categories[cat][sub]) categories[cat][sub]=[];
+    categories[cat][sub].push(item);
+  });
+
+  Object.keys(categories).forEach(cat=>{
+    const catDiv=document.createElement('div');
+    catDiv.className='library-category';
+    catDiv.textContent=cat.charAt(0).toUpperCase()+cat.slice(1);
+    container.appendChild(catDiv);
+
+    Object.keys(categories[cat]).forEach(sub=>{
+      const subDiv=document.createElement('div');
+      subDiv.className='library-subcategory';
+      subDiv.textContent=sub.charAt(0).toUpperCase()+sub.slice(1);
+      container.appendChild(subDiv);
+
+      categories[cat][sub].forEach(item=>{
+        if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
+
+        const div=document.createElement('div');
+        div.className='library-item';
+
+        const thumb=document.createElement('div');
+        thumb.className='library-thumb';
+        if(item.thumbnail){
+          const img=document.createElement('img');
+          img.src=item.thumbnail;
+          thumb.appendChild(img);
+        } else {
+          const preview=document.createElement('div');
+          preview.innerHTML=item.content || "";
+          preview.style.transform="scale(0.4)";
+          preview.style.transformOrigin="top left";
+          preview.style.height="80px";
+          preview.style.overflow="hidden";
+          thumb.appendChild(preview);
+        }
+
+        const title=document.createElement('div');
+        title.className='library-title';
+        title.innerText=item.name.replace(/[_-]/g," ");
+
+        div.appendChild(thumb);
+        div.appendChild(title);
+
+        if(item.type==="page"){
+          // full page
+          div.addEventListener("click",()=>{
+            const filename=item.name.toLowerCase().replace(/\s+/g,'_')+".html";
+            pages.push(filename);
+            pageContents[filename]=item.content;
+            editedContents[filename]=item.content;
+            activePage=filename;
+            renderTabs();
+            renderIframes();
+          });
+        } else {
+          // insert element
+          div.addEventListener("click",()=>{
+            const iframe=iframeRefs[activePage];
+            if(!iframe) return;
+            const doc=iframe.contentDocument||iframe.contentWindow.document;
+            let insertTarget = doc.activeElement && doc.body.contains(doc.activeElement) ? doc.activeElement : doc.body;
+            const temp=document.createElement('div');
+            temp.innerHTML=item.content;
+            insertTarget.appendChild(temp.firstChild);
+            editedContents[activePage]="<!DOCTYPE html>"+doc.documentElement.outerHTML;
+          });
+          // Drag/drop
+          div.draggable=true;
+          div.addEventListener('dragstart', e=>{
+            e.dataTransfer.setData('text/html', item.content);
+            div.classList.add('dragging');
+          });
+          div.addEventListener('dragend', ()=>div.classList.remove('dragging'));
+        }
+
+        container.appendChild(div);
+      });
+    });
+  });
+}
+
+// Search
+document.getElementById("librarySearch").addEventListener("input",e=>{
+  renderLibraryAssets(e.target.value);
+});
+
+// Open/close
+document.getElementById('openLibraryBtn').onclick=()=>{document.getElementById('librarySidebar').style.display='flex';};
+document.getElementById('closeLibraryBtn').onclick=()=>{document.getElementById('librarySidebar').style.display='none';};
+
+// Enable drop inside iframe
+function enableDrop(){
+  const iframe=iframeRefs[activePage];
+  if(!iframe) return;
+  const doc=iframe.contentDocument||iframe.contentWindow.document;
+  doc.body.addEventListener("dragover", e=>e.preventDefault());
+  doc.body.addEventListener("drop", e=>{
+    e.preventDefault();
+    const html=e.dataTransfer.getData("text/html");
+    if(html){
+      const temp=document.createElement("div");
+      temp.innerHTML=html;      doc.body.appendChild(temp.firstChild);
+      editedContents[activePage]="<!DOCTYPE html>"+doc.documentElement.outerHTML;
+    }
+  });
+}
+const originalRenderIframes=renderIframes;
+renderIframes=function(){ originalRenderIframes(); enableDrop(); };
+
+// Blank page
+document.getElementById('addPageBtnSidebar').onclick=()=>{
+  const name=prompt('Enter new page name:');
+  if(!name) return;
+  const filename=name.replace(/\s+/g,'_').toLowerCase()+'.html';
+  const html=`<!DOCTYPE html><html><head><title>${name}</title></head><body><h1>${name}</h1></body></html>`;
+  pages.push(filename);
+  pageContents[filename]=html;
+  editedContents[filename]=html;
+  activePage=filename;
+  renderTabs();
+  renderIframes();
+};
+
+// Initial render
+renderLibraryAssets();
+</script>
+   <!-- ========== Theme Module (Part 1 – Fixed with WCAG Contrast + Card Override) ========== -->
+<style>
+#themePanel {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  width: 320px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  z-index: 9999;
+  display: none;
+}
+#themePanel h3 { margin:0 0 10px 0; font-size:16px; }
+#themePanel .preset-grid { 
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px; 
+  max-height:200px; overflow:auto;
+}
+#themePanel .preset-tile { 
+  border:1px solid #eee; padding:8px; border-radius:8px; cursor:pointer;
+  text-align:center; font-size:12px; background:#fafafa;
+}
+#themePanel .preset-tile:hover { background:#f0f0f0; }
+#themeToggleBtn {
+  position: fixed; bottom: 80px; right: 20px;
+  background:#000; color:#fff; border-radius:50%; width:46px; height:46px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; cursor:pointer; z-index:10000;
+}
+</style>
+
+<div id="themePanel">
+  <h3>🎨 Themes</h3>
+  <div class="preset-grid" id="themeGrid"></div>
+  <div style="margin-top:10px; display:flex; gap:6px;">
+    <input type="color" id="primaryColor" value="#0b79ff">
+    <input type="color" id="accentColor" value="#06b6d4">
+    <input type="color" id="bgColor" value="#ffffff">
+    <button id="applyCustomTheme">Apply</button>
+  </div>
+</div>
+<div id="themeToggleBtn">🎨</div>
+
+<script>
+(function(){
+  // ----------------- Theme Presets -----------------
+  const themePresets = [
+    {name:'Oceanic', primary:'#0b79ff', accent:'#06b6d4', bg:'#f6fbff'},
+    {name:'Midnight', primary:'#7c3aed', accent:'#06b6d4', bg:'#071026'},
+    {name:'Sunset', primary:'#ff6b6b', accent:'#ff9a00', bg:'#fff7f2'},
+    {name:'Forest', primary:'#0b8457', accent:'#34d399', bg:'#f3fbf6'},
+    {name:'Corporate', primary:'#0b3d91', accent:'#06b6d4', bg:'#fbfdff'},
+    {name:'Warm', primary:'#d97706', accent:'#fb923c', bg:'#fffaf0'},
+    {name:'Violet', primary:'#6b21a8', accent:'#8b5cf6', bg:'#fbf7ff'},
+    {name:'Candy', primary:'#ff6bcb', accent:'#ffd166', bg:'#fff7fb'},
+    {name:'Grayscale', primary:'#111827', accent:'#6b7280', bg:'#ffffff'},
+    {name:'Aqua', primary:'#0088cc', accent:'#00c2c7', bg:'#f0fcff'},
+    {name:'Rose', primary:'#e11d48', accent:'#fb7185', bg:'#fff5f7'},
+    {name:'Indigo', primary:'#272ddf', accent:'#7c3aed', bg:'#f5f7ff'},
+    {name:'Lime', primary:'#84cc16', accent:'#bef264', bg:'#fbfff0'},
+    {name:'Coral', primary:'#ff7a59', accent:'#ffb199', bg:'#fff6f2'},
+    {name:'Teal', primary:'#0d9488', accent:'#2dd4bf', bg:'#f2fffb'},
+    {name:'Slate', primary:'#334155', accent:'#64748b', bg:'#f8fafc'},
+    {name:'Classic', primary:'#0b79ff', accent:'#ff6b6b', bg:'#ffffff'},
+    {name:'Lavender', primary:'#a78bfa', accent:'#c4b5fd', bg:'#fbf8ff'},
+    {name:'Copper', primary:'#9a3412', accent:'#fb923c', bg:'#fff6f0'}
+  ];
+
+  const themeGrid = document.getElementById("themeGrid");
+  themePresets.forEach(t=>{
+    const tile=document.createElement("div");
+    tile.className="preset-tile";
+    tile.style.background=`linear-gradient(90deg,${t.primary},${t.accent})`;
+    tile.innerHTML=`<div>${t.name}</div>`;
+    tile.addEventListener("click",()=>applyTheme(t));
+    themeGrid.appendChild(tile);
+  });
+
+  // ----------------- Apply Theme -----------------
+  function applyTheme(theme){
+    const iframe = iframeRefs[activePage];
+    if(!iframe) return alert("No active page loaded.");
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+
+    // card background calculated from theme.bg
+    const cardBg = adjustColor(theme.bg, luminance(theme.bg) > 0.5 ? -25 : 25);
+    const css = `
+      body {
+        background: ${theme.bg} !important;
+        color: ${contrastText(theme.bg)} !important;
+      }
+      header, .header, nav, .nav, .navbar {
+        background: ${theme.primary} !important;
+        color: ${contrastText(theme.primary)} !important;
+      }
+      footer, .footer, .site-footer {
+        background: ${theme.accent} !important;
+        color: ${contrastText(theme.accent)} !important;
+      }
+      h1,h2,h3,h4,h5,h6,p,span,li {
+        color: inherit !important;
+      }
+      a { color: ${theme.primary} !important; }
+      button, .btn, .button, input[type="submit"], .action-btn, .cta {
+        background: ${theme.primary} !important;
+        color: ${contrastText(theme.primary)} !important;
+        border-radius:6px; padding:8px 14px;
+      }
+      .card, .panel, .tile, .box, .content-card, .card-body {
+        background: ${cardBg} !important;
+        color: ${contrastText(cardBg)} !important;
+        border-radius: 12px;
+      }
+      input, select, textarea {
+        border: 1px solid ${theme.primary}88 !important;
+        border-radius: 6px;
+        padding: 6px;
+        color: ${contrastText(theme.bg)} !important;
+      }
+      input:focus, select:focus, textarea:focus {
+        outline: 2px solid ${theme.accent} !important;
+      }
+      .section, .container, .hero, .banner {
+        background: linear-gradient(180deg, ${theme.bg}, ${theme.bg}cc) !important;
+        color: ${contrastText(theme.bg)} !important;
+      }
+    `;
+
+    injectThemeCss(doc, css);
+    saveThemeToEditedContents(css);
+  }
+
+  function injectThemeCss(doc, css){
+    let styleTag = doc.getElementById("__wizard_theme");
+    if(!styleTag){
+      styleTag = doc.createElement("style");
+      styleTag.id="__wizard_theme";
+      doc.head.appendChild(styleTag);
+    }
+    styleTag.innerHTML = css;
+  }
+
+  function saveThemeToEditedContents(css){
+    let html = editedContents[activePage];
+    if(html){
+      if(html.includes("__wizard_theme")){
+        html = html.replace(/<style id="__wizard_theme">([\s\S]*?)<\/style>/,
+                            `<style id="__wizard_theme">${css}</style>`);
+      } else {
+        html = html.replace(/<\/head>/i, `<style id="__wizard_theme">${css}</style></head>`);
+      }
+      editedContents[activePage] = html;
+    }
+
+    const cssFile = Object.keys(otherFiles).find(f=>f.endsWith(".css"));
+    if(cssFile){
+      const decoder = new TextDecoder();
+      const encoder = new TextEncoder();
+      let cssText = decoder.decode(otherFiles[cssFile]);
+      if(cssText.includes("/* WizardMaker Theme */")){
+        cssText = cssText.replace(/\/\* WizardMaker Theme \*\/([\s\S]*?)\/\* End Theme \*\//,
+          `/* WizardMaker Theme */\n${css}\n/* End Theme */`);
+      } else {
+        cssText += `\n/* WizardMaker Theme */\n${css}\n/* End Theme */`;
+      }
+      otherFiles[cssFile] = encoder.encode(cssText);
+    }
+  }
+
+  // ----------------- Helpers -----------------
+  function hexToRgb(hex){
+    hex = hex.replace("#","");
+    if(hex.length===3) hex=hex.split("").map(c=>c+c).join("");
+    const num = parseInt(hex,16);
+    return {r:(num>>16)&255, g:(num>>8)&255, b:num&255};
+  }
+  function luminance(hex){
+    const c=hexToRgb(hex);
+    const a=[c.r/255,c.g/255,c.b/255].map(v=>v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4));
+    return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2];
+  }
+  function contrastRatio(hex1, hex2){
+    const L1=luminance(hex1)+0.05;
+    const L2=luminance(hex2)+0.05;
+    return L1>L2?L1/L2:L2/L1;
+  }
+  function contrastText(bg){
+    return contrastRatio(bg, "#000") >= 4.5 ? "#000" : "#fff";
+  }
+  function adjustColor(hex, amt){
+    let {r,g,b}=hexToRgb(hex);
+    r=Math.min(255,Math.max(0,r+amt));
+    g=Math.min(255,Math.max(0,g+amt));
+    b=Math.min(255,Math.max(0,b+amt));
+    return `rgb(${r},${g},${b})`;
+  }
+
+  // ----------------- Toggle -----------------
+  document.getElementById("themeToggleBtn").onclick=()=>{
+    const panel=document.getElementById("themePanel");
+    panel.style.display=panel.style.display==="none"?"block":"none";
+  };
+  document.getElementById("applyCustomTheme").onclick=()=>{
+    const t={name:"Custom", primary:primaryColor.value, accent:accentColor.value, bg:bgColor.value};
+    applyTheme(t);
+  };
+})();
+</script>
+<!-- ========== /Theme Module ========== -->
+
+
+
 </body>
 </html>
