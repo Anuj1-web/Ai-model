@@ -89,12 +89,19 @@
       z-index: 50;
     }
     .modal {
-      background: #fff;
-      padding: 1.5rem;
-      border-radius: 1rem;
-      max-width: 420px;
-      width: 100%;
-      box-shadow: 0 6px 20px rgba(0,0,0,.25);
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 6px 20px rgba(0,0,0,.25);
+
+  position: fixed; /* movable */
+  top: 100px;       /* starting position */
+  left: 100px;
+  cursor: grab;
+}
+
     }
     .modal h2 {
       margin-bottom: 1rem;
@@ -267,6 +274,8 @@
     let otherFiles = {};
     let activePage = "";
     let iframeRefs = {};
+    let fileMap = {};
+
 
     let modalTarget = { page: "", id: "", hasText: false, hasPlaceholder: false };
     let originalSnapshot = null;
@@ -288,9 +297,13 @@
           newPages.push(filename);
           newContents[filename] = data;
         } else {
-          const data = await entry.async("uint8array");
-          other[filename] = data;
-        }
+  const blob = await entry.async("blob");
+  const blobUrl = URL.createObjectURL(blob);
+  fileMap[filename] = blobUrl;   // store blob URL for later fixing
+  const data = await entry.async("uint8array");
+  other[filename] = data;
+}
+
       }));
 
       newPages.sort((a,b) => {
@@ -387,13 +400,59 @@
     }
 
     function renderIframes() {
-      iframeContainer.innerHTML = "";
-      if (!activePage) return;
-      const iframe = document.createElement("iframe");
-      iframe.srcdoc = injectEditingBridge(editedContents[activePage] || pageContents[activePage] || "", activePage);
-      iframeContainer.appendChild(iframe);
-      iframeRefs[activePage] = iframe;
-    }
+  iframeContainer.innerHTML = "";
+  if (!activePage) return;
+
+  let rawHtml = editedContents[activePage] || pageContents[activePage] || "";
+
+  // Parse HTML so we can fix broken resource links
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(rawHtml, "text/html");
+
+ function resolvePath(htmlFile, resourcePath) {
+  if (!resourcePath) return null;
+
+  // 1. Normalize path relative to HTML file
+  const htmlDir = htmlFile.substring(0, htmlFile.lastIndexOf("/") + 1);
+  let normalized = htmlDir + resourcePath;
+  normalized = normalized.replace(/^\.\//, "").replace(/\/\.\//g, "/");
+
+  // 2. Direct match
+  if (fileMap[normalized]) return fileMap[normalized];
+  if (fileMap[resourcePath]) return fileMap[resourcePath];
+
+  // 3. Strip leading "./" or "/"
+  const stripped = resourcePath.replace(/^(\.\/|\/)/, "");
+  if (fileMap[stripped]) return fileMap[stripped];
+
+  // 4. Fallback: match by filename only
+  const fileName = resourcePath.split("/").pop();
+  for (const key in fileMap) {
+    if (key.endsWith(fileName)) return fileMap[key];
+  }
+
+  return null; // not found
+}
+
+doc.querySelectorAll("link[href], script[src], img[src]").forEach(el => {
+  const attr = el.tagName === "LINK" ? "href" : "src";
+  const original = el.getAttribute(attr);
+  const fixed = resolvePath(activePage, original);
+  if (fixed) {
+    el.setAttribute(attr, fixed);
+  }
+});
+
+
+  // Rebuild HTML with editing bridge
+  let finalHtml = injectEditingBridge("<!DOCTYPE html>" + doc.documentElement.outerHTML, activePage);
+
+  const iframe = document.createElement("iframe");
+  iframe.srcdoc = finalHtml;
+  iframeContainer.appendChild(iframe);
+  iframeRefs[activePage] = iframe;
+}
+
 
     window.addEventListener("message", (event) => {
       const d = event.data || {};
@@ -452,6 +511,49 @@
       }
       modalBackdrop.style.display = "none";
     };
+    (function makeModalDraggable(){
+  const modal = document.querySelector(".modal");
+  let isDragging = false;
+  let offsetX = 0, offsetY = 0;
+
+  modal.addEventListener("mousedown", (e) => {
+    if (e.target.closest(".actions")) return; // don’t drag buttons
+    isDragging = true;
+    offsetX = e.clientX - modal.offsetLeft;
+    offsetY = e.clientY - modal.offsetTop;
+    modal.style.cursor = "grabbing";
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    modal.style.left = `${e.clientX - offsetX}px`;
+    modal.style.top = `${e.clientY - offsetY}px`;
+  });
+
+  document.addEventListener("mouseup", () => {
+    isDragging = false;
+    modal.style.cursor = "grab";
+  });
+
+  // Touch support
+  modal.addEventListener("touchstart", (e) => {
+    const touch = e.touches[0];
+    if (e.target.closest(".actions")) return;
+    isDragging = true;
+    offsetX = touch.clientX - modal.offsetLeft;
+    offsetY = touch.clientY - modal.offsetTop;
+  });
+
+  document.addEventListener("touchmove", (e) => {
+    if (!isDragging) return;
+    const touch = e.touches[0];
+    modal.style.left = `${touch.clientX - offsetX}px`;
+    modal.style.top = `${touch.clientY - offsetY}px`;
+  }, {passive:false});
+
+  document.addEventListener("touchend", () => { isDragging = false; });
+})();
+
 
     exportBtn.addEventListener("click", async () => {
       const zip = new JSZip();
@@ -933,4 +1035,4 @@ renderLibraryAssets();
 
 
 </body>
-</html>
+</html> 
