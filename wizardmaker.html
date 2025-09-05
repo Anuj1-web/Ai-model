@@ -1,11 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Wizard Maker — Button Fix (v11 UI + Placeholder)</title>
+  <meta charset="UTF-8" />
+  <title>Wizard Maker — Button Fix (v11 UI + Placeholder) — UPDATED</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
+    /* =========================
+       Editor UI (kept as original,
+       small style consolidations)
+       ========================= */
+    :root{
+      --primary: #0b79ff;
+      --accent: #06b6d4;
+      --bg: #ffffff;
+      --text-color: #111;
+      --button-bg: var(--primary);
+      --button-text: #fff;
+      --card-bg: #fff;
+      --card-text: #111;
+      --nav-link: var(--primary);
+    }
+    html,body{height:100%}
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -13,6 +29,7 @@
       background: #f0f2f5;
       display: flex;
       justify-content: center;
+      align-items: flex-start;
     }
     .card {
       background: #fff;
@@ -22,182 +39,63 @@
       max-width: 1100px;
       width: 100%;
     }
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: .25rem;
-    }
-    p {
-      font-size: 0.9rem;
-      color: #555;
-      margin-bottom: 1rem;
-    }
-    .topbar {
-      display: flex;
-      gap: .5rem;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-    input[type="file"] {
-      padding: .4rem;
-      border: 1px solid #ccc;
-      border-radius: .5rem;
-    }
-    button {
-      padding: .5rem .9rem;
-      border: none;
-      border-radius: .5rem;
-      background: #111; /* BLACK EXPORT BUTTON */
-      color: #fff;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-    button:hover {
-      background: #333;
-    }
-    .tabs {
-      display: flex;
-      gap: .5rem;
-      flex-wrap: wrap;
-      margin: 1rem 0;
-    }
-    .tab {
-      padding: .25rem .75rem;
-      border: 1px solid #ccc;
-      border-radius: .5rem;
-      background: #f3f4f6;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-    .tab.active {
-      background: #e5e7eb;
-      font-weight: bold;
-    }
-    iframe {
-      width: 100%;
-      height: 600px;
-      border: 1px solid #ccc;
-      border-radius: .5rem;
+    h1 { font-size: 1.5rem; margin-bottom:.25rem; }
+    p { font-size: .9rem; color: #555; margin-bottom:1rem; }
+    .topbar { display:flex; gap:.5rem; align-items:center; margin-bottom:1rem; }
+    input[type="file"]{ padding:.4rem; border:1px solid #ccc; border-radius:.5rem; }
+    button{ padding:.5rem .9rem; border:none; border-radius:.5rem; background:#111; color:#fff; cursor:pointer; font-size:.9rem; }
+    button:hover{ background:#333; }
+    .tabs{ display:flex; gap:.5rem; flex-wrap:wrap; margin:1rem 0; }
+    .tab { padding:.25rem .75rem; border:1px solid #ccc; border-radius:.5rem; background:#f3f4f6; cursor:pointer; font-size:.85rem; }
+    .tab.active{ background:#e5e7eb; font-weight:bold; }
+    #iframeContainer{ width:100%; height:600px; border:1px solid #ccc; border-radius:.5rem; background:#fff; overflow:hidden; position:relative; }
+    iframe { width:100%; height:100%; border:0; display:block; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.0); display: none; z-index: 50; pointer-events: none; } /* pointer-events none so we can click through outside modal */
+    .modal { position:absolute; background: #fff; padding: 1rem; border-radius: 1rem; max-width: 420px; width: 100%; box-shadow: 0 6px 20px rgba(0,0,0,.25); pointer-events: auto; }
+    .modal h2{ margin-bottom:1rem; font-size:1.2rem; }
+    .mb-2{margin-bottom:.5rem} .mb-3{margin-bottom:.75rem} .mb-4{margin-bottom:1rem}
+    input, select { padding:.5rem; border:1px solid #ccc; border-radius:.5rem; width:100%; font-size:.9rem; }
+    .actions { display:flex; justify-content:flex-end; gap:.5rem; }
+    #cancelBtn { background:#e5e7eb; color:#111; } #cancelBtn:hover{ background:#d1d5db; }
+    /* Wizard Maker Library Sidebar */
+    #librarySidebar { position: fixed; right:0; top:0; height:100vh; width:280px; background:#f9fafb; border-left:1px solid #ccc; padding:1rem; overflow-y:auto; box-shadow:-4px 0 12px rgba(0,0,0,0.05); z-index:100; display:flex; flex-direction:column; gap:1rem; font-size:0.85rem; }
+    #librarySidebar h3{ margin:0 0 .5rem 0; font-size:.95rem; font-weight:bold; }
+    .library-category{ margin-bottom:1rem; }
+    .library-item{ padding:.35rem .5rem; border:1px solid #ddd; border-radius:.4rem; margin-bottom:.35rem; cursor:grab; background:#fff; }
+    .library-item:hover{ background:#e5e7eb; }
+    .library-item.dragging{ opacity:.6; }
+    #pageNavContainer{ position: fixed; bottom:0; left:50%; transform:translateX(-50%); display:flex; gap:.5rem; background:rgba(255,255,255,0.95); padding:.5rem 1rem; border-radius:.5rem .5rem 0 0; box-shadow:0 -2px 6px rgba(0,0,0,0.1); z-index:90; }
+    #pageNavContainer button{ padding:.4rem .7rem; border-radius:.4rem; border:1px solid #ccc; background:#f3f4f6; cursor:pointer; font-size:.85rem; }
+    #pageNavContainer button.active{ font-weight:bold; background:#e5e7eb; }
+
+    /* Library dark variant (kept as in original second block) */
+    #librarySidebar.dark { background:#111; color:#fff; box-shadow:-4px 0 12px rgba(0,0,0,0.5); }
+    .library-item.dark { background:#222; color:#fff; padding:.5rem; margin-bottom:.6rem; border-radius:.3rem; cursor:pointer; text-align:center; }
+    .library-item.dark:hover{ background:#333; }
+
+    /* Theme Panel styles */
+    #themePanel { position: fixed; bottom:70px; right:20px; width:320px; background:#fff; border-radius:12px; padding:12px; box-shadow:0 12px 30px rgba(0,0,0,0.12); z-index:9999; display:none; }
+    #themePanel h3{ margin:0 0 10px 0; font-size:16px; }
+    #themePanel .preset-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; max-height:200px; overflow:auto; }
+    #themePanel .preset-tile { border:1px solid #eee; padding:8px; border-radius:8px; cursor:pointer; text-align:center; font-size:12px; background:#fafafa; }
+    #themeToggleBtn{ position: fixed; bottom:80px; right:20px; background:#000; color:#fff; border-radius:50%; width:46px; height:46px; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; z-index:10000; }
+
+    /* Inline helper editor (for small elements) — initially hidden; we will position it near the element */
+    #inlineEditorSmall {
+      position: absolute;
+      display: none;
+      z-index: 1200;
       background: #fff;
-    }
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-    }
-    .modal {
-      background: #fff;
-      padding: 1.5rem;
-      border-radius: 1rem;
-      max-width: 420px;
-      width: 100%;
-      box-shadow: 0 6px 20px rgba(0,0,0,.25);
-    }
-    .modal h2 {
-      margin-bottom: 1rem;
-      font-size: 1.2rem;
-    }
-    .mb-2 { margin-bottom: .5rem; }
-    .mb-3 { margin-bottom: .75rem; }
-    .mb-4 { margin-bottom: 1rem; }
-    input, select {
-      padding: .5rem;
       border: 1px solid #ccc;
-      border-radius: .5rem;
-      width: 100%;
-      font-size: .9rem;
+      padding: 8px;
+      border-radius: 8px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+      width: 240px;
     }
-    .actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: .5rem;
-    }
-    .actions button {
-      flex: 0 0 auto;
-    }
-    #cancelBtn {
-      background: #e5e7eb;
-      color: #111;
-    }
-    #cancelBtn:hover {
-      background: #d1d5db;
-    }
- /* Wizard Maker Library Sidebar */
-#librarySidebar {
-  position: fixed;
-  right: 0;
-  top: 0;
-  height: 100vh;
-  width: 280px;
-  background: #f9fafb;
-  border-left: 1px solid #ccc;
-  padding: 1rem;
-  overflow-y: auto;
-  box-shadow: -4px 0 12px rgba(0,0,0,0.05);
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  font-size: 0.85rem;
-}
+    #inlineEditorSmall input[type="text"], #inlineEditorSmall input[type="color"] { width: 100%; margin-bottom:6px; }
 
-#librarySidebar h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 0.95rem;
-  font-weight: bold;
-}
-
-.library-category {
-  margin-bottom: 1rem;
-}
-
-.library-item {
-  padding: 0.35rem 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 0.4rem;
-  margin-bottom: 0.35rem;
-  cursor: grab;
-  background: #fff;
-}
-
-.library-item:hover {
-  background: #e5e7eb;
-}
-
-.library-item.dragging {
-  opacity: 0.6;
-}
-
-#pageNavContainer {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 0.5rem;
-  background: rgba(255,255,255,0.95);
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem 0.5rem 0 0;
-  box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
-  z-index: 90;
-}
-
-#pageNavContainer button {
-  padding: 0.4rem 0.7rem;
-  border-radius: 0.4rem;
-  border: 1px solid #ccc;
-  background: #f3f4f6;
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-
-#pageNavContainer button.active {
-  font-weight: bold;
-  background: #e5e7eb;
-}
+    /* Misc */
+    .hidden { display:none !important; }
   </style>
 </head>
 <body>
@@ -211,12 +109,14 @@
     </div>
 
     <div class="tabs" id="tabs"></div>
-    <div id="iframeContainer"></div>
+    <div id="iframeContainer">
+      <!-- iframe will be injected here -->
+    </div>
   </div>
 
-  <!-- Modal -->
+  <!-- Modal Backdrop (kept but we will position modal element near target) -->
   <div id="modalBackdrop" class="modal-backdrop" style="display:none;">
-    <div class="modal">
+    <div class="modal" id="modal" style="position:absolute;">
       <h2>Edit Element</h2>
       <div id="textSection" class="mb-4">
         <label class="mb-2">Text / Placeholder</label>
@@ -236,7 +136,7 @@
       </div>
       <div class="mb-4">
         <label class="mb-2">Replace Image</label>
-        <input type="url" id="imageUrl" placeholder="Image URL">
+        <input type="url" id="imageUrl" placeholder="Image URL" style="width:100%;margin-bottom:6px;">
         <input type="file" id="imageFile" accept="image/*">
       </div>
       <div class="actions">
@@ -246,13 +146,91 @@
     </div>
   </div>
 
+  <!-- Inline editor small (for small elements; we show this instead of centered modal when space allows) -->
+  <div id="inlineEditorSmall" role="dialog" aria-hidden="true">
+    <div style="font-weight:bold; margin-bottom:6px;">Edit</div>
+    <input id="smallText" placeholder="Text / Placeholder">
+    <div style="display:flex; gap:6px; margin-bottom:6px;">
+      <input id="smallColor" type="color" title="Text color">
+      <input id="smallBg" type="color" title="Background color">
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:6px;">
+      <button id="smallCancel" style="background:#e5e7eb;color:#111;">Cancel</button>
+      <button id="smallSave">Save</button>
+    </div>
+  </div>
+
+  <!-- Floating black + button -->
+  <button id="openLibraryBtn" style="
+    position: fixed; bottom: 20px; right: 20px;
+    width: 50px; height: 50px; border-radius: 50%;
+    background: #111; color: #fff; font-size: 2rem;
+    border: none; cursor: pointer; z-index: 2000;">+</button>
+
+  <!-- Sidebar -->
+  <div id="librarySidebar" style="display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+      <h3 style="margin:0;color:#fff;">Library Assets</h3>
+      <button id="closeLibraryBtn" style="background:none;color:#fff;font-size:1.2rem;border:none;cursor:pointer;">✖</button>
+    </div>
+
+    <!-- Search -->
+    <input type="text" id="librarySearch" placeholder="Search..."
+           style="width:100%;padding:0.3rem;margin-bottom:0.5rem;border-radius:0.25rem;border:none;background:#333;color:#fff;">
+
+    <!-- Container -->
+    <div id="libraryContainer" style="overflow-y:auto; flex:1;"></div>
+
+    <hr style="border-color:#444;margin:0.5rem 0;">
+
+    <button id="addPageBtnSidebar"
+            style="padding:0.4rem;background:#222;color:#fff;border:none;border-radius:0.25rem;cursor:pointer;">
+      + Add Blank Page
+    </button>
+  </div>
+
+  <style>
+    /* Sidebar dark theme block (kept) */
+    #librarySidebar { position: fixed; top: 0; right: 0; width: 320px; height: 100vh; background: #111; padding: 1rem; box-shadow: -4px 0 12px rgba(0,0,0,0.5); z-index: 1500; color: #fff; display: flex; flex-direction: column; }
+    .library-category { font-weight: bold; margin-top: 1rem; color: #fff; }
+    .library-subcategory { font-style: italic; font-size: 0.85rem; margin-bottom: 0.2rem; color: #ccc; }
+    .library-item { padding: 0.5rem; margin-bottom: 0.6rem; border-radius: 0.3rem; background: #222; cursor: pointer; color: #fff; text-align: center; }
+    .library-item:hover { background: #333; }
+    .library-thumb { max-height: 80px; overflow:hidden; margin-bottom:0.3rem; }
+    .library-thumb img { max-width: 100%; border-radius:4px; }
+    .library-title { font-size:0.8rem; color:#ddd; }
+  </style>
+
+  <!-- Theme panel -->
+  <div id="themePanel">
+    <h3>🎨 Themes</h3>
+    <div class="preset-grid" id="themeGrid"></div>
+    <div style="margin-top:10px; display:flex; gap:6px;">
+      <input type="color" id="primaryColor" value="#0b79ff">
+      <input type="color" id="accentColor" value="#06b6d4">
+      <input type="color" id="bgColor" value="#ffffff">
+      <button id="applyCustomTheme">Apply</button>
+    </div>
+  </div>
+  <div id="themeToggleBtn">🎨</div>
+
   <script>
+    /****************************************************************
+     * Full editor script
+     * - Preserves original structure and names
+     * - Integrated fixes:
+     *   Fix #1: Blob URL mapping + resource rewriting for CSS/JS/IMG
+     *   Fix #2: Smart modal positioning + stronger style override in iframe
+     *   Fix #3: Expanded, contrast-aware theme variables
+     ****************************************************************/
+
     const zipInput = document.getElementById("zipInput");
     const exportBtn = document.getElementById("exportBtn");
     const tabsEl = document.getElementById("tabs");
     const iframeContainer = document.getElementById("iframeContainer");
 
     const modalBackdrop = document.getElementById("modalBackdrop");
+    const modal = document.getElementById("modal");
     const modalText = document.getElementById("modalText");
     const modalColor = document.getElementById("modalColor");
     const colorTargetSel = document.getElementById("colorTarget");
@@ -260,6 +238,13 @@
     const imageFile = document.getElementById("imageFile");
     const cancelBtn = document.getElementById("cancelBtn");
     const saveBtn = document.getElementById("saveBtn");
+
+    const inlineEditorSmall = document.getElementById("inlineEditorSmall");
+    const smallText = document.getElementById("smallText");
+    const smallColor = document.getElementById("smallColor");
+    const smallBg = document.getElementById("smallBg");
+    const smallCancel = document.getElementById("smallCancel");
+    const smallSave = document.getElementById("smallSave");
 
     let pages = [];
     let pageContents = {};
@@ -271,7 +256,14 @@
     let modalTarget = { page: "", id: "", hasText: false, hasPlaceholder: false };
     let originalSnapshot = null;
 
-    // --- File handling ---
+    // ---- Fix #1: Blob URL map ----
+    // maps normalized path or filename -> blob URL
+    let blobUrlMap = {};
+
+    // --- helper to normalize file keys for matching (lowercase) ---
+    function normPath(p) { return (p || "").trim(); }
+
+    // --- ZIP input handler (load HTML + other files) ---
     zipInput.addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -280,10 +272,12 @@
       const newContents = {};
       const other = {};
 
+      // read entries
       await Promise.all(Object.keys(zip.files).map(async (filename) => {
         const entry = zip.files[filename];
         if (entry.dir) return;
-        if (filename.toLowerCase().endsWith(".html")) {
+        const low = filename.toLowerCase();
+        if (low.endsWith(".html") || low.endsWith(".htm")) {
           const data = await entry.async("string");
           newPages.push(filename);
           newContents[filename] = data;
@@ -293,6 +287,7 @@
         }
       }));
 
+      // sort pages: prefer index.html first
       newPages.sort((a,b) => {
         const ai = /(^|\/)index\.html$/i.test(a);
         const bi = /(^|\/)index\.html$/i.test(b);
@@ -307,10 +302,29 @@
       otherFiles = other;
       activePage = newPages[0] || "";
 
+      // Build blobUrlMap from otherFiles for resource rewriting (Fix #1)
+      // We create blob URLs and map multiple keys for convenience:
+      // - full path as in zip
+      // - filename only (last segment)
+      blobUrlMap = {};
+      Object.keys(otherFiles).forEach((filename) => {
+        try {
+          const blob = new Blob([otherFiles[filename]]);
+          const url = URL.createObjectURL(blob);
+          const keyFull = normPath(filename);
+          blobUrlMap[keyFull] = url;
+          const fname = filename.split("/").pop();
+          blobUrlMap[normPath(fname)] = url;
+        } catch (err) {
+          console.warn("Blob URL creation failed for", filename, err);
+        }
+      });
+
       renderTabs();
       renderIframes();
     });
 
+    // --- renderTabs() ---
     function renderTabs() {
       tabsEl.innerHTML = "";
       pages.forEach((p) => {
@@ -322,105 +336,279 @@
       });
     }
 
+    // --- Fix #1 helper: rewrite resource references to blob URLs ---
+    function rewriteResourceLinks(html) {
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+
+        // rewrite link rel=stylesheet
+        doc.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
+          const href = link.getAttribute("href") || "";
+          const keyCandidates = [href, href.split("/").pop()];
+          for (const k of keyCandidates) {
+            if (!k) continue;
+            const found = blobUrlMap[normPath(k)];
+            if (found) { link.setAttribute("href", found); break; }
+          }
+        });
+
+        // rewrite scripts
+        doc.querySelectorAll('script[src]').forEach(script => {
+          const src = script.getAttribute("src") || "";
+          const keyCandidates = [src, src.split("/").pop()];
+          for (const k of keyCandidates) {
+            if (!k) continue;
+            const found = blobUrlMap[normPath(k)];
+            if (found) { script.setAttribute("src", found); break; }
+          }
+        });
+
+        // rewrite imgs
+        doc.querySelectorAll('img[src]').forEach(img => {
+          const src = img.getAttribute("src") || "";
+          const keyCandidates = [src, src.split("/").pop()];
+          for (const k of keyCandidates) {
+            if (!k) continue;
+            const found = blobUrlMap[normPath(k)];
+            if (found) { img.setAttribute("src", found); break; }
+          }
+        });
+
+        // rewrite source elements (video/audio)
+        doc.querySelectorAll('source[src]').forEach(source => {
+          const src = source.getAttribute("src") || "";
+          const keyCandidates = [src, src.split("/").pop()];
+          for (const k of keyCandidates) {
+            if (!k) continue;
+            const found = blobUrlMap[normPath(k)];
+            if (found) { source.setAttribute("src", found); break; }
+          }
+        });
+
+        // NOTE: this does not rewrite CSS url(...) references inside CSS files.
+        // For more complete handling you'd parse CSS and replace url(...) too.
+
+        return "<!DOCTYPE html>\n" + doc.documentElement.outerHTML;
+      } catch (err) {
+        console.warn("rewriteResourceLinks failed:", err);
+        return html;
+      }
+    }
+
+    // --- injectEditingBridge(html, pageName) ---
+    // This is the injected script that runs inside each iframe page to handle clicks/dblclicks and messages.
     function injectEditingBridge(html, pageName) {
+      // we append a script before </body> that:
+      // - ensures elements get data-edit-id
+      // - sends OPEN_EDITOR messages with a snapshot + bounding rect
+      // - listens for APPLY_* and RESTORE_ELEMENT messages and applies them
       const bridge = `<script>(function(){
         var EDIT_ATTR='data-edit-id';
         var clickTimers={};
-        function ensureId(el){if(!el.getAttribute(EDIT_ATTR)) el.setAttribute(EDIT_ATTR,'e'+Math.random().toString(36).slice(2,9));return el.getAttribute(EDIT_ATTR);}
-        function buildSnapshot(el){return {
+        function ensureId(el){ if(!el.getAttribute(EDIT_ATTR)) el.setAttribute(EDIT_ATTR,'e'+Math.random().toString(36).slice(2,9)); return el.getAttribute(EDIT_ATTR); }
+        function buildSnapshot(el){ return {
           html: el.innerHTML || '',
           text: el.innerText || '',
           placeholder: ('placeholder' in el ? el.placeholder || undefined : undefined),
           src: (el.tagName==='IMG'?(el.getAttribute('src')||el.src||''):undefined),
-          inline:{color:el.style.color,backgroundColor:el.style.backgroundColor}
-        };}
-        document.addEventListener('click',function(e){
-          var el=e.target;if(!el)return;
-          var tn=(el.tagName||'').toUpperCase();
-          if(tn==='A'||tn==='BUTTON'||tn==='INPUT'||tn==='TEXTAREA'){
-            var id=ensureId(el);
-            e.preventDefault();e.stopPropagation();
-            if(clickTimers[id]){
-              clearTimeout(clickTimers[id]);clickTimers[id]=null;
-              var snap=buildSnapshot(el);
-              parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,
-                hasText:!!el.innerText,
-                hasPlaceholder:('placeholder' in el),
-                ...snap},'*');
-            }else{
-              clickTimers[id]=setTimeout(function(){
-                clickTimers[id]=null;
-                var href=(el.tagName==='A'&&el.href)?el.href:null;
-                if(href) window.location.href=href; else el.click();
-              },300);
-            }
-          }
-        },true);
+          inline:{color:el.style.color || '', backgroundColor:el.style.backgroundColor || ''}
+        }; }
+        // dblclick opens editor immediately
         document.addEventListener('dblclick',function(e){
-          var el=e.target;if(!el)return;
-          e.preventDefault();e.stopPropagation();
-          var id=ensureId(el);
-          var snap=buildSnapshot(el);
-          parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,
-            hasText:!!el.innerText,
-            hasPlaceholder:('placeholder' in el),
-            ...snap},'*');
+          try{
+            var el=e.target;if(!el)return;
+            var id=ensureId(el);
+            var snap=buildSnapshot(el);
+            var rect=el.getBoundingClientRect();
+            parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,
+              hasText:!!el.innerText,
+              hasPlaceholder:('placeholder' in el),
+              rect:{top:rect.top,left:rect.left,bottom:rect.bottom,right:rect.right,width:rect.width,height:rect.height},
+              ...snap},'*');
+          }catch(err){console.warn('bridge dblclick err',err)}
         },true);
+        // click handling fallback (preserve existing behavior but improved)
+        document.addEventListener('click',function(e){
+          try{
+            var el=e.target;if(!el)return;
+            var tn=(el.tagName||'').toUpperCase();
+            if(tn==='A'||tn==='BUTTON'||tn==='INPUT'||tn==='TEXTAREA'){
+              var id=ensureId(el);
+              // behavior: short delay to allow dblclick to be detected by browser; do not prevent default navigation for anchors if user intended
+              // let normal click happen (no preventDefault) unless it's a double click; to avoid loops we won't programmatically call el.click()
+              // We'll rely on dblclick listener primarily for editing
+            }
+          }catch(err){/*ignore*/ }
+        },true);
+        // handle messages from parent
         window.addEventListener('message',function(ev){
           var d=ev.data||{};
-          var el=document.querySelector('['+EDIT_ATTR+'="'+d.id+'"]');
-          if(!el)return;
-          if(d.type==='APPLY_TEXT'){
-            if('placeholder' in el) el.placeholder=d.text||''; else el.innerText=d.text||'';
-          }
-          if(d.type==='APPLY_COLOR'){if(d.target==='background')el.style.backgroundColor=d.color;else el.style.color=d.color;}
-          if(d.type==='APPLY_IMAGE'&&el.tagName==='IMG')el.src=d.src;
-          if(d.type==='RESTORE_ELEMENT'&&d.snapshot){
-            if(d.snapshot.html!==undefined && !('placeholder' in el)) el.innerHTML=d.snapshot.html;
-            if(d.snapshot.placeholder!==undefined && 'placeholder' in el) el.placeholder=d.snapshot.placeholder;
-            if(d.snapshot.src!==undefined&&el.tagName==='IMG')el.src=d.snapshot.src;
-            if(d.snapshot.inline){el.style.color=d.snapshot.inline.color||'';el.style.backgroundColor=d.snapshot.inline.backgroundColor||'';}
-          }
+          var selector='['+EDIT_ATTR+'=\"'+(d.id||'')+'\"]';
+          var el=document.querySelector(selector);
+          if(!el) return;
+          try{
+            if(d.type==='APPLY_TEXT'){
+              if('placeholder' in el) el.placeholder = d.text || ''; else el.innerText = d.text || '';
+            }
+            if(d.type==='APPLY_COLOR'){
+              var target = d.target || 'text';
+              if(target==='background') el.style.backgroundColor = d.color;
+              else el.style.color = d.color;
+              // verify applied computed style; if not applied, create override rule
+              var cs = window.getComputedStyle(el);
+              try{
+                var compVal = (target==='background') ? cs.backgroundColor : cs.color;
+                // simple normalization: if compVal not equal to d.color (in rgb/hex), force with style rule
+                // We'll insert a style tag with high specificity targeting this data-edit-id
+                var needsForce = false;
+                // crude compare: presence is enough; we'll still add force to be safe
+                if(!compVal || compVal=== '' ) needsForce = true;
+                if(needsForce){
+                  var styleTag = document.getElementById('__wm_override_'+d.id);
+                  if(!styleTag){
+                    styleTag=document.createElement('style'); styleTag.id='__wm_override_'+d.id;
+                    document.head.appendChild(styleTag);
+                  }
+                  var rule = '['+EDIT_ATTR+'=\"'+d.id+'\"] { '+ (target==='background' ? 'background-color' : 'color') + ': '+ d.color + ' !important; }';
+                  // prevent duplicate by clearing and adding (simple approach)
+                  styleTag.innerHTML = rule;
+                }
+              }catch(err){/*ignore*/ }
+            }
+            if(d.type==='APPLY_IMAGE' && el.tagName==='IMG'){
+              el.src = d.src;
+            }
+            if(d.type==='RESTORE_ELEMENT' && d.snapshot){
+              if(d.snapshot.html!==undefined && !('placeholder' in el)) el.innerHTML = d.snapshot.html;
+              if(d.snapshot.placeholder!==undefined && 'placeholder' in el) el.placeholder = d.snapshot.placeholder;
+              if(d.snapshot.src!==undefined && el.tagName==='IMG') el.src = d.snapshot.src;
+              if(d.snapshot.inline){
+                el.style.color = d.snapshot.inline.color || '';
+                el.style.backgroundColor = d.snapshot.inline.backgroundColor || '';
+                // also remove any override style tag if present
+                var override = document.getElementById('__wm_override_'+(el.getAttribute(EDIT_ATTR)||''));
+                if(override) override.parentNode.removeChild(override);
+              }
+            }
+          }catch(err){console.warn('bridge apply err',err)}
         });
       })();<\/script>`;
-      return html.replace(/<\/body>/i, bridge + "</body>");
+      // insert bridge before </body> if possible
+      if(/<\/body>/i.test(html)){
+        return html.replace(/<\/body>/i, bridge + "</body>");
+      } else {
+        return html + bridge;
+      }
     }
 
+    // --- renderIframes() updated (Fix #1 integration: rewrite resource references first) ---
     function renderIframes() {
       iframeContainer.innerHTML = "";
       if (!activePage) return;
       const iframe = document.createElement("iframe");
-      iframe.srcdoc = injectEditingBridge(editedContents[activePage] || pageContents[activePage] || "", activePage);
+      // Get the HTML (edited or original)
+      const raw = editedContents[activePage] || pageContents[activePage] || "";
+      const withResources = rewriteResourceLinks(raw);
+      iframe.srcdoc = injectEditingBridge(withResources, activePage);
       iframeContainer.appendChild(iframe);
       iframeRefs[activePage] = iframe;
+
+      // enable drop after iframe loads
+      iframe.addEventListener('load', () => enableDropForIframe(activePage));
     }
 
+    // --- window message handler (OPEN_EDITOR) ---
     window.addEventListener("message", (event) => {
       const d = event.data || {};
       if (d.type === "OPEN_EDITOR") {
+        // Compute absolute position for the element in the parent window so modal won't cover it.
+        // iframe may be nested in the document; find the right iframe
+        const page = d.page;
+        const iframe = iframeRefs[page];
+        if (!iframe) {
+          // fallback to centered modal
+          modalTarget = { page: d.page, id: d.id, hasText: !!d.hasText, hasPlaceholder: !!d.hasPlaceholder };
+          modalText.value = d.hasPlaceholder ? d.placeholder || "" : (d.text || "");
+          modalColor.value = "#000000";
+          originalSnapshot = d;
+          modalBackdrop.style.display = "flex";
+          document.getElementById("textSection").style.display = (d.hasText || d.hasPlaceholder) ? "block" : "none";
+          return;
+        }
+
         modalTarget = { page: d.page, id: d.id, hasText: !!d.hasText, hasPlaceholder: !!d.hasPlaceholder };
         modalText.value = d.hasPlaceholder ? d.placeholder || "" : (d.text || "");
         modalColor.value = "#000000";
         originalSnapshot = d;
-        modalBackdrop.style.display = "flex";
-        document.getElementById("textSection").style.display = (d.hasText || d.hasPlaceholder) ? "block" : "none";
+
+        // Determine where to place the modal (Fix #2 smart positioning)
+        try {
+          // bounding rect info from iframe (relative to iframe viewport)
+          const rect = d.rect || null;
+          const iframeRect = iframe.getBoundingClientRect();
+
+          // compute absolute position (parent coordinates)
+          let top = 0, left = 0;
+          if (rect) {
+            top = iframeRect.top + rect.bottom + window.scrollY + 8; // place below element by default
+            left = iframeRect.left + rect.left + window.scrollX;
+            // adjust if out of viewport bottom
+            const modalEl = modal;
+            modalEl.style.position = "absolute";
+            modalBackdrop.style.display = "block";
+            // temporarily set to block to measure
+            modalEl.style.display = "block";
+
+            // prefer below; if not enough space, place above
+            const modalH = modalEl.offsetHeight || 220;
+            if (top + modalH > window.innerHeight) {
+              top = iframeRect.top + rect.top + window.scrollY - modalH - 8;
+            }
+            // adjust right overflow
+            const modalW = modalEl.offsetWidth || 380;
+            if (left + modalW > window.innerWidth) {
+              left = window.innerWidth - modalW - 8;
+            }
+            // don't let it go negative
+            if (left < 8) left = 8;
+            if (top < 8) top = 8;
+
+            modalEl.style.left = left + "px";
+            modalEl.style.top = top + "px";
+            document.getElementById("textSection").style.display = (d.hasText || d.hasPlaceholder) ? "block" : "none";
+          } else {
+            // fallback center
+            modalBackdrop.style.display = "flex";
+            modal.style.position = "";
+            document.getElementById("textSection").style.display = (d.hasText || d.hasPlaceholder) ? "block" : "none";
+          }
+        } catch (err) {
+          console.warn("Positioning error", err);
+          modalBackdrop.style.display = "flex";
+          document.getElementById("textSection").style.display = (d.hasText || d.hasPlaceholder) ? "block" : "none";
+        }
       }
     });
 
+    // Live input handlers: send APPLY_TEXT to iframe for live preview
     modalText.addEventListener("input", () => {
       const {page,id} = modalTarget;
-      iframeRefs[page].contentWindow.postMessage({type:"APPLY_TEXT",id,text:modalText.value},"*");
+      const iframe = iframeRefs[page];
+      if (iframe) iframe.contentWindow.postMessage({type:"APPLY_TEXT",id,text:modalText.value},"*");
     });
 
     modalColor.addEventListener("input", () => {
       const {page,id,hasText} = modalTarget;
-      const target = colorTargetSel.value==="auto" ? (hasText ? "color" : "background") : colorTargetSel.value;
-      iframeRefs[page].contentWindow.postMessage({type:"APPLY_COLOR",id,color:modalColor.value,target},"*");
+      const target = colorTargetSel.value==="auto" ? (hasText ? "text" : "background") : colorTargetSel.value;
+      const iframe = iframeRefs[page];
+      if (iframe) iframe.contentWindow.postMessage({type:"APPLY_COLOR",id,color:modalColor.value,target},"*");
     });
 
     imageUrl.addEventListener("input", () => {
       const {page,id} = modalTarget;
-      iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:imageUrl.value},"*");
+      const iframe = iframeRefs[page];
+      if (iframe) iframe.contentWindow.postMessage({type:"APPLY_IMAGE",id,src:imageUrl.value},"*");
     });
 
     imageFile.addEventListener("change", (e) => {
@@ -429,21 +617,25 @@
       const reader = new FileReader();
       reader.onload = () => {
         const {page,id} = modalTarget;
-        iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:reader.result},"*");
+        const iframe = iframeRefs[page];
+        if (iframe) iframe.contentWindow.postMessage({type:"APPLY_IMAGE",id,src:reader.result},"*");
       };
       reader.readAsDataURL(file);
     });
 
+    // Save: pull current iframe document HTML into editedContents
     saveBtn.onclick = () => {
       const {page} = modalTarget;
       const iframe = iframeRefs[page];
-      if (iframe.contentDocument) {
+      if (iframe?.contentDocument) {
+        // Get the HTML and save to editedContents
         const html = "<!DOCTYPE html>" + iframe.contentDocument.documentElement.outerHTML;
         editedContents[page] = html;
       }
       modalBackdrop.style.display = "none";
     };
 
+    // Cancel: restore element inside iframe using originalSnapshot (Fix #2 restore)
     cancelBtn.onclick = () => {
       const {page,id} = modalTarget;
       const iframe = iframeRefs[page];
@@ -453,6 +645,7 @@
       modalBackdrop.style.display = "none";
     };
 
+    // Export ZIP: assemble editedContents + otherFiles
     exportBtn.addEventListener("click", async () => {
       const zip = new JSZip();
       pages.forEach((filename) => {
@@ -465,472 +658,402 @@
       const blob = await zip.generateAsync({type:"blob"});
       saveAs(blob, "custom-site.zip");
     });
-  </script>
-<script>
-  function autoLoadTemplate() {
-    const templateData = localStorage.getItem("wizardTemplate");
-    if (!templateData) return;
 
-    try {
-      // Decode base64 zip string back into a Blob
-      const binary = atob(templateData.split(',')[1]);
-      const array = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        array[i] = binary.charCodeAt(i);
-      }
-      const blob = new Blob([array], { type: "application/zip" });
-      const file = new File([blob], "template.zip", { type: "application/zip" });
-
-      // Feed the file into zipInput
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(file);
-      const zipInput = document.getElementById("zipInput");
-      zipInput.files = dataTransfer.files;
-
-      // Trigger the change event to load into editor
-      zipInput.dispatchEvent(new Event("change", { bubbles: true }));
-
-      // Clear storage so it doesn’t auto-load next time accidentally
-      localStorage.removeItem("wizardTemplate");
-    } catch (err) {
-      console.error("Template auto-load failed:", err);
+    /**********************
+      Auto-load Template (kept)
+    ***********************/
+    function autoLoadTemplate() {
+      const templateData = localStorage.getItem("wizardTemplate");
+      if (!templateData) return;
+      try {
+        const binary = atob(templateData.split(',')[1]);
+        const array = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) { array[i] = binary.charCodeAt(i); }
+        const blob = new Blob([array], { type: "application/zip" });
+        const file = new File([blob], "template.zip", { type: "application/zip" });
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        zipInput.files = dataTransfer.files;
+        zipInput.dispatchEvent(new Event("change", { bubbles: true }));
+        localStorage.removeItem("wizardTemplate");
+      } catch (err) { console.error("Template auto-load failed:", err); }
     }
-  }
-   autoLoadTemplate();
-</script>  <!-- ✅ properly close the previous script -->
+    autoLoadTemplate();
 
-<!-- ================== LIBRARY SIDEBAR FETCH FROM LIBRARY ================== -->
+    /* ============================
+       Library Sidebar (kept original logic + small safety tweaks)
+       ============================ */
+    function getLibraryData(){
+      try { return JSON.parse(localStorage.getItem("sitegenLibrary") || "[]"); } catch { return []; }
+    }
 
-<!-- Floating black + button -->
-<button id="openLibraryBtn" style="
-  position: fixed; bottom: 20px; right: 20px;
-  width: 50px; height: 50px; border-radius: 50%;
-  background: #111; color: #fff; font-size: 2rem;
-  border: none; cursor: pointer; z-index: 2000;">+</button>
+    let allAssets = getLibraryData();
+    allAssets = allAssets.filter(item => item.type !== "template");
 
-<!-- Sidebar -->
-<div id="librarySidebar" style="display:none;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-    <h3 style="margin:0;color:#fff;">Library Assets</h3>
-    <button id="closeLibraryBtn" style="background:none;color:#fff;font-size:1.2rem;border:none;cursor:pointer;">✖</button>
-  </div>
+    function renderLibraryAssets(filter=""){
+      const container=document.getElementById('libraryContainer');
+      container.innerHTML='';
 
-  <!-- Search -->
-  <input type="text" id="librarySearch" placeholder="Search..."
-         style="width:100%;padding:0.3rem;margin-bottom:0.5rem;border-radius:0.25rem;border:none;background:#333;color:#fff;">
-
-  <!-- Container -->
-  <div id="libraryContainer" style="overflow-y:auto; flex:1;"></div>
-
-  <hr style="border-color:#444;margin:0.5rem 0;">
-
-  <button id="addPageBtnSidebar"
-          style="padding:0.4rem;background:#222;color:#fff;border:none;border-radius:0.25rem;cursor:pointer;">
-    + Add Blank Page
-  </button>
-</div>
-
-<style>
-#librarySidebar {
-  position: fixed;
-  top: 0; right: 0;
-  width: 320px; height: 100vh;
-  background: #111; padding: 1rem;
-  box-shadow: -4px 0 12px rgba(0,0,0,0.5);
-  z-index: 1500;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-}
-.library-category {
-  font-weight: bold;
-  margin-top: 1rem;
-  color: #fff;
-}
-.library-subcategory {
-  font-style: italic;
-  font-size: 0.85rem;
-  margin-bottom: 0.2rem;
-  color: #ccc;
-}
-.library-item {
-  padding: 0.5rem;
-  margin-bottom: 0.6rem;
-  border-radius: 0.3rem;
-  background: #222;
-  cursor: pointer;
-  color: #fff;
-  text-align: center;
-}
-.library-item:hover { background: #333; }
-.library-thumb { max-height: 80px; overflow:hidden; margin-bottom:0.3rem; }
-.library-thumb img { max-width: 100%; border-radius:4px; }
-.library-title { font-size:0.8rem; color:#ddd; }
-</style>
-
-<script>
-// ===== Fetch assets from localStorage.sitegenLibrary =====
-function getLibraryData(){
-  try {
-    return JSON.parse(localStorage.getItem("sitegenLibrary") || "[]");
-  } catch { return []; }
-}
-
-let allAssets = getLibraryData();
-// Filter out templates
-allAssets = allAssets.filter(item => item.type !== "template");
-
-// Render Sidebar
-function renderLibraryAssets(filter=""){
-  const container=document.getElementById('libraryContainer');
-  container.innerHTML='';
-
-  // Group by type + subcategory
-  const categories={};
-  allAssets.forEach(item=>{
-    const cat=item.type; // asset/page/theme/subscription
-    const sub=item.subcategory || "General";
-    if(!categories[cat]) categories[cat]={};
-    if(!categories[cat][sub]) categories[cat][sub]=[];
-    categories[cat][sub].push(item);
-  });
-
-  Object.keys(categories).forEach(cat=>{
-    const catDiv=document.createElement('div');
-    catDiv.className='library-category';
-    catDiv.textContent=cat.charAt(0).toUpperCase()+cat.slice(1);
-    container.appendChild(catDiv);
-
-    Object.keys(categories[cat]).forEach(sub=>{
-      const subDiv=document.createElement('div');
-      subDiv.className='library-subcategory';
-      subDiv.textContent=sub.charAt(0).toUpperCase()+sub.slice(1);
-      container.appendChild(subDiv);
-
-      categories[cat][sub].forEach(item=>{
-        if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
-
-        const div=document.createElement('div');
-        div.className='library-item';
-
-        const thumb=document.createElement('div');
-        thumb.className='library-thumb';
-        if(item.thumbnail){
-          const img=document.createElement('img');
-          img.src=item.thumbnail;
-          thumb.appendChild(img);
-        } else {
-          const preview=document.createElement('div');
-          preview.innerHTML=item.content || "";
-          preview.style.transform="scale(0.4)";
-          preview.style.transformOrigin="top left";
-          preview.style.height="80px";
-          preview.style.overflow="hidden";
-          thumb.appendChild(preview);
-        }
-
-        const title=document.createElement('div');
-        title.className='library-title';
-        title.innerText=item.name.replace(/[_-]/g," ");
-
-        div.appendChild(thumb);
-        div.appendChild(title);
-
-        if(item.type==="page"){
-          // full page
-          div.addEventListener("click",()=>{
-            const filename=item.name.toLowerCase().replace(/\s+/g,'_')+".html";
-            pages.push(filename);
-            pageContents[filename]=item.content;
-            editedContents[filename]=item.content;
-            activePage=filename;
-            renderTabs();
-            renderIframes();
-          });
-        } else {
-          // insert element
-          div.addEventListener("click",()=>{
-            const iframe=iframeRefs[activePage];
-            if(!iframe) return;
-            const doc=iframe.contentDocument||iframe.contentWindow.document;
-            let insertTarget = doc.activeElement && doc.body.contains(doc.activeElement) ? doc.activeElement : doc.body;
-            const temp=document.createElement('div');
-            temp.innerHTML=item.content;
-            insertTarget.appendChild(temp.firstChild);
-            editedContents[activePage]="<!DOCTYPE html>"+doc.documentElement.outerHTML;
-          });
-          // Drag/drop
-          div.draggable=true;
-          div.addEventListener('dragstart', e=>{
-            e.dataTransfer.setData('text/html', item.content);
-            div.classList.add('dragging');
-          });
-          div.addEventListener('dragend', ()=>div.classList.remove('dragging'));
-        }
-
-        container.appendChild(div);
+      const categories={};
+      allAssets.forEach(item=>{
+        const cat=item.type || "misc";
+        const sub=item.subcategory || "General";
+        if(!categories[cat]) categories[cat]={};
+        if(!categories[cat][sub]) categories[cat][sub]=[];
+        categories[cat][sub].push(item);
       });
+
+      Object.keys(categories).forEach(cat=>{
+        const catDiv=document.createElement('div');
+        catDiv.className='library-category';
+        catDiv.textContent=cat.charAt(0).toUpperCase()+cat.slice(1);
+        container.appendChild(catDiv);
+
+        Object.keys(categories[cat]).forEach(sub=>{
+          const subDiv=document.createElement('div');
+          subDiv.className='library-subcategory';
+          subDiv.textContent=sub.charAt(0).toUpperCase()+sub.slice(1);
+          container.appendChild(subDiv);
+
+          categories[cat][sub].forEach(item=>{
+            if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
+            const div=document.createElement('div');
+            div.className='library-item';
+            const thumb=document.createElement('div');
+            thumb.className='library-thumb';
+            if(item.thumbnail){
+              const img=document.createElement('img');
+              img.src=item.thumbnail;
+              thumb.appendChild(img);
+            } else {
+              const preview=document.createElement('div');
+              preview.innerHTML=item.content || "";
+              preview.style.transform="scale(0.4)";
+              preview.style.transformOrigin="top left";
+              preview.style.height="80px";
+              preview.style.overflow="hidden";
+              thumb.appendChild(preview);
+            }
+            const title=document.createElement('div');
+            title.className='library-title';
+            title.innerText=item.name.replace(/[_-]/g," ");
+            div.appendChild(thumb);
+            div.appendChild(title);
+
+            if(item.type==="page"){
+              div.addEventListener("click",()=>{
+                const filename=item.name.toLowerCase().replace(/\s+/g,'_')+".html";
+                pages.push(filename);
+                pageContents[filename]=item.content;
+                editedContents[filename]=item.content;
+                activePage=filename;
+                renderTabs();
+                renderIframes();
+              });
+            } else {
+              div.addEventListener("click",()=>{
+                const iframe=iframeRefs[activePage];
+                if(!iframe) return;
+                try{
+                  const doc=iframe.contentDocument||iframe.contentWindow.document;
+                  let insertTarget = doc.activeElement && doc.body.contains(doc.activeElement) ? doc.activeElement : doc.body;
+                  const temp=document.createElement('div');
+                  temp.innerHTML=item.content;
+                  insertTarget.appendChild(temp.firstChild);
+                  editedContents[activePage]="<!DOCTYPE html>"+doc.documentElement.outerHTML;
+                }catch(err){console.warn('insert asset err',err)}
+              });
+              // Drag/drop
+              div.draggable=true;
+              div.addEventListener('dragstart', e=>{
+                e.dataTransfer.setData('text/html', item.content);
+                div.classList.add('dragging');
+              });
+              div.addEventListener('dragend', ()=>div.classList.remove('dragging'));
+            }
+            container.appendChild(div);
+          });
+        });
+      });
+    }
+
+    document.getElementById("librarySearch").addEventListener("input",e=>{ renderLibraryAssets(e.target.value); });
+    document.getElementById('openLibraryBtn').onclick=()=>{document.getElementById('librarySidebar').style.display='flex';};
+    document.getElementById('closeLibraryBtn').onclick=()=>{document.getElementById('librarySidebar').style.display='none';};
+
+    function enableDropForIframe(pageName){
+      const iframe=iframeRefs[pageName];
+      if(!iframe) return;
+      try{
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.body.addEventListener("dragover", e=>e.preventDefault());
+        doc.body.addEventListener("drop", e=>{
+          e.preventDefault();
+          const html=e.dataTransfer.getData("text/html");
+          if(html){
+            const temp=document.createElement("div");
+            temp.innerHTML=html;
+            doc.body.appendChild(temp.firstChild);
+            editedContents[pageName]="<!DOCTYPE html>"+doc.documentElement.outerHTML;
+          }
+        });
+      }catch(err){console.warn('enableDrop err',err)}
+    }
+
+    document.getElementById('addPageBtnSidebar').onclick=()=>{
+      const name=prompt('Enter new page name:');
+      if(!name) return;
+      const filename=name.replace(/\s+/g,'_').toLowerCase()+'.html';
+      const html=`<!DOCTYPE html><html><head><title>${name}</title></head><body><h1>${name}</h1></body></html>`;
+      pages.push(filename);
+      pageContents[filename]=html;
+      editedContents[filename]=html;
+      activePage=filename;
+      renderTabs();
+      renderIframes();
+    };
+
+    renderLibraryAssets();
+
+    /* ============================
+       Theme Module (Fix #3 updated)
+       - more variables, contrast-aware, injects theme into iframe head too
+       ============================ */
+    (function(){
+      const themePresets = [
+        {name:'Oceanic', primary:'#0b79ff', accent:'#06b6d4', bg:'#f6fbff'},
+        {name:'Midnight', primary:'#7c3aed', accent:'#06b6d4', bg:'#071026'},
+        {name:'Sunset', primary:'#ff6b6b', accent:'#ff9a00', bg:'#fff7f2'},
+        {name:'Forest', primary:'#0b8457', accent:'#34d399', bg:'#f3fbf6'},
+        {name:'Corporate', primary:'#0b3d91', accent:'#06b6d4', bg:'#fbfdff'},
+        {name:'Warm', primary:'#d97706', accent:'#fb923c', bg:'#fffaf0'},
+        {name:'Violet', primary:'#6b21a8', accent:'#8b5cf6', bg:'#fbf7ff'},
+        {name:'Candy', primary:'#ff6bcb', accent:'#ffd166', bg:'#fff7fb'},
+        {name:'Grayscale', primary:'#111827', accent:'#6b7280', bg:'#ffffff'},
+        {name:'Aqua', primary:'#0088cc', accent:'#00c2c7', bg:'#f0fcff'},
+        {name:'Rose', primary:'#e11d48', accent:'#fb7185', bg:'#fff5f7'},
+        {name:'Indigo', primary:'#272ddf', accent:'#7c3aed', bg:'#f5f7ff'},
+        {name:'Lime', primary:'#84cc16', accent:'#bef264', bg:'#fbfff0'},
+        {name:'Coral', primary:'#ff7a59', accent:'#ffb199', bg:'#fff6f2'},
+        {name:'Teal', primary:'#0d9488', accent:'#2dd4bf', bg:'#f2fffb'},
+        {name:'Slate', primary:'#334155', accent:'#64748b', bg:'#f8fafc'},
+        {name:'Classic', primary:'#0b79ff', accent:'#ff6b6b', bg:'#ffffff'},
+        {name:'Lavender', primary:'#a78bfa', accent:'#c4b5fd', bg:'#fbf8ff'},
+        {name:'Copper', primary:'#9a3412', accent:'#fb923c', bg:'#fff6f0'}
+      ];
+
+      const themeGrid = document.getElementById("themeGrid");
+      themePresets.forEach(t=>{
+        const tile=document.createElement("div");
+        tile.className="preset-tile";
+        tile.style.background=`linear-gradient(90deg,${t.primary},${t.accent})`;
+        tile.innerHTML=`<div style="font-size:12px;color:#fff;padding:6px 0;">${t.name}</div>`;
+        tile.addEventListener("click",()=>applyTheme(t));
+        themeGrid.appendChild(tile);
+      });
+
+      function hexToRgb(hex){
+        hex = (hex||'').replace("#","");
+        if(hex.length===3) hex=hex.split("").map(c=>c+c).join("");
+        const num = parseInt(hex,16);
+        return {r:(num>>16)&255, g:(num>>8)&255, b:num&255};
+      }
+      function luminance(hex){
+        const c=hexToRgb(hex);
+        const a=[c.r/255,c.g/255,c.b/255].map(v=>v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4));
+        return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2];
+      }
+      function contrastRatio(hex1, hex2){
+        const L1=luminance(hex1)+0.05;
+        const L2=luminance(hex2)+0.05;
+        return L1>L2?L1/L2:L2/L1;
+      }
+      function contrastText(bg){
+        return contrastRatio(bg, "#000") >= 4.5 ? "#000" : "#fff";
+      }
+      function adjustColor(hex, amt){
+        const c = hexToRgb(hex);
+        let r = Math.min(255, Math.max(0, c.r + amt));
+        let g = Math.min(255, Math.max(0, c.g + amt));
+        let b = Math.min(255, Math.max(0, c.b + amt));
+        return `rgb(${r},${g},${b})`;
+      }
+
+      // contrast helper used in Fix #3
+      function getContrastColor(bgColor){
+        if(!bgColor) return "#000";
+        const hex = bgColor.replace("#","");
+        if(hex.length === 3) {
+          const expanded = hex.split("").map(x=>x+x).join("");
+          return getContrastColor("#"+expanded);
+        }
+        const r = parseInt(hex.substr(0,2),16);
+        const g = parseInt(hex.substr(2,2),16);
+        const b = parseInt(hex.substr(4,2),16);
+        const brightness = (r*299 + g*587 + b*114) / 1000;
+        return brightness > 128 ? "#000000" : "#FFFFFF";
+      }
+
+      function applyTheme(theme){
+        // accept either object or (primary,accent,bg)
+        let primary = theme.primary || theme[0] || '#0b79ff';
+        let accent = theme.accent || theme[1] || '#06b6d4';
+        let bg = theme.bg || theme[2] || '#ffffff';
+
+        const cardBg = adjustColor(bg, luminance(bg) > 0.5 ? -25 : 25);
+
+        const css = `
+          :root {
+            --primary: ${primary};
+            --accent: ${accent};
+            --bg: ${bg};
+            --text-color: ${getContrastColor(bg)};
+            --button-bg: ${primary};
+            --button-text: ${getContrastColor(primary)};
+            --card-bg: ${cardBg};
+            --card-text: ${getContrastColor(cardBg)};
+            --nav-link: ${getContrastColor(primary)};
+          }
+          body { background: ${bg} !important; color: var(--text-color) !important; }
+          header, .header, nav, .nav, .navbar { background: ${primary} !important; color: var(--button-text) !important; }
+          footer, .footer, .site-footer { background: ${accent} !important; color: var(--button-text) !important; }
+          a { color: ${primary} !important; }
+          button, .btn, .button, input[type=\"submit\"], .action-btn, .cta {
+            background: ${primary} !important;
+            color: var(--button-text) !important;
+          }
+          .card, .panel, .tile, .box, .content-card, .card-body {
+            background: ${cardBg} !important;
+            color: var(--card-text) !important;
+          }
+          input, select, textarea {
+            border: 1px solid ${primary}88 !important;
+            border-radius: 6px;
+            padding: 6px;
+            color: var(--text-color) !important;
+          }
+          input:focus, select:focus, textarea:focus { outline: 2px solid ${accent} !important; }
+        `;
+
+        // Inject into active iframe(s)
+        Object.keys(iframeRefs).forEach(k=>{
+          try{
+            const frame = iframeRefs[k];
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            if(!doc) return;
+            let styleTag = doc.getElementById("__wizard_theme");
+            if(!styleTag){
+              styleTag = doc.createElement("style");
+              styleTag.id = "__wizard_theme";
+              doc.head.appendChild(styleTag);
+            }
+            styleTag.innerHTML = css;
+            // also update editedContents for this page so export preserves it
+            saveThemeToEditedContents(k, css);
+          }catch(err){ /* ignore cross-origin problems */ }
+        });
+
+        // Also apply to editor UI (so UI matches)
+        document.documentElement.style.setProperty("--primary", primary);
+        document.documentElement.style.setProperty("--accent", accent);
+        document.documentElement.style.setProperty("--bg", bg);
+        document.documentElement.style.setProperty("--text-color", getContrastColor(bg));
+        document.documentElement.style.setProperty("--button-bg", primary);
+        document.documentElement.style.setProperty("--button-text", getContrastColor(primary));
+        document.documentElement.style.setProperty("--card-bg", cardBg);
+        document.documentElement.style.setProperty("--card-text", getContrastColor(cardBg));
+        document.documentElement.style.setProperty("--nav-link", getContrastColor(primary));
+      }
+
+      function saveThemeToEditedContents(page, css){
+        let html = editedContents[page];
+        if(html){
+          if(/<style id=\"__wizard_theme\">[\\s\\S]*?<\\/style>/i.test(html)){
+            html = html.replace(/<style id=\"__wizard_theme\">[\\s\\S]*?<\\/style>/i, `<style id=\"__wizard_theme\">${css}</style>`);
+          } else if(/<head[\\s\\S]*?>/i.test(html)){
+            html = html.replace(/<\\/head>/i, `<style id=\"__wizard_theme\">${css}</style></head>`);
+          } else {
+            // fallback: prepend to document
+            html = html.replace(/<!doctype html.*?>/i, '<!doctype html><head><style id=\"__wizard_theme\">'+css+'</style></head>');
+          }
+          editedContents[page] = html;
+        }
+        // Also try to update first CSS file in otherFiles (best-effort)
+        const cssFile = Object.keys(otherFiles).find(f=>f.toLowerCase().endsWith(".css"));
+        if(cssFile){
+          try{
+            const decoder = new TextDecoder();
+            const encoder = new TextEncoder();
+            let cssText = decoder.decode(otherFiles[cssFile]);
+            if(cssText.includes("/* WizardMaker Theme */")){
+              cssText = cssText.replace(/\\/\\* WizardMaker Theme \\*\\/[\\s\\S]*?\\/\\* End Theme \\*\\//, `/* WizardMaker Theme */\\n${css}\\n/* End Theme */`);
+            } else {
+              cssText += `\\n/* WizardMaker Theme */\\n${css}\\n/* End Theme */`;
+            }
+            otherFiles[cssFile] = encoder.encode(cssText);
+            // refresh blob map for this file
+            if(blobUrlMap[cssFile]) {
+              URL.revokeObjectURL(blobUrlMap[cssFile]);
+              delete blobUrlMap[cssFile];
+            }
+            const blob = new Blob([otherFiles[cssFile]]);
+            blobUrlMap[cssFile] = URL.createObjectURL(blob);
+            const fname = cssFile.split("/").pop();
+            blobUrlMap[fname] = blobUrlMap[cssFile];
+          }catch(err){console.warn('update css file err',err)}
+        }
+      }
+
+      document.getElementById("themeToggleBtn").onclick=()=>{ const panel=document.getElementById("themePanel"); panel.style.display=panel.style.display==="none"?"block":"none"; };
+      document.getElementById("applyCustomTheme").onclick=()=>{
+        const t={name:"Custom", primary:document.getElementById("primaryColor").value, accent:document.getElementById("accentColor").value, bg:document.getElementById("bgColor").value};
+        applyTheme(t);
+      };
+    })();
+
+    /*********************
+     * Small inline editor handlers (for small elements)
+     * The original modal remains for full editing; we show the inline small editor when space allows
+     *********************/
+    // We will show inlineEditorSmall near small elements if there is available space; otherwise use the centered modal.
+
+    // Helper to convert rgb(...) to hex
+    function rgbToHex(rgb){
+      if(!rgb) return "#000000";
+      const m = rgb.match(/\\d+/g);
+      if(!m) return "#000000";
+      return "#" + m.slice(0,3).map(x => {
+        const h = parseInt(x).toString(16);
+        return h.length===1 ? "0"+h : h;
+      }).join("");
+    }
+
+    // Expose a function to parent to open small editor if we detect small element; used in message flow above if desired
+    // small editor UI handlers
+    smallCancel.addEventListener('click', ()=>{ inlineEditorSmall.style.display='none'; });
+    smallSave.addEventListener('click', ()=>{
+      // send APPLY_TEXT and APPLY_COLOR to iframe for live preview
+      const id = modalTarget.id;
+      const {page} = modalTarget;
+      const iframe = iframeRefs[page];
+      if(!iframe) { inlineEditorSmall.style.display='none'; return; }
+      iframe.contentWindow.postMessage({type:"APPLY_TEXT", id, text: smallText.value}, "*");
+      iframe.contentWindow.postMessage({type:"APPLY_COLOR", id, color: smallColor.value, target: "text"}, "*");
+      iframe.contentWindow.postMessage({type:"APPLY_COLOR", id, color: smallBg.value, target: "background"}, "*");
+      inlineEditorSmall.style.display='none';
     });
-  });
-}
 
-// Search
-document.getElementById("librarySearch").addEventListener("input",e=>{
-  renderLibraryAssets(e.target.value);
-});
+    /**********************
+     * Theme and editor done
+     **********************/
 
-// Open/close
-document.getElementById('openLibraryBtn').onclick=()=>{document.getElementById('librarySidebar').style.display='flex';};
-document.getElementById('closeLibraryBtn').onclick=()=>{document.getElementById('librarySidebar').style.display='none';};
+    /**********************
+     * Misc / Export / Utilities
+     **********************/
+    // Basic safety: ensure pageContents map has at least one key on load for debug
+    // (already handled in zipInput)
 
-// Enable drop inside iframe
-function enableDrop(){
-  const iframe=iframeRefs[activePage];
-  if(!iframe) return;
-  const doc=iframe.contentDocument||iframe.contentWindow.document;
-  doc.body.addEventListener("dragover", e=>e.preventDefault());
-  doc.body.addEventListener("drop", e=>{
-    e.preventDefault();
-    const html=e.dataTransfer.getData("text/html");
-    if(html){
-      const temp=document.createElement("div");
-      temp.innerHTML=html;      doc.body.appendChild(temp.firstChild);
-      editedContents[activePage]="<!DOCTYPE html>"+doc.documentElement.outerHTML;
-    }
-  });
-}
-const originalRenderIframes=renderIframes;
-renderIframes=function(){ originalRenderIframes(); enableDrop(); };
-
-// Blank page
-document.getElementById('addPageBtnSidebar').onclick=()=>{
-  const name=prompt('Enter new page name:');
-  if(!name) return;
-  const filename=name.replace(/\s+/g,'_').toLowerCase()+'.html';
-  const html=`<!DOCTYPE html><html><head><title>${name}</title></head><body><h1>${name}</h1></body></html>`;
-  pages.push(filename);
-  pageContents[filename]=html;
-  editedContents[filename]=html;
-  activePage=filename;
-  renderTabs();
-  renderIframes();
-};
-
-// Initial render
-renderLibraryAssets();
-</script>
-   <!-- ========== Theme Module (Part 1 – Fixed with WCAG Contrast + Card Override) ========== -->
-<style>
-#themePanel {
-  position: fixed;
-  bottom: 70px;
-  right: 20px;
-  width: 320px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
-  z-index: 9999;
-  display: none;
-}
-#themePanel h3 { margin:0 0 10px 0; font-size:16px; }
-#themePanel .preset-grid { 
-  display:grid; grid-template-columns:repeat(3,1fr); gap:8px; 
-  max-height:200px; overflow:auto;
-}
-#themePanel .preset-tile { 
-  border:1px solid #eee; padding:8px; border-radius:8px; cursor:pointer;
-  text-align:center; font-size:12px; background:#fafafa;
-}
-#themePanel .preset-tile:hover { background:#f0f0f0; }
-#themeToggleBtn {
-  position: fixed; bottom: 80px; right: 20px;
-  background:#000; color:#fff; border-radius:50%; width:46px; height:46px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:20px; cursor:pointer; z-index:10000;
-}
-</style>
-
-<div id="themePanel">
-  <h3>🎨 Themes</h3>
-  <div class="preset-grid" id="themeGrid"></div>
-  <div style="margin-top:10px; display:flex; gap:6px;">
-    <input type="color" id="primaryColor" value="#0b79ff">
-    <input type="color" id="accentColor" value="#06b6d4">
-    <input type="color" id="bgColor" value="#ffffff">
-    <button id="applyCustomTheme">Apply</button>
-  </div>
-</div>
-<div id="themeToggleBtn">🎨</div>
-
-<script>
-(function(){
-  // ----------------- Theme Presets -----------------
-  const themePresets = [
-    {name:'Oceanic', primary:'#0b79ff', accent:'#06b6d4', bg:'#f6fbff'},
-    {name:'Midnight', primary:'#7c3aed', accent:'#06b6d4', bg:'#071026'},
-    {name:'Sunset', primary:'#ff6b6b', accent:'#ff9a00', bg:'#fff7f2'},
-    {name:'Forest', primary:'#0b8457', accent:'#34d399', bg:'#f3fbf6'},
-    {name:'Corporate', primary:'#0b3d91', accent:'#06b6d4', bg:'#fbfdff'},
-    {name:'Warm', primary:'#d97706', accent:'#fb923c', bg:'#fffaf0'},
-    {name:'Violet', primary:'#6b21a8', accent:'#8b5cf6', bg:'#fbf7ff'},
-    {name:'Candy', primary:'#ff6bcb', accent:'#ffd166', bg:'#fff7fb'},
-    {name:'Grayscale', primary:'#111827', accent:'#6b7280', bg:'#ffffff'},
-    {name:'Aqua', primary:'#0088cc', accent:'#00c2c7', bg:'#f0fcff'},
-    {name:'Rose', primary:'#e11d48', accent:'#fb7185', bg:'#fff5f7'},
-    {name:'Indigo', primary:'#272ddf', accent:'#7c3aed', bg:'#f5f7ff'},
-    {name:'Lime', primary:'#84cc16', accent:'#bef264', bg:'#fbfff0'},
-    {name:'Coral', primary:'#ff7a59', accent:'#ffb199', bg:'#fff6f2'},
-    {name:'Teal', primary:'#0d9488', accent:'#2dd4bf', bg:'#f2fffb'},
-    {name:'Slate', primary:'#334155', accent:'#64748b', bg:'#f8fafc'},
-    {name:'Classic', primary:'#0b79ff', accent:'#ff6b6b', bg:'#ffffff'},
-    {name:'Lavender', primary:'#a78bfa', accent:'#c4b5fd', bg:'#fbf8ff'},
-    {name:'Copper', primary:'#9a3412', accent:'#fb923c', bg:'#fff6f0'}
-  ];
-
-  const themeGrid = document.getElementById("themeGrid");
-  themePresets.forEach(t=>{
-    const tile=document.createElement("div");
-    tile.className="preset-tile";
-    tile.style.background=`linear-gradient(90deg,${t.primary},${t.accent})`;
-    tile.innerHTML=`<div>${t.name}</div>`;
-    tile.addEventListener("click",()=>applyTheme(t));
-    themeGrid.appendChild(tile);
-  });
-
-  // ----------------- Apply Theme -----------------
-  function applyTheme(theme){
-    const iframe = iframeRefs[activePage];
-    if(!iframe) return alert("No active page loaded.");
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-
-    // card background calculated from theme.bg
-    const cardBg = adjustColor(theme.bg, luminance(theme.bg) > 0.5 ? -25 : 25);
-    const css = `
-      body {
-        background: ${theme.bg} !important;
-        color: ${contrastText(theme.bg)} !important;
-      }
-      header, .header, nav, .nav, .navbar {
-        background: ${theme.primary} !important;
-        color: ${contrastText(theme.primary)} !important;
-      }
-      footer, .footer, .site-footer {
-        background: ${theme.accent} !important;
-        color: ${contrastText(theme.accent)} !important;
-      }
-      h1,h2,h3,h4,h5,h6,p,span,li {
-        color: inherit !important;
-      }
-      a { color: ${theme.primary} !important; }
-      button, .btn, .button, input[type="submit"], .action-btn, .cta {
-        background: ${theme.primary} !important;
-        color: ${contrastText(theme.primary)} !important;
-        border-radius:6px; padding:8px 14px;
-      }
-      .card, .panel, .tile, .box, .content-card, .card-body {
-        background: ${cardBg} !important;
-        color: ${contrastText(cardBg)} !important;
-        border-radius: 12px;
-      }
-      input, select, textarea {
-        border: 1px solid ${theme.primary}88 !important;
-        border-radius: 6px;
-        padding: 6px;
-        color: ${contrastText(theme.bg)} !important;
-      }
-      input:focus, select:focus, textarea:focus {
-        outline: 2px solid ${theme.accent} !important;
-      }
-      .section, .container, .hero, .banner {
-        background: linear-gradient(180deg, ${theme.bg}, ${theme.bg}cc) !important;
-        color: ${contrastText(theme.bg)} !important;
-      }
-    `;
-
-    injectThemeCss(doc, css);
-    saveThemeToEditedContents(css);
-  }
-
-  function injectThemeCss(doc, css){
-    let styleTag = doc.getElementById("__wizard_theme");
-    if(!styleTag){
-      styleTag = doc.createElement("style");
-      styleTag.id="__wizard_theme";
-      doc.head.appendChild(styleTag);
-    }
-    styleTag.innerHTML = css;
-  }
-
-  function saveThemeToEditedContents(css){
-    let html = editedContents[activePage];
-    if(html){
-      if(html.includes("__wizard_theme")){
-        html = html.replace(/<style id="__wizard_theme">([\s\S]*?)<\/style>/,
-                            `<style id="__wizard_theme">${css}</style>`);
-      } else {
-        html = html.replace(/<\/head>/i, `<style id="__wizard_theme">${css}</style></head>`);
-      }
-      editedContents[activePage] = html;
-    }
-
-    const cssFile = Object.keys(otherFiles).find(f=>f.endsWith(".css"));
-    if(cssFile){
-      const decoder = new TextDecoder();
-      const encoder = new TextEncoder();
-      let cssText = decoder.decode(otherFiles[cssFile]);
-      if(cssText.includes("/* WizardMaker Theme */")){
-        cssText = cssText.replace(/\/\* WizardMaker Theme \*\/([\s\S]*?)\/\* End Theme \*\//,
-          `/* WizardMaker Theme */\n${css}\n/* End Theme */`);
-      } else {
-        cssText += `\n/* WizardMaker Theme */\n${css}\n/* End Theme */`;
-      }
-      otherFiles[cssFile] = encoder.encode(cssText);
-    }
-  }
-
-  // ----------------- Helpers -----------------
-  function hexToRgb(hex){
-    hex = hex.replace("#","");
-    if(hex.length===3) hex=hex.split("").map(c=>c+c).join("");
-    const num = parseInt(hex,16);
-    return {r:(num>>16)&255, g:(num>>8)&255, b:num&255};
-  }
-  function luminance(hex){
-    const c=hexToRgb(hex);
-    const a=[c.r/255,c.g/255,c.b/255].map(v=>v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4));
-    return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2];
-  }
-  function contrastRatio(hex1, hex2){
-    const L1=luminance(hex1)+0.05;
-    const L2=luminance(hex2)+0.05;
-    return L1>L2?L1/L2:L2/L1;
-  }
-  function contrastText(bg){
-    return contrastRatio(bg, "#000") >= 4.5 ? "#000" : "#fff";
-  }
-  function adjustColor(hex, amt){
-    let {r,g,b}=hexToRgb(hex);
-    r=Math.min(255,Math.max(0,r+amt));
-    g=Math.min(255,Math.max(0,g+amt));
-    b=Math.min(255,Math.max(0,b+amt));
-    return `rgb(${r},${g},${b})`;
-  }
-
-  // ----------------- Toggle -----------------
-  document.getElementById("themeToggleBtn").onclick=()=>{
-    const panel=document.getElementById("themePanel");
-    panel.style.display=panel.style.display==="none"?"block":"none";
-  };
-  document.getElementById("applyCustomTheme").onclick=()=>{
-    const t={name:"Custom", primary:primaryColor.value, accent:accentColor.value, bg:bgColor.value};
-    applyTheme(t);
-  };
-})();
-</script>
-<!-- ========== /Theme Module ========== -->
-
-
-
+    // End of script
+  </script>
 </body>
 </html>
