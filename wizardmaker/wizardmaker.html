@@ -3,13 +3,209 @@
 <head>
   <meta charset="UTF-8">
   <title>Wizard Maker — Button Fix (v11 UI + Placeholder)</title>
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="css/wizard.css">
-
-  <!-- External Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+    }
+    .card {
+      background: #fff;
+      border-radius: 1rem;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+      max-width: 1100px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: .25rem;
+    }
+    p {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 1rem;
+    }
+    .topbar {
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    input[type="file"] {
+      padding: .4rem;
+      border: 1px solid #ccc;
+      border-radius: .5rem;
+    }
+    button {
+      padding: .5rem .9rem;
+      border: none;
+      border-radius: .5rem;
+      background: #111; /* BLACK EXPORT BUTTON */
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    button:hover {
+      background: #333;
+    }
+    .tabs {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      margin: 1rem 0;
+    }
+    .tab {
+      padding: .25rem .75rem;
+      border: 1px solid #ccc;
+      border-radius: .5rem;
+      background: #f3f4f6;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .tab.active {
+      background: #e5e7eb;
+      font-weight: bold;
+    }
+    iframe {
+      width: 100%;
+      height: 600px;
+      border: 1px solid #ccc;
+      border-radius: .5rem;
+      background: #fff;
+    }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .modal {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 6px 20px rgba(0,0,0,.25);
+
+  position: fixed; /* movable */
+  top: 100px;       /* starting position */
+  left: 100px;
+  cursor: grab;
+}
+
+    }
+    .modal h2 {
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+    .mb-2 { margin-bottom: .5rem; }
+    .mb-3 { margin-bottom: .75rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    input, select {
+      padding: .5rem;
+      border: 1px solid #ccc;
+      border-radius: .5rem;
+      width: 100%;
+      font-size: .9rem;
+    }
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: .5rem;
+    }
+    .actions button {
+      flex: 0 0 auto;
+    }
+    #cancelBtn {
+      background: #e5e7eb;
+      color: #111;
+    }
+    #cancelBtn:hover {
+      background: #d1d5db;
+    }
+ /* Wizard Maker Library Sidebar */
+#librarySidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  width: 280px;
+  background: #f9fafb;
+  border-left: 1px solid #ccc;
+  padding: 1rem;
+  overflow-y: auto;
+  box-shadow: -4px 0 12px rgba(0,0,0,0.05);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+
+#librarySidebar h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+  font-weight: bold;
+}
+
+.library-category {
+  margin-bottom: 1rem;
+}
+
+.library-item {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 0.4rem;
+  margin-bottom: 0.35rem;
+  cursor: grab;
+  background: #fff;
+}
+
+.library-item:hover {
+  background: #e5e7eb;
+}
+
+.library-item.dragging {
+  opacity: 0.6;
+}
+
+#pageNavContainer {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(255,255,255,0.95);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
+  z-index: 90;
+}
+
+#pageNavContainer button {
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.4rem;
+  border: 1px solid #ccc;
+  background: #f3f4f6;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+#pageNavContainer button.active {
+  font-weight: bold;
+  background: #e5e7eb;
+}
+  </style>
 </head>
 <body>
   <div class="card">
@@ -57,61 +253,739 @@
     </div>
   </div>
 
-  <!-- Floating black + button -->
-  <button id="openLibraryBtn" style="
-    position: fixed; bottom: 20px; right: 20px;
-    width: 50px; height: 50px; border-radius: 50%;
-    background: #111; color: #fff; font-size: 2rem;
-    border: none; cursor: pointer; z-index: 2000;">+</button>
+  <script>
+    const zipInput = document.getElementById("zipInput");
+    const exportBtn = document.getElementById("exportBtn");
+    const tabsEl = document.getElementById("tabs");
+    const iframeContainer = document.getElementById("iframeContainer");
 
-  <!-- Sidebar -->
-  <div id="librarySidebar" style="display:none;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-      <h3 style="margin:0;color:#fff;">Library Assets</h3>
-      <button id="closeLibraryBtn" style="background:none;color:#fff;font-size:1.2rem;border:none;cursor:pointer;">✖</button>
-    </div>
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const modalText = document.getElementById("modalText");
+    const modalColor = document.getElementById("modalColor");
+    const colorTargetSel = document.getElementById("colorTarget");
+    const imageUrl = document.getElementById("imageUrl");
+    const imageFile = document.getElementById("imageFile");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const saveBtn = document.getElementById("saveBtn");
 
-    <!-- Search -->
-    <input type="text" id="librarySearch" placeholder="Search..."
-           style="width:100%;padding:0.3rem;margin-bottom:0.5rem;border-radius:0.25rem;border:none;background:#333;color:#fff;">
+    let pages = [];
+    let pageContents = {};
+    let editedContents = {};
+    let otherFiles = {};
+    let activePage = "";
+    let iframeRefs = {};
+    let fileMap = {};
 
-    <!-- Container -->
-    <div id="libraryContainer" style="overflow-y:auto; flex:1;"></div>
 
-    <hr style="border-color:#444;margin:0.5rem 0;">
+    let modalTarget = { page: "", id: "", hasText: false, hasPlaceholder: false };
+    let originalSnapshot = null;
 
-    <button id="addPageBtnSidebar"
-            style="padding:0.4rem;background:#222;color:#fff;border:none;border-radius:0.25rem;cursor:pointer;">
-      + Add Blank Page
-    </button>
+    // --- File handling ---
+    zipInput.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const zip = await JSZip.loadAsync(file);
+      const newPages = [];
+      const newContents = {};
+      const other = {};
+
+      await Promise.all(Object.keys(zip.files).map(async (filename) => {
+        const entry = zip.files[filename];
+        if (entry.dir) return;
+        if (filename.toLowerCase().endsWith(".html")) {
+          const data = await entry.async("string");
+          newPages.push(filename);
+          newContents[filename] = data;
+        } else {
+  const blob = await entry.async("blob");
+  const blobUrl = URL.createObjectURL(blob);
+  fileMap[filename] = blobUrl;   // store blob URL for later fixing
+  const data = await entry.async("uint8array");
+  other[filename] = data;
+}
+
+      }));
+
+      newPages.sort((a,b) => {
+        const ai = /(^|\/)index\.html$/i.test(a);
+        const bi = /(^|\/)index\.html$/i.test(b);
+        if (ai && !bi) return -1;
+        if (!ai && bi) return 1;
+        return a.localeCompare(b);
+      });
+
+      pages = newPages;
+      pageContents = newContents;
+      editedContents = {...newContents};
+      otherFiles = other;
+      activePage = newPages[0] || "";
+
+      renderTabs();
+      renderIframes();
+    });
+
+    function renderTabs() {
+      tabsEl.innerHTML = "";
+      pages.forEach((p) => {
+        const tab = document.createElement("div");
+        tab.className = "tab" + (p === activePage ? " active" : "");
+        tab.textContent = p;
+        tab.onclick = () => { activePage = p; renderTabs(); renderIframes(); };
+        tabsEl.appendChild(tab);
+      });
+    }
+
+    function injectEditingBridge(html, pageName) {
+      const bridge = `<script>(function(){
+        var EDIT_ATTR='data-edit-id';
+        var clickTimers={};
+        function ensureId(el){if(!el.getAttribute(EDIT_ATTR)) el.setAttribute(EDIT_ATTR,'e'+Math.random().toString(36).slice(2,9));return el.getAttribute(EDIT_ATTR);}
+        function buildSnapshot(el){return {
+          html: el.innerHTML || '',
+          text: el.innerText || '',
+          placeholder: ('placeholder' in el ? el.placeholder || undefined : undefined),
+          src: (el.tagName==='IMG'?(el.getAttribute('src')||el.src||''):undefined),
+          inline:{color:el.style.color,backgroundColor:el.style.backgroundColor}
+        };}
+        document.addEventListener('click',function(e){
+          var el=e.target;if(!el)return;
+          var tn=(el.tagName||'').toUpperCase();
+          if(tn==='A'||tn==='BUTTON'||tn==='INPUT'||tn==='TEXTAREA'){
+            var id=ensureId(el);
+            e.preventDefault();e.stopPropagation();
+            if(clickTimers[id]){
+              clearTimeout(clickTimers[id]);clickTimers[id]=null;
+              var snap=buildSnapshot(el);
+              parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,
+                hasText:!!el.innerText,
+                hasPlaceholder:('placeholder' in el),
+                ...snap},'*');
+            }else{
+              clickTimers[id]=setTimeout(function(){
+                clickTimers[id]=null;
+                var href=(el.tagName==='A'&&el.href)?el.href:null;
+                if(href) window.location.href=href; else el.click();
+              },300);
+            }
+          }
+        },true);
+        document.addEventListener('dblclick',function(e){
+          var el=e.target;if(!el)return;
+          e.preventDefault();e.stopPropagation();
+          var id=ensureId(el);
+          var snap=buildSnapshot(el);
+          parent.postMessage({type:'OPEN_EDITOR',page:'${pageName}',id:id,
+            hasText:!!el.innerText,
+            hasPlaceholder:('placeholder' in el),
+            ...snap},'*');
+        },true);
+        window.addEventListener('message',function(ev){
+          var d=ev.data||{};
+          var el=document.querySelector('['+EDIT_ATTR+'="'+d.id+'"]');
+          if(!el)return;
+          if(d.type==='APPLY_TEXT'){
+            if('placeholder' in el) el.placeholder=d.text||''; else el.innerText=d.text||'';
+          }
+          if(d.type==='APPLY_COLOR'){if(d.target==='background')el.style.backgroundColor=d.color;else el.style.color=d.color;}
+          if(d.type==='APPLY_IMAGE'&&el.tagName==='IMG')el.src=d.src;
+          if(d.type==='RESTORE_ELEMENT'&&d.snapshot){
+            if(d.snapshot.html!==undefined && !('placeholder' in el)) el.innerHTML=d.snapshot.html;
+            if(d.snapshot.placeholder!==undefined && 'placeholder' in el) el.placeholder=d.snapshot.placeholder;
+            if(d.snapshot.src!==undefined&&el.tagName==='IMG')el.src=d.snapshot.src;
+            if(d.snapshot.inline){el.style.color=d.snapshot.inline.color||'';el.style.backgroundColor=d.snapshot.inline.backgroundColor||'';}
+          }
+        });
+      })();<\/script>`;
+      return html.replace(/<\/body>/i, bridge + "</body>");
+    }
+
+    function renderIframes() {
+  iframeContainer.innerHTML = "";
+  if (!activePage) return;
+
+  let rawHtml = editedContents[activePage] || pageContents[activePage] || "";
+
+  // Parse HTML so we can fix broken resource links
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(rawHtml, "text/html");
+
+ function resolvePath(htmlFile, resourcePath) {
+  if (!resourcePath) return null;
+
+  // 1. Normalize path relative to HTML file
+  const htmlDir = htmlFile.substring(0, htmlFile.lastIndexOf("/") + 1);
+  let normalized = htmlDir + resourcePath;
+  normalized = normalized.replace(/^\.\//, "").replace(/\/\.\//g, "/");
+
+  // 2. Direct match
+  if (fileMap[normalized]) return fileMap[normalized];
+  if (fileMap[resourcePath]) return fileMap[resourcePath];
+
+  // 3. Strip leading "./" or "/"
+  const stripped = resourcePath.replace(/^(\.\/|\/)/, "");
+  if (fileMap[stripped]) return fileMap[stripped];
+
+  // 4. Fallback: match by filename only
+  const fileName = resourcePath.split("/").pop();
+  for (const key in fileMap) {
+    if (key.endsWith(fileName)) return fileMap[key];
+  }
+
+  return null; // not found
+}
+
+doc.querySelectorAll("link[href], script[src], img[src]").forEach(el => {
+  const attr = el.tagName === "LINK" ? "href" : "src";
+  const original = el.getAttribute(attr);
+  const fixed = resolvePath(activePage, original);
+  if (fixed) {
+    el.setAttribute(attr, fixed);
+  }
+});
+
+
+  // Rebuild HTML with editing bridge
+  let finalHtml = injectEditingBridge("<!DOCTYPE html>" + doc.documentElement.outerHTML, activePage);
+
+  const iframe = document.createElement("iframe");
+  iframe.srcdoc = finalHtml;
+  iframeContainer.appendChild(iframe);
+  iframeRefs[activePage] = iframe;
+}
+
+
+    window.addEventListener("message", (event) => {
+      const d = event.data || {};
+      if (d.type === "OPEN_EDITOR") {
+        modalTarget = { page: d.page, id: d.id, hasText: !!d.hasText, hasPlaceholder: !!d.hasPlaceholder };
+        modalText.value = d.hasPlaceholder ? d.placeholder || "" : (d.text || "");
+        modalColor.value = "#000000";
+        originalSnapshot = d;
+        modalBackdrop.style.display = "flex";
+        document.getElementById("textSection").style.display = (d.hasText || d.hasPlaceholder) ? "block" : "none";
+      }
+    });
+
+    modalText.addEventListener("input", () => {
+      const {page,id} = modalTarget;
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_TEXT",id,text:modalText.value},"*");
+    });
+
+    modalColor.addEventListener("input", () => {
+      const {page,id,hasText} = modalTarget;
+      const target = colorTargetSel.value==="auto" ? (hasText ? "color" : "background") : colorTargetSel.value;
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_COLOR",id,color:modalColor.value,target},"*");
+    });
+
+    imageUrl.addEventListener("input", () => {
+      const {page,id} = modalTarget;
+      iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:imageUrl.value},"*");
+    });
+
+    imageFile.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const {page,id} = modalTarget;
+        iframeRefs[page].contentWindow.postMessage({type:"APPLY_IMAGE",id,src:reader.result},"*");
+      };
+      reader.readAsDataURL(file);
+    });
+
+    saveBtn.onclick = () => {
+      const {page} = modalTarget;
+      const iframe = iframeRefs[page];
+      if (iframe.contentDocument) {
+        const html = "<!DOCTYPE html>" + iframe.contentDocument.documentElement.outerHTML;
+        editedContents[page] = html;
+      }
+      modalBackdrop.style.display = "none";
+    };
+
+    cancelBtn.onclick = () => {
+      const {page,id} = modalTarget;
+      const iframe = iframeRefs[page];
+      if (iframe?.contentWindow && originalSnapshot) {
+        iframe.contentWindow.postMessage({type:"RESTORE_ELEMENT",id,snapshot:originalSnapshot},"*");
+      }
+      modalBackdrop.style.display = "none";
+    };
+    (function makeModalDraggable(){
+  const modal = document.querySelector(".modal");
+  let isDragging = false;
+  let offsetX = 0, offsetY = 0;
+
+  modal.addEventListener("mousedown", (e) => {
+    if (e.target.closest(".actions")) return; // don’t drag buttons
+    isDragging = true;
+    offsetX = e.clientX - modal.offsetLeft;
+    offsetY = e.clientY - modal.offsetTop;
+    modal.style.cursor = "grabbing";
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    modal.style.left = `${e.clientX - offsetX}px`;
+    modal.style.top = `${e.clientY - offsetY}px`;
+  });
+
+  document.addEventListener("mouseup", () => {
+    isDragging = false;
+    modal.style.cursor = "grab";
+  });
+
+  // Touch support
+  modal.addEventListener("touchstart", (e) => {
+    const touch = e.touches[0];
+    if (e.target.closest(".actions")) return;
+    isDragging = true;
+    offsetX = touch.clientX - modal.offsetLeft;
+    offsetY = touch.clientY - modal.offsetTop;
+  });
+
+  document.addEventListener("touchmove", (e) => {
+    if (!isDragging) return;
+    const touch = e.touches[0];
+    modal.style.left = `${touch.clientX - offsetX}px`;
+    modal.style.top = `${touch.clientY - offsetY}px`;
+  }, {passive:false});
+
+  document.addEventListener("touchend", () => { isDragging = false; });
+})();
+
+
+    exportBtn.addEventListener("click", async () => {
+      const zip = new JSZip();
+      pages.forEach((filename) => {
+        const html = editedContents[filename] || pageContents[filename] || "";
+        zip.file(filename, html);
+      });
+      Object.entries(otherFiles).forEach(([filename, data]) => {
+        zip.file(filename, data);
+      });
+      const blob = await zip.generateAsync({type:"blob"});
+      saveAs(blob, "custom-site.zip");
+    });
+  </script>
+<script>
+  function autoLoadTemplate() {
+    const templateData = localStorage.getItem("wizardTemplate");
+    if (!templateData) return;
+
+    try {
+      // Decode base64 zip string back into a Blob
+      const binary = atob(templateData.split(',')[1]);
+      const array = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        array[i] = binary.charCodeAt(i);
+      }
+      const blob = new Blob([array], { type: "application/zip" });
+      const file = new File([blob], "template.zip", { type: "application/zip" });
+
+      // Feed the file into zipInput
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      const zipInput = document.getElementById("zipInput");
+      zipInput.files = dataTransfer.files;
+
+      // Trigger the change event to load into editor
+      zipInput.dispatchEvent(new Event("change", { bubbles: true }));
+
+      // Clear storage so it doesn’t auto-load next time accidentally
+      localStorage.removeItem("wizardTemplate");
+    } catch (err) {
+      console.error("Template auto-load failed:", err);
+    }
+  }
+   autoLoadTemplate();
+</script>  <!-- ✅ properly close the previous script -->
+
+<!-- ================== LIBRARY SIDEBAR FETCH FROM LIBRARY ================== -->
+
+<!-- Floating black + button -->
+<button id="openLibraryBtn" style="
+  position: fixed; bottom: 20px; right: 20px;
+  width: 50px; height: 50px; border-radius: 50%;
+  background: #111; color: #fff; font-size: 2rem;
+  border: none; cursor: pointer; z-index: 2000;">+</button>
+
+<!-- Sidebar -->
+<div id="librarySidebar" style="display:none;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+    <h3 style="margin:0;color:#fff;">Library Assets</h3>
+    <button id="closeLibraryBtn" style="background:none;color:#fff;font-size:1.2rem;border:none;cursor:pointer;">✖</button>
   </div>
 
-  <!-- Color pad button -->
-  <button id="open-theme-tool" style="position:fixed;right:20px;bottom:20px;z-index:2147480000;border:none;background:#111;color:#fff;padding:10px;border-radius:10px;cursor:pointer;">
-    🎨
+  <!-- Search -->
+  <input type="text" id="librarySearch" placeholder="Search..."
+         style="width:100%;padding:0.3rem;margin-bottom:0.5rem;border-radius:0.25rem;border:none;background:#333;color:#fff;">
+
+  <!-- Container -->
+  <div id="libraryContainer" style="overflow-y:auto; flex:1;"></div>
+
+  <hr style="border-color:#444;margin:0.5rem 0;">
+
+  <button id="addPageBtnSidebar"
+          style="padding:0.4rem;background:#222;color:#fff;border:none;border-radius:0.25rem;cursor:pointer;">
+    + Add Blank Page
   </button>
-
-  <!-- Theme tool iframe (hidden by default) -->
-  <iframe id="sgwm-theme-frame" src="theme.html" style="position:fixed;inset:0;width:100%;height:100%;border:none;display:none;z-index:2147480000;background:transparent;"></iframe>
-
-  <!-- Core Scripts -->
-  <script src="js/core.js"></script>
-  <script src="js/editor.js"></script>
-  <script src="js/library.js"></script>
-  <script src="js/theme.js"></script>
-<!-- Library Preview Modal -->
-<div id="libraryPreviewModal" class="modal-backdrop" style="display:none;">
-  <div class="modal">
-    <h2>Preview Library Item</h2>
-    <div id="libraryPreviewContent" style="max-height:300px;overflow:auto;background:#f9f9f9;padding:1rem;border-radius:0.5rem;">
-      <!-- Live preview will be injected here -->
-    </div>
-    <div class="actions" style="margin-top:1rem;">
-      <button id="cancelLibraryPreview">Cancel</button>
-      <button id="insertLibraryPreview">Insert</button>
-    </div>
-  </div>
 </div>
 
+<style>
+#librarySidebar {
+  position: fixed;
+  top: 0; right: 0;
+  width: 320px; height: 100vh;
+  background: #111; padding: 1rem;
+  box-shadow: -4px 0 12px rgba(0,0,0,0.5);
+  z-index: 1500;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+.library-category {
+  font-weight: bold;
+  margin-top: 1rem;
+  color: #fff;
+}
+.library-subcategory {
+  font-style: italic;
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+  color: #ccc;
+}
+.library-item {
+  padding: 0.5rem;
+  margin-bottom: 0.6rem;
+  border-radius: 0.3rem;
+  background: #222;
+  cursor: pointer;
+  color: #fff;
+  text-align: center;
+}
+.library-item:hover { background: #333; }
+.library-thumb { max-height: 80px; overflow:hidden; margin-bottom:0.3rem; }
+.library-thumb img { max-width: 100%; border-radius:4px; }
+.library-title { font-size:0.8rem; color:#ddd; }
+</style>
+
+<script>
+// ===== Fetch assets from localStorage.sitegenLibrary =====
+function getLibraryData(){
+  try {
+    return JSON.parse(localStorage.getItem("sitegenLibrary") || "[]");
+  } catch { return []; }
+}
+
+let allAssets = getLibraryData();
+// Filter out templates
+allAssets = allAssets.filter(item => item.type !== "template");
+
+// Render Sidebar
+function renderLibraryAssets(filter=""){
+  const container=document.getElementById('libraryContainer');
+  container.innerHTML='';
+
+  // Group by type + subcategory
+  const categories={};
+  allAssets.forEach(item=>{
+    const cat=item.type; // asset/page/theme/subscription
+    const sub=item.subcategory || "General";
+    if(!categories[cat]) categories[cat]={};
+    if(!categories[cat][sub]) categories[cat][sub]=[];
+    categories[cat][sub].push(item);
+  });
+
+  Object.keys(categories).forEach(cat=>{
+    const catDiv=document.createElement('div');
+    catDiv.className='library-category';
+    catDiv.textContent=cat.charAt(0).toUpperCase()+cat.slice(1);
+    container.appendChild(catDiv);
+
+    Object.keys(categories[cat]).forEach(sub=>{
+      const subDiv=document.createElement('div');
+      subDiv.className='library-subcategory';
+      subDiv.textContent=sub.charAt(0).toUpperCase()+sub.slice(1);
+      container.appendChild(subDiv);
+
+      categories[cat][sub].forEach(item=>{
+        if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
+
+        const div=document.createElement('div');
+        div.className='library-item';
+
+        const thumb=document.createElement('div');
+        thumb.className='library-thumb';
+        if(item.thumbnail){
+          const img=document.createElement('img');
+          img.src=item.thumbnail;
+          thumb.appendChild(img);
+        } else {
+          const preview=document.createElement('div');
+          preview.innerHTML=item.content || "";
+          preview.style.transform="scale(0.4)";
+          preview.style.transformOrigin="top left";
+          preview.style.height="80px";
+          preview.style.overflow="hidden";
+          thumb.appendChild(preview);
+        }
+
+        const title=document.createElement('div');
+        title.className='library-title';
+        title.innerText=item.name.replace(/[_-]/g," ");
+
+        div.appendChild(thumb);
+        div.appendChild(title);
+
+        if(item.type==="page"){
+          // full page
+          div.addEventListener("click",()=>{
+            const filename=item.name.toLowerCase().replace(/\s+/g,'_')+".html";
+            pages.push(filename);
+            pageContents[filename]=item.content;
+            editedContents[filename]=item.content;
+            activePage=filename;
+            renderTabs();
+            renderIframes();
+          });
+        } else {
+          // insert element
+          div.addEventListener("click",()=>{
+            const iframe=iframeRefs[activePage];
+            if(!iframe) return;
+            const doc=iframe.contentDocument||iframe.contentWindow.document;
+            let insertTarget = doc.activeElement && doc.body.contains(doc.activeElement) ? doc.activeElement : doc.body;
+            const temp=document.createElement('div');
+            temp.innerHTML=item.content;
+            insertTarget.appendChild(temp.firstChild);
+            editedContents[activePage]="<!DOCTYPE html>"+doc.documentElement.outerHTML;
+          });
+          // Drag/drop
+          div.draggable=true;
+          div.addEventListener('dragstart', e=>{
+            e.dataTransfer.setData('text/html', item.content);
+            div.classList.add('dragging');
+          });
+          div.addEventListener('dragend', ()=>div.classList.remove('dragging'));
+        }
+
+        container.appendChild(div);
+      });
+    });
+  });
+}
+
+// Search
+document.getElementById("librarySearch").addEventListener("input",e=>{
+  renderLibraryAssets(e.target.value);
+});
+
+// Open/close
+document.getElementById('openLibraryBtn').onclick=()=>{document.getElementById('librarySidebar').style.display='flex';};
+document.getElementById('closeLibraryBtn').onclick=()=>{document.getElementById('librarySidebar').style.display='none';};
+
+// Enable drop inside iframe
+function enableDrop(){
+  const iframe=iframeRefs[activePage];
+  if(!iframe) return;
+  const doc=iframe.contentDocument||iframe.contentWindow.document;
+  doc.body.addEventListener("dragover", e=>e.preventDefault());
+  doc.body.addEventListener("drop", e=>{
+    e.preventDefault();
+    const html=e.dataTransfer.getData("text/html");
+    if(html){
+      const temp=document.createElement("div");
+      temp.innerHTML=html;      doc.body.appendChild(temp.firstChild);
+      editedContents[activePage]="<!DOCTYPE html>"+doc.documentElement.outerHTML;
+    }
+  });
+}
+const originalRenderIframes=renderIframes;
+renderIframes=function(){ originalRenderIframes(); enableDrop(); };
+
+// Blank page
+document.getElementById('addPageBtnSidebar').onclick=()=>{
+  const name=prompt('Enter new page name:');
+  if(!name) return;
+  const filename=name.replace(/\s+/g,'_').toLowerCase()+'.html';
+  const html=`<!DOCTYPE html><html><head><title>${name}</title></head><body><h1>${name}</h1></body></html>`;
+  pages.push(filename);
+  pageContents[filename]=html;
+  editedContents[filename]=html;
+  activePage=filename;
+  renderTabs();
+  renderIframes();
+};
+
+// Initial render
+renderLibraryAssets();
+</script>
+<!-- ========== Universal Live Theme Module ========== -->
+<style>
+#themePanel {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  width: 360px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  z-index: 9999;
+  display: none;
+  font-family: sans-serif;
+}
+#themePanel h3 { margin:0 0 10px 0; font-size:16px; }
+#themePanel .color-item { display:flex; align-items:center; margin-bottom:8px; gap:6px; }
+#themePanel .color-item label { flex:1; font-size:12px; }
+#themePanel input[type=color] { width:40px; height:28px; border:none; padding:0; cursor:pointer; }
+#themeToggleBtn {
+  position: fixed; bottom: 80px; right: 20px;
+  background:#000; color:#fff; border-radius:50%; width:46px; height:46px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; cursor:pointer; z-index:10000;
+}
+</style>
+
+<div id="themePanel">
+  <h3>🎨 Live Theme Editor</h3>
+  <div class="color-item"><label>Header/Footer</label><input type="color" id="colorHeaderFooter" value="#0b1220"></div>
+  <div class="color-item"><label>Page Background</label><input type="color" id="colorPageBg" value="#ffffff"></div>
+  <div class="color-item"><label>Card/Panel</label><input type="color" id="colorCard" value="#ffffff"></div>
+  <div class="color-item"><label>Hero Section</label><input type="color" id="colorHero" value="#071024"></div>
+  <div class="color-item"><label>Buttons</label><input type="color" id="colorButton" value="#60a5fa"></div>
+  <div class="color-item"><label>Text</label><input type="color" id="colorText" value="#0f172a"></div>
+  <div class="color-item"><label>Section Background</label><input type="color" id="colorSectionBg" value="#f8fafc"></div>
+</div>
+<div id="themeToggleBtn">🎨</div>
+
+<script>
+(function(){
+  const panel = document.getElementById("themePanel");
+  const toggleBtn = document.getElementById("themeToggleBtn");
+
+  toggleBtn.onclick = ()=>{ 
+    panel.style.display = panel.style.display==="none"?"block":"none"; 
+  };
+
+  const headerFooter = document.getElementById("colorHeaderFooter");
+  const pageBg = document.getElementById("colorPageBg");
+  const cardColor = document.getElementById("colorCard");
+  const heroColor = document.getElementById("colorHero");
+  const buttonColor = document.getElementById("colorButton");
+  const textColor = document.getElementById("colorText");
+  const sectionBg = document.getElementById("colorSectionBg");
+
+  // Live update
+  [headerFooter,pageBg,cardColor,heroColor,buttonColor,textColor,sectionBg].forEach(picker=>{
+    picker.addEventListener("input",()=>applyTheme());
+  });
+
+  function applyTheme(){
+    // If working inside live preview iframe system
+    const iframe = (typeof iframeRefs!=="undefined" && iframeRefs[activePage]) ? iframeRefs[activePage] : null;
+    const doc = iframe ? (iframe.contentDocument || iframe.contentWindow.document) : document;
+
+    if(!doc) return;
+
+    // 1️⃣ Header & Footer
+    doc.querySelectorAll("header, footer, .header, .footer, .navbar, .site-footer")
+      .forEach(el=>{
+        el.style.setProperty("background", headerFooter.value, "important");
+        el.style.setProperty("color", textColor.value, "important");
+      });
+
+    // 2️⃣ Page background
+    if(doc.body){
+      doc.body.style.setProperty("background", pageBg.value, "important");
+      doc.body.style.setProperty("color", textColor.value, "important");
+    }
+
+   // 3️⃣ Cards / Panels / Boxes
+doc.querySelectorAll("div, section, article")
+  .forEach(el=>{
+    const cls = el.className || "";
+    if(/card|panel|tile|content|course|feature|dashboard|admin|auth|video|topic/i.test(cls)){
+      el.style.setProperty("background-color", cardColor.value, "important");
+      el.style.setProperty("color", textColor.value, "important");
+      el.style.setProperty("border-color", adjustColor(cardColor.value,-30), "important");
+    }
+  });
+
+
+    // 4️⃣ Hero Sections
+    doc.querySelectorAll(".hero, .hero-inner, [class*='hero']")
+      .forEach(el=>{
+        el.style.setProperty("background", heroColor.value, "important");
+        el.style.setProperty("color", textColor.value, "important");
+      });
+
+    // 5️⃣ Buttons
+    doc.querySelectorAll("button, .btn, .cta, a.button, a.btn, input[type=submit]")
+      .forEach(el=>{
+        el.style.setProperty("background", buttonColor.value, "important");
+        el.style.setProperty("color", contrastText(buttonColor.value), "important");
+        el.style.setProperty("border", "1px solid "+adjustColor(buttonColor.value,-20), "important");
+      });
+
+   // 6️⃣ All text with true full contrast
+doc.querySelectorAll("h1,h2,h3,h4,h5,h6,p,a,label,span,div,li,strong,em,button,input")
+  .forEach(el=>{
+    if(!el.closest("svg")){ // skip icons
+      // Find effective background color
+      let bgEl = el;
+      let bgColor = "";
+      while(bgEl && bgColor === "" || bgColor === "transparent" || bgColor === "rgba(0, 0, 0, 0)"){
+        bgColor = window.getComputedStyle(bgEl).backgroundColor;
+        bgEl = bgEl.parentElement;
+      }
+      const rgb = bgColor.match(/\d+/g);
+      if(rgb){
+        const r=parseInt(rgb[0]), g=parseInt(rgb[1]), b=parseInt(rgb[2]);
+        const lum = 0.2126*(r/255)**2.4 + 0.7152*(g/255)**2.4 + 0.0722*(b/255)**2.4;
+        el.style.setProperty("color", lum>0.5?"#000":"#fff", "important");
+      }
+    }
+  });
+
+
+    // 7️⃣ Section backgrounds
+    doc.querySelectorAll("main section, .features, .courses, .contact-section, section")
+      .forEach(el=>{
+        el.style.setProperty("background", sectionBg.value, "important");
+        el.querySelectorAll("h2,h3,h4,h5,h6")
+          .forEach(h=>h.style.setProperty("color", textColor.value, "important"));
+      });
+  }   
+
+
+
+  // ---------------- Helpers ----------------
+  function hexToRgb(hex){
+    hex = hex.replace("#","");
+    if(hex.length===3) hex = hex.split("").map(c=>c+c).join("");
+    const num = parseInt(hex,16);
+    return {r:(num>>16)&255,g:(num>>8)&255,b:num&255};
+  }
+  function luminance(hex){
+    const c=hexToRgb(hex);
+    const a=[c.r/255,c.g/255,c.b/255].map(v=>v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4));
+    return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2];
+  }
+  function contrastText(hex){
+    return luminance(hex)>0.5?"#000":"#fff";
+  }
+  function adjustColor(hex,amt){
+    let {r,g,b}=hexToRgb(hex);
+    r=Math.min(255,Math.max(0,r+amt));
+    g=Math.min(255,Math.max(0,g+amt));
+    b=Math.min(255,Math.max(0,b+amt));
+    return `rgb(${r},${g},${b})`;
+  }
+})();
+</script>
+<!-- ========== /Universal Live Theme Module ========== -->   
+
 </body>
-</html>
+</html> 
