@@ -821,25 +821,30 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-<!-- ========== Universal Live Theme Module ========== -->
+<!-- ========== Universal Multi-Section WCAG Theme Module ========== -->
 <style>
 #themePanel {
   position: fixed;
   bottom: 70px;
   right: 20px;
-  width: 360px;
+  width: 340px;
   background: #fff;
   border-radius: 12px;
-  padding: 16px;
+  padding: 12px;
   box-shadow: 0 12px 30px rgba(0,0,0,0.12);
   z-index: 9999;
   display: none;
   font-family: sans-serif;
 }
 #themePanel h3 { margin:0 0 10px 0; font-size:16px; }
-#themePanel .color-item { display:flex; align-items:center; margin-bottom:8px; gap:6px; }
-#themePanel .color-item label { flex:1; font-size:12px; }
-#themePanel input[type=color] { width:40px; height:28px; border:none; padding:0; cursor:pointer; }
+#themePanel .preset-grid { 
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px; max-height:220px; overflow:auto;
+}
+#themePanel .preset-tile { 
+  border:1px solid #eee; padding:8px; border-radius:8px; cursor:pointer;
+  text-align:center; font-size:12px; background:#fafafa;
+}
+#themePanel .preset-tile:hover { background:#f0f0f0; }
 #themeToggleBtn {
   position: fixed; bottom: 80px; right: 20px;
   background:#000; color:#fff; border-radius:50%; width:46px; height:46px;
@@ -849,123 +854,58 @@ renderLibraryAssets();
 </style>
 
 <div id="themePanel">
-  <h3>🎨 Live Theme Editor</h3>
-  <div class="color-item"><label>Header/Footer</label><input type="color" id="colorHeaderFooter" value="#0b1220"></div>
-  <div class="color-item"><label>Page Background</label><input type="color" id="colorPageBg" value="#ffffff"></div>
-  <div class="color-item"><label>Card/Panel</label><input type="color" id="colorCard" value="#ffffff"></div>
-  <div class="color-item"><label>Hero Section</label><input type="color" id="colorHero" value="#071024"></div>
-  <div class="color-item"><label>Buttons</label><input type="color" id="colorButton" value="#60a5fa"></div>
-  <div class="color-item"><label>Text</label><input type="color" id="colorText" value="#0f172a"></div>
-  <div class="color-item"><label>Section Background</label><input type="color" id="colorSectionBg" value="#f8fafc"></div>
+  <h3>🎨 Themes</h3>
+  <div class="preset-grid" id="themeGrid"></div>
+  <div style="margin-top:10px; display:flex; gap:6px;">
+    <input type="color" id="primaryColor" value="#0b79ff">
+    <input type="color" id="accentColor" value="#06b6d4">
+    <input type="color" id="bgColor" value="#ffffff">
+    <button id="applyCustomTheme">Apply</button>
+  </div>
 </div>
 <div id="themeToggleBtn">🎨</div>
 
 <script>
 (function(){
-  const panel = document.getElementById("themePanel");
-  const toggleBtn = document.getElementById("themeToggleBtn");
 
-  toggleBtn.onclick = ()=>{ 
-    panel.style.display = panel.style.display==="none"?"block":"none"; 
-  };
+  // ----------------- Theme Presets -----------------
+   const themePresets = [
+    {name:'Oceanic', primary:'#0b79ff', accent:'#06b6d4', bg:'#f6fbff'},
+    {name:'Midnight', primary:'#7c3aed', accent:'#06b6d4', bg:'#071026'},
+    {name:'Sunset', primary:'#ff6b6b', accent:'#ff9a00', bg:'#fff7f2'},
+    {name:'Forest', primary:'#0b8457', accent:'#34d399', bg:'#f3fbf6'},
+    {name:'Corporate', primary:'#0b3d91', accent:'#06b6d4', bg:'#fbfdff'},
+    {name:'Warm', primary:'#d97706', accent:'#fb923c', bg:'#fffaf0'},
+    {name:'Violet', primary:'#6b21a8', accent:'#8b5cf6', bg:'#fbf7ff'},
+    {name:'Candy', primary:'#ff6bcb', accent:'#ffd166', bg:'#fff7fb'},
+    {name:'Grayscale', primary:'#111827', accent:'#6b7280', bg:'#ffffff'},
+    {name:'Aqua', primary:'#0088cc', accent:'#00c2c7', bg:'#f0fcff'},
+    {name:'Rose', primary:'#e11d48', accent:'#fb7185', bg:'#fff5f7'},
+    {name:'Indigo', primary:'#272ddf', accent:'#7c3aed', bg:'#f5f7ff'},
+    {name:'Lime', primary:'#84cc16', accent:'#bef264', bg:'#fbfff0'},
+    {name:'Coral', primary:'#ff7a59', accent:'#ffb199', bg:'#fff6f2'},
+    {name:'Teal', primary:'#0d9488', accent:'#2dd4bf', bg:'#f2fffb'},
+    {name:'Slate', primary:'#334155', accent:'#64748b', bg:'#f8fafc'},
+    {name:'Classic', primary:'#0b79ff', accent:'#ff6b6b', bg:'#ffffff'},
+    {name:'Lavender', primary:'#a78bfa', accent:'#c4b5fd', bg:'#fbf8ff'},
+    {name:'Copper', primary:'#9a3412', accent:'#fb923c', bg:'#fff6f0'}
+  ];
 
-  const headerFooter = document.getElementById("colorHeaderFooter");
-  const pageBg = document.getElementById("colorPageBg");
-  const cardColor = document.getElementById("colorCard");
-  const heroColor = document.getElementById("colorHero");
-  const buttonColor = document.getElementById("colorButton");
-  const textColor = document.getElementById("colorText");
-  const sectionBg = document.getElementById("colorSectionBg");
-
-  // Live update
-  [headerFooter,pageBg,cardColor,heroColor,buttonColor,textColor,sectionBg].forEach(picker=>{
-    picker.addEventListener("input",()=>applyTheme());
+  const themeGrid = document.getElementById("themeGrid");
+  themePresets.forEach(t=>{
+    const tile=document.createElement("div");
+    tile.className="preset-tile";
+    tile.style.background=`linear-gradient(90deg,${t.primary},${t.accent})`;
+    tile.innerHTML=`<div>${t.name}</div>`;
+    tile.addEventListener("click",()=>applyTheme(t));
+    themeGrid.appendChild(tile);
   });
 
-  function applyTheme(){
-    // If working inside live preview iframe system
-    const iframe = (typeof iframeRefs!=="undefined" && iframeRefs[activePage]) ? iframeRefs[activePage] : null;
-    const doc = iframe ? (iframe.contentDocument || iframe.contentWindow.document) : document;
-
-    if(!doc) return;
-
-    // 1️⃣ Header & Footer
-    doc.querySelectorAll("header, footer, .header, .footer, .navbar, .site-footer")
-      .forEach(el=>{
-        el.style.setProperty("background", headerFooter.value, "important");
-        el.style.setProperty("color", textColor.value, "important");
-      });
-
-    // 2️⃣ Page background
-    if(doc.body){
-      doc.body.style.setProperty("background", pageBg.value, "important");
-      doc.body.style.setProperty("color", textColor.value, "important");
-    }
-
-   // 3️⃣ Cards / Panels / Boxes
-doc.querySelectorAll("div, section, article")
-  .forEach(el=>{
-    const cls = el.className || "";
-    if(/card|panel|tile|content|course|feature|dashboard|admin|auth|video|topic/i.test(cls)){
-      el.style.setProperty("background-color", cardColor.value, "important");
-      el.style.setProperty("color", textColor.value, "important");
-      el.style.setProperty("border-color", adjustColor(cardColor.value,-30), "important");
-    }
-  });
-
-
-    // 4️⃣ Hero Sections
-    doc.querySelectorAll(".hero, .hero-inner, [class*='hero']")
-      .forEach(el=>{
-        el.style.setProperty("background", heroColor.value, "important");
-        el.style.setProperty("color", textColor.value, "important");
-      });
-
-    // 5️⃣ Buttons
-    doc.querySelectorAll("button, .btn, .cta, a.button, a.btn, input[type=submit]")
-      .forEach(el=>{
-        el.style.setProperty("background", buttonColor.value, "important");
-        el.style.setProperty("color", contrastText(buttonColor.value), "important");
-        el.style.setProperty("border", "1px solid "+adjustColor(buttonColor.value,-20), "important");
-      });
-
-   // 6️⃣ All text with true full contrast
-doc.querySelectorAll("h1,h2,h3,h4,h5,h6,p,a,label,span,div,li,strong,em,button,input")
-  .forEach(el=>{
-    if(!el.closest("svg")){ // skip icons
-      // Find effective background color
-      let bgEl = el;
-      let bgColor = "";
-      while(bgEl && bgColor === "" || bgColor === "transparent" || bgColor === "rgba(0, 0, 0, 0)"){
-        bgColor = window.getComputedStyle(bgEl).backgroundColor;
-        bgEl = bgEl.parentElement;
-      }
-      const rgb = bgColor.match(/\d+/g);
-      if(rgb){
-        const r=parseInt(rgb[0]), g=parseInt(rgb[1]), b=parseInt(rgb[2]);
-        const lum = 0.2126*(r/255)**2.4 + 0.7152*(g/255)**2.4 + 0.0722*(b/255)**2.4;
-        el.style.setProperty("color", lum>0.5?"#000":"#fff", "important");
-      }
-    }
-  });
-
-
-    // 7️⃣ Section backgrounds
-    doc.querySelectorAll("main section, .features, .courses, .contact-section, section")
-      .forEach(el=>{
-        el.style.setProperty("background", sectionBg.value, "important");
-        el.querySelectorAll("h2,h3,h4,h5,h6")
-          .forEach(h=>h.style.setProperty("color", textColor.value, "important"));
-      });
-  }   
-
-
-
-  // ---------------- Helpers ----------------
+  // ----------------- Helpers -----------------
   function hexToRgb(hex){
-    hex = hex.replace("#","");
-    if(hex.length===3) hex = hex.split("").map(c=>c+c).join("");
-    const num = parseInt(hex,16);
+    hex=hex.replace("#","");
+    if(hex.length===3) hex=hex.split("").map(c=>c+c).join("");
+    const num=parseInt(hex,16);
     return {r:(num>>16)&255,g:(num>>8)&255,b:num&255};
   }
   function luminance(hex){
@@ -973,19 +913,105 @@ doc.querySelectorAll("h1,h2,h3,h4,h5,h6,p,a,label,span,div,li,strong,em,button,i
     const a=[c.r/255,c.g/255,c.b/255].map(v=>v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4));
     return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2];
   }
-  function contrastText(hex){
-    return luminance(hex)>0.5?"#000":"#fff";
+  function contrastRatio(c1,c2){
+    const L1=luminance(c1)+0.05;
+    const L2=luminance(c2)+0.05;
+    return L1>L2?L1/L2:L2/L1;
   }
-  function adjustColor(hex,amt){
+  function bestTextColor(bg){
+    return contrastRatio(bg,"#000000")>=4.5 ? "#000000" : "#ffffff";
+  }
+  function rgbToHex(rgb){
+    const m=rgb.match(/\d+/g);
+    if(!m) return "#ffffff";
+    return "#" + m.slice(0,3).map(x=>(+x).toString(16).padStart(2,"0")).join("");
+  }
+  function getEffectiveBg(el, doc){
+    let node=el;
+    while(node && node!==doc){
+      const bg=getComputedStyle(node).backgroundColor;
+      if(bg && bg!=="rgba(0, 0, 0, 0)" && bg!=="transparent") return rgbToHex(bg);
+      node=node.parentElement;
+    }
+    return "#ffffff";
+  }
+  function adjustColor(hex, amt){
     let {r,g,b}=hexToRgb(hex);
     r=Math.min(255,Math.max(0,r+amt));
     g=Math.min(255,Math.max(0,g+amt));
     b=Math.min(255,Math.max(0,b+amt));
     return `rgb(${r},${g},${b})`;
   }
+
+  // ----------------- Apply Theme -----------------
+  function applyTheme(theme){
+    const iframe = (typeof iframeRefs!=="undefined" && iframeRefs[activePage]) ? iframeRefs[activePage] : null;
+    const doc = iframe ? (iframe.contentDocument || iframe.contentWindow.document) : null;
+    if(!doc) return;
+
+    // 1️⃣ Global page background
+    doc.body.style.setProperty("background-color", theme.bg, "important");
+
+    // 2️⃣ Sections & hero
+    doc.querySelectorAll(".hero, .banner, .jumbotron, .section, main, .container").forEach(el=>{
+      const bg = adjustColor(theme.bg, luminance(theme.bg)>0.5?-15:15);
+      el.style.setProperty("background", bg, "important");
+      el.style.setProperty("color", bestTextColor(bg), "important");
+    });
+
+    // 3️⃣ Cards / panels
+    doc.querySelectorAll(".card, .panel, .tile, .box, .content-card, .card-body").forEach(el=>{
+      const bg = adjustColor(theme.accent, luminance(theme.accent)>0.5?-20:20);
+      el.style.setProperty("background", bg, "important");
+      el.style.setProperty("color", bestTextColor(bg), "important");
+      el.style.setProperty("border-color", adjustColor(bg,-20), "important");
+    });
+
+    // 4️⃣ Headers / navbars / footers
+    doc.querySelectorAll("header, .header, nav, .nav, .navbar, footer, .footer, .site-footer").forEach(el=>{
+      const bg = theme.primary;
+      el.style.setProperty("background", bg, "important");
+      el.style.setProperty("color", bestTextColor(bg), "important");
+    });
+
+    // 5️⃣ Buttons / cta
+    doc.querySelectorAll("button, .btn, .button, a.button, a.btn, input[type=submit], .cta").forEach(el=>{
+      const bg = theme.primary;
+      el.style.setProperty("background", bg, "important");
+      el.style.setProperty("color", bestTextColor(bg), "important");
+      el.style.setProperty("border","1px solid "+adjustColor(bg,-20), "important");
+      el.style.setProperty("border-radius","6px", "important");
+      el.style.setProperty("padding","6px 12px", "important");
+    });
+
+    // 6️⃣ Links contrast
+    doc.querySelectorAll("a").forEach(el=>{
+      const bg = getEffectiveBg(el, doc);
+      const fg = theme.primary;
+      const finalColor = contrastRatio(bg, fg)<4.5 ? bestTextColor(bg) : fg;
+      el.style.setProperty("color", finalColor, "important");
+    });
+
+    // 7️⃣ Text general fallback
+    doc.querySelectorAll("h1,h2,h3,h4,h5,h6,p,span,li,label,strong,em").forEach(el=>{
+      const bg = getEffectiveBg(el, doc);
+      el.style.setProperty("color", bestTextColor(bg), "important");
+    });
+  }
+
+  // ----------------- Toggle Panel -----------------
+  document.getElementById("themeToggleBtn").onclick=()=>{
+    const panel=document.getElementById("themePanel");
+    panel.style.display=panel.style.display==="none"?"block":"none";
+  };
+  document.getElementById("applyCustomTheme").onclick=()=>{
+    const t={name:"Custom", primary:primaryColor.value, accent:accentColor.value, bg:bgColor.value};
+    applyTheme(t);
+  };
 })();
 </script>
-<!-- ========== /Universal Live Theme Module ========== -->   
+<!-- ========== /Universal Multi-Section WCAG Theme Module ========== -->
+
 
 </body>
 </html> 
