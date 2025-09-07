@@ -821,7 +821,7 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-<!-- ========== Merged Universal WCAG Theme Module with Export ========== -->
+<!-- ========== Universal Multi-Section WCAG Theme Module ========== -->
 <style>
 #themePanel {
   position: fixed;
@@ -869,7 +869,7 @@ renderLibraryAssets();
 (function(){
 
   // ----------------- Theme Presets -----------------
-  const themePresets = [
+   const themePresets = [
     {name:'Oceanic', primary:'#0b79ff', accent:'#06b6d4', bg:'#f6fbff'},
     {name:'Midnight', primary:'#7c3aed', accent:'#06b6d4', bg:'#071026'},
     {name:'Sunset', primary:'#ff6b6b', accent:'#ff9a00', bg:'#fff7f2'},
@@ -949,25 +949,32 @@ renderLibraryAssets();
     const doc = iframe ? (iframe.contentDocument || iframe.contentWindow.document) : null;
     if(!doc) return;
 
-    // Live inline styling (Universal module)
+    // 1️⃣ Global page background
     doc.body.style.setProperty("background-color", theme.bg, "important");
 
+    // 2️⃣ Sections & hero
     doc.querySelectorAll(".hero, .banner, .jumbotron, .section, main, .container").forEach(el=>{
       const bg = adjustColor(theme.bg, luminance(theme.bg)>0.5?-15:15);
       el.style.setProperty("background", bg, "important");
       el.style.setProperty("color", bestTextColor(bg), "important");
     });
+
+    // 3️⃣ Cards / panels
     doc.querySelectorAll(".card, .panel, .tile, .box, .content-card, .card-body").forEach(el=>{
       const bg = adjustColor(theme.accent, luminance(theme.accent)>0.5?-20:20);
       el.style.setProperty("background", bg, "important");
       el.style.setProperty("color", bestTextColor(bg), "important");
       el.style.setProperty("border-color", adjustColor(bg,-20), "important");
     });
+
+    // 4️⃣ Headers / navbars / footers
     doc.querySelectorAll("header, .header, nav, .nav, .navbar, footer, .footer, .site-footer").forEach(el=>{
       const bg = theme.primary;
       el.style.setProperty("background", bg, "important");
       el.style.setProperty("color", bestTextColor(bg), "important");
     });
+
+    // 5️⃣ Buttons / cta
     doc.querySelectorAll("button, .btn, .button, a.button, a.btn, input[type=submit], .cta").forEach(el=>{
       const bg = theme.primary;
       el.style.setProperty("background", bg, "important");
@@ -976,84 +983,35 @@ renderLibraryAssets();
       el.style.setProperty("border-radius","6px", "important");
       el.style.setProperty("padding","6px 12px", "important");
     });
+
+    // 6️⃣ Links contrast
     doc.querySelectorAll("a").forEach(el=>{
       const bg = getEffectiveBg(el, doc);
       const fg = theme.primary;
       const finalColor = contrastRatio(bg, fg)<4.5 ? bestTextColor(bg) : fg;
       el.style.setProperty("color", finalColor, "important");
     });
+
+    // 7️⃣ Text general fallback
     doc.querySelectorAll("h1,h2,h3,h4,h5,h6,p,span,li,label,strong,em").forEach(el=>{
       const bg = getEffectiveBg(el, doc);
       el.style.setProperty("color", bestTextColor(bg), "important");
     });
-
-    // Inject <style> for saving/export (Part 1 logic)
-    const css = `
-      body { background: ${theme.bg} !important; color: ${bestTextColor(theme.bg)} !important; }
-      header, .header, nav, .nav, .navbar, footer, .footer, .site-footer { background: ${theme.primary} !important; color: ${bestTextColor(theme.primary)} !important; }
-      .card, .panel, .tile, .box, .content-card, .card-body { background: ${adjustColor(theme.accent,luminance(theme.accent)>0.5?-20:20)} !important; color: ${bestTextColor(adjustColor(theme.accent,luminance(theme.accent)>0.5?-20:20))} !important; border-radius:12px; }
-      button, .btn, .button, input[type=submit], .cta { background: ${theme.primary} !important; color: ${bestTextColor(theme.primary)} !important; border-radius:6px; padding:6px 12px; border:1px solid ${adjustColor(theme.primary,-20)}; }
-    `;
-    saveThemeToEditedContents(css);
   }
 
-  // ----------------- Save & Export Logic (Part 1) -----------------
-  function saveThemeToEditedContents(css){
-    if(typeof editedContents==="undefined" || typeof activePage==="undefined") return;
-    let html = editedContents[activePage];
-    if(html){
-      if(html.includes("__wizard_theme")){
-        html = html.replace(/<style id="__wizard_theme">([\s\S]*?)<\/style>/,
-                            `<style id="__wizard_theme">${css}</style>`);
-      } else {
-        html = html.replace(/<\/head>/i, `<style id="__wizard_theme">${css}</style></head>`);
-      }
-      editedContents[activePage] = html;
-    }
-    // CSS file
-    if(typeof otherFiles!=="undefined"){
-      const cssFile = Object.keys(otherFiles).find(f=>f.endsWith(".css"));
-      if(cssFile){
-        const decoder = new TextDecoder();
-        const encoder = new TextEncoder();
-        let cssText = decoder.decode(otherFiles[cssFile]);
-        if(cssText.includes("/* WizardMaker Theme */")){
-          cssText = cssText.replace(/\/\* WizardMaker Theme \*\/([\s\S]*?)\/\* End Theme \*\//,
-            `/* WizardMaker Theme */\n${css}\n/* End Theme */`);
-        } else {
-          cssText += `\n/* WizardMaker Theme */\n${css}\n/* End Theme */`;
-        }
-        otherFiles[cssFile] = encoder.encode(cssText);
-      }
-    }
-  }
-
-  // ----------------- Panel Toggle & Custom Theme -----------------
-  document.getElementById("themeToggleBtn").onclick=()=> {
+  // ----------------- Toggle Panel -----------------
+  document.getElementById("themeToggleBtn").onclick=()=>{
     const panel=document.getElementById("themePanel");
     panel.style.display=panel.style.display==="none"?"block":"none";
   };
-  document.getElementById("applyCustomTheme").onclick=()=> {
+  document.getElementById("applyCustomTheme").onclick=()=>{
     const t={name:"Custom", primary:primaryColor.value, accent:accentColor.value, bg:bgColor.value};
     applyTheme(t);
   };
-
-  // ----------------- Windows-safe Export Function -----------------
-  window.exportSiteZip = function(zipContent, fileName="site.zip"){
-    const blob = new Blob([zipContent], {type:"application/zip"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
 })();
 </script>
-<!-- ========== /Merged Module ========== -->
+<!-- ========== /Universal Multi-Section WCAG Theme Module ========== -->
+
 
 </body>
 </html> 
