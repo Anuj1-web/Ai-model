@@ -1054,6 +1054,192 @@ renderLibraryAssets();
 })();
 </script>
 <!-- ========== /Merged Module ========== -->
+  <!-- === Library Drawer Tool (attach to + button) === -->
+<style>
+  /* Drawer styles */
+  #libraryDrawer {
+    position: fixed;
+    top: 0;
+    right: -420px;
+    width: 420px;
+    height: 100%;
+    background: #fff;
+    box-shadow: -4px 0 25px rgba(0,0,0,0.18);
+    transition: right 0.3s ease;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    font-family: system-ui, Arial, sans-serif;
+  }
+  #libraryDrawer.open { right: 0; }
+  #libraryDrawer header {
+    padding: 14px;
+    border-bottom: 1px solid #eaeaea;
+    font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f9fafc;
+  }
+  #libraryDrawer .list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+  }
+  .lib-category {
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+    margin: 16px 0 8px;
+  }
+  .lib-item {
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #fafafa;
+    transition: all 0.2s ease;
+  }
+  .lib-item:hover {
+    background: #eef4ff;
+    border-color: #0b5cff;
+  }
+  .lib-item h4 {
+    margin: 0;
+    font-size: 14px;
+  }
+  .lib-item small {
+    display: block;
+    font-size: 12px;
+    color: #666;
+  }
+  .lib-preview {
+    width: 100%;
+    height: 180px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 8px;
+    background: #fff;
+  }
+  .lib-preview iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  #libraryDrawer footer {
+    padding: 10px;
+    border-top: 1px solid #eaeaea;
+    font-size: 12px;
+    color: #777;
+    text-align: center;
+  }
+</style>
+
+<div id="libraryDrawer">
+  <header>
+    <span>Library</span>
+    <button id="closeLibraryBtn" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+  </header>
+  <div class="list" id="libraryList">
+    <div style="padding:10px;color:#777">Loading library…</div>
+  </div>
+  <footer>
+    Drag or click items to load them into preview. Excludes Site ZIP files.
+  </footer>
+</div>
+
+<script>
+(function(){
+  const drawer = document.getElementById("libraryDrawer");
+  const closeBtn = document.getElementById("closeLibraryBtn");
+  const list = document.getElementById("libraryList");
+  const plusBtn = document.querySelector("#plusBtn"); // <- your existing + button
+  const livePreview = document.getElementById("livePreview");
+
+  // Project storage (export system will pick this up)
+  window.editedContents = window.editedContents || {};
+  let activePage = "index.html";
+
+  // Toggle drawer
+  function toggleDrawer(open){ drawer.classList.toggle("open", open); }
+  plusBtn?.addEventListener("click", ()=> toggleDrawer(true));
+  closeBtn.addEventListener("click", ()=> toggleDrawer(false));
+
+  // Load library.html and build list
+  async function loadLibrary(){
+    try {
+      const res = await fetch("library.html");
+      const html = await res.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+
+      // Assume library.html groups entries under sections like <section data-category="Pages">
+      const sections = [...doc.querySelectorAll("section[data-category]")];
+      list.innerHTML = "";
+
+      if(sections.length === 0){
+        list.innerHTML = "<div style='padding:10px;color:#999'>No items found in library.</div>";
+        return;
+      }
+
+      sections.forEach(section=>{
+        const category = section.dataset.category;
+        if(category.toLowerCase().includes("sitezip")) return; // exclude site zip
+
+        const title = document.createElement("div");
+        title.className = "lib-category";
+        title.textContent = category;
+        list.appendChild(title);
+
+        const items = [...section.querySelectorAll("[data-type]")];
+        items.forEach(el=>{
+          const type = el.dataset.type || "page";
+          if(type === "sitezip") return; // skip site zips
+
+          const name = el.dataset.name || el.querySelector("h3,h4")?.textContent || "Untitled";
+          const code = el.innerHTML;
+
+          const item = document.createElement("div");
+          item.className = "lib-item";
+          item.innerHTML = `<h4>${name}</h4><small>Type: ${type}</small>`;
+
+          // Preview
+          const preview = document.createElement("div");
+          preview.className = "lib-preview";
+          const iframe = document.createElement("iframe");
+          iframe.srcdoc = code;
+          preview.appendChild(iframe);
+          item.appendChild(preview);
+
+          // Insert on click
+          item.addEventListener("click", ()=>{
+            const filename = (name.replace(/\\s+/g,"_").toLowerCase() || "page") + ".html";
+            editedContents[filename] = code;
+            activePage = filename;
+            if(livePreview){
+              livePreview.srcdoc = code;
+              toggleDrawer(false);
+            }
+            alert("Page '"+name+"' loaded into live preview and added to export list.");
+          });
+
+          list.appendChild(item);
+        });
+      });
+
+    } catch(err){
+      console.error("Error loading library:", err);
+      list.innerHTML = "<div style='padding:10px;color:red'>Failed to load library.html</div>";
+    }
+  }
+
+  loadLibrary();
+})();
+</script>
+
 
 
 </body>
