@@ -689,11 +689,26 @@ doc.querySelectorAll("link[href], script[src], img[src]").forEach(el => {
 </style>
 
 <script>
-function getLibraryData(){ try { return JSON.parse(localStorage.getItem("sitegenLibrary")||"[]"); } catch{return [];} }
-function decodeContent(content){ if(!content) return ""; if(content.startsWith("data:")) return atob(content.split(',')[1]||""); return content; }
+function getLibraryData(){ 
+  try { 
+    return JSON.parse(localStorage.getItem("sitegenLibrary")||"[]"); 
+  } catch{return [];} 
+}
+function decodeContent(content){ 
+  if(!content) return ""; 
+  if(content.startsWith("data:")) return atob(content.split(',')[1]||""); 
+  return content; 
+}
 
 let allAssets = getLibraryData();
-allAssets = allAssets.map(item => { if(item.name.endsWith('.html')||item.type==='template') item.type='page'; return item; });
+allAssets = allAssets.map(item => {
+  // Normalize only HTML files to "page"
+  if(item.name.endsWith('.html')) {
+    item.type = 'page';
+  }
+  // Leave .zip templates as "template" so they can be skipped later
+  return item;
+});
 
 function renderLibraryAssets(filter=""){
   const container = document.getElementById('libraryContainer');
@@ -701,7 +716,11 @@ function renderLibraryAssets(filter=""){
 
   const categories = {};
   allAssets.forEach(item=>{
-    const cat=item.type; const sub=item.subcategory||"General";
+    // 🚫 Skip templates completely (they go to index page, not sidebar)
+    if(item.type === "template") return;
+
+    const cat=item.type; 
+    const sub=item.subcategory||"General";
     if(!categories[cat]) categories[cat]={};
     if(!categories[cat][sub]) categories[cat][sub]=[];
     categories[cat][sub].push(item);
@@ -750,32 +769,103 @@ function renderLibraryAssets(filter=""){
         title.innerText=item.name.replace(/[_-]/g," ");
         div.appendChild(title);
 
-        // Delete page button
-if(item.type==="page"){
+       // Delete page button (robust version)
+if (item.type === "page") {
   const removeBtn = document.createElement('button');
   removeBtn.className = 'removePageBtn';
   removeBtn.innerText = '🗑️';
 
   removeBtn.onclick = e => {
     e.stopPropagation();
-    const filename = item.name.endsWith('.html') ? item.name : item.name + '.html';
-    if(confirm(`Remove page "${filename}" from live preview?`)){
-      if(typeof pages !== 'undefined' && Array.isArray(pages)){
-        const index = pages.indexOf(filename);
-        if(index !== -1){
-          pages.splice(index, 1);           // remove page in-place
-          delete pageContents[filename];    // delete content
-          delete editedContents[filename];  // delete edited content
-          if(activePage === filename) activePage = pages[0] || '';
-          renderTabs();
-          renderIframes();
+
+    // Build candidate filenames to match whatever format pages[] may have
+    const rawName = (item.name || '').replace(/^\s+|\s+$/g, '');
+    const candidates = new Set();
+
+    // If item.name already has .html, include it
+    if (rawName.endsWith('.html')) candidates.add(rawName);
+    // raw with .html appended
+    candidates.add(rawName + (rawName.endsWith('.html') ? '' : '.html'));
+    // normalized: spaces/ dashes -> underscore, lowercase
+    candidates.add(rawName.replace(/\.html$/i, '')
+                         .replace(/[_\s-]+/g, '_')
+                         .toLowerCase() + '.html');
+    // kebab-case
+    candidates.add(rawName.replace(/\.html$/i, '')
+                         .replace(/[_\s]+/g, '-')
+                         .toLowerCase() + '.html');
+
+    // Also include a plain base-name match (no extension)
+    candidates.add(rawName.replace(/\.html$/i, ''));
+
+    // Convert to array
+    const candArr = Array.from(candidates);
+
+    if (confirm(`Remove page "${rawName}" from live preview?`)) {
+      if (typeof pages === 'undefined' || !Array.isArray(pages)) {
+        console.error('pages is not defined or not an array', pages);
+        alert('Cannot remove page: pages list not available (see console).');
+        return;
+      }
+
+      // Find page index by any candidate match
+      const pageIndex = pages.findIndex(p => {
+        // compare both with and without extension
+        const pnorm = (p || '').toString();
+        if (candArr.includes(pnorm)) return true;
+        const pBase = pnorm.replace(/\.html$/i, '');
+        if (candArr.includes(pBase)) return true;
+        return false;
+      });
+
+      if (pageIndex === -1) {
+        console.warn('Delete: no matching page found. Candidates:', candArr, 'pages:', pages);
+        alert('Page not found in project — cannot remove (check console).');
+        return;
+      }
+
+      // Actual filename string we will remove
+      const filename = pages[pageIndex];
+
+      // Remove from pages array
+      pages.splice(pageIndex, 1);
+
+      // Clean up content maps
+      try { delete pageContents[filename]; } catch(_) {}
+      try { delete editedContents[filename]; } catch(_) {}
+
+      // Remove iframe if you keep references in iframeRefs (optional)
+      try {
+        if (typeof iframeRefs !== 'undefined' && iframeRefs[filename]) {
+          const ifr = iframeRefs[filename];
+          try { ifr.remove(); } catch(_) {}
+          delete iframeRefs[filename];
         }
+      } catch (err) {
+        console.warn('Could not remove iframeRefs entry', err);
+      }
+
+      // If the deleted page was active, switch to next available page
+      if (typeof activePage !== 'undefined' && activePage === filename) {
+        activePage = pages[0] || '';
+      }
+
+      // Force UI refresh
+      try { renderTabs(); } catch(_) {}
+      try { renderIframes(); } catch(_) {}
+
+      // Optional: if you have a previewArea element, clear it when no pages left
+      const previewArea = document.getElementById('previewArea');
+      if (previewArea && pages.length === 0) {
+        previewArea.innerHTML = "<p style='color:#999;text-align:center;padding:2rem;'>No pages in project</p>";
       }
     }
   };
 
   div.appendChild(removeBtn);
 }
+
+
 
 
         // Fullscreen button
@@ -903,8 +993,6 @@ document.getElementById('addPageBtnSidebar').onclick=()=>{
 // Initial render
 renderLibraryAssets();
 </script>
-
-
 
 
 
