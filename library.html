@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Library Page with Working Thumbnails</title>
+  <title>Library Page Fixed</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet"/>
   <style>
@@ -11,20 +11,19 @@
     .btn { background: black; color: white; padding: 0.5rem 1rem; border-radius: 0.25rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .btn:hover { opacity: 0.8; }
     .card-img { width: 100%; height: 150px; object-fit: cover; border-radius: 0.5rem; }
-    #thumbModal img { max-width: 100%; max-height: 100%; display:block; margin:auto; }
-    #thumbModal { display: none; }
   </style>
 </head>
 <body class="p-6">
   <h1 class="text-3xl font-bold mb-4">Library</h1>
 
-  <div class="flex justify-end mb-6">
+  <!-- Navigation Button -->
+  <div class="flex justify-end">
     <a href="index.html" class="btn">Go to Home</a>
   </div>
 
   <!-- Upload Section -->
   <div class="mb-6">
-    <label class="block mb-2 font-semibold">Upload Template / Block / Theme / Subscription / HTML Page</label>
+    <label class="block mb-2 font-semibold">Upload Template / Block / Page / Theme / Subscription</label>
     <input type="file" id="fileInput" class="mb-4 border p-2" multiple>
     <progress id="uploadProgress" value="0" max="100" class="w-full mb-4"></progress>
     <button id="uploadBtn" class="btn">Upload</button>
@@ -34,11 +33,11 @@
   <div id="libraryGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6"></div>
 
   <!-- Thumbnail Editor Modal -->
-  <div id="thumbModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden">
-    <div class="bg-white p-4 rounded shadow-lg w-3/4 h-3/4 flex flex-col">
+  <div id="thumbModal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center">
+    <div class="bg-white p-4 rounded shadow-lg w-3/4 h-3/4">
       <h2 class="text-xl font-bold mb-4">Edit Thumbnail</h2>
-      <div class="flex-1 flex items-center justify-center">
-        <img id="cropperImage" />
+      <div class="h-4/5">
+        <img id="cropperImage" style="max-width:100%; max-height:100%; display:block; margin:auto;"/>
       </div>
       <div class="mt-4 flex justify-end gap-4">
         <button id="saveThumb" class="btn">Save Thumbnail</button>
@@ -47,169 +46,195 @@
     </div>
   </div>
 
-<script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
-<script>
-window.addEventListener('DOMContentLoaded', () => {
-  const fileInput = document.getElementById('fileInput');
-  const uploadBtn = document.getElementById('uploadBtn');
-  const uploadProgress = document.getElementById('uploadProgress');
-  const libraryGrid = document.getElementById('libraryGrid');
+  <script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const fileInput = document.getElementById('fileInput');
+      const uploadBtn = document.getElementById('uploadBtn');
+      const uploadProgress = document.getElementById('uploadProgress');
+      const libraryGrid = document.getElementById('libraryGrid');
 
-  const thumbModal = document.getElementById('thumbModal');
-  const cropperImage = document.getElementById('cropperImage');
-  const saveThumb = document.getElementById('saveThumb');
-  const cancelThumb = document.getElementById('cancelThumb');
+      const thumbModal = document.getElementById('thumbModal');
+      const cropperImage = document.getElementById('cropperImage');
+      const saveThumb = document.getElementById('saveThumb');
+      const cancelThumb = document.getElementById('cancelThumb');
 
-  let library = JSON.parse(localStorage.getItem('sitegenLibrary') || '[]');
-  let currentEditingId = null;
-  let cropper;
-  let currentCardImg = null;
+      let library = JSON.parse(localStorage.getItem('sitegenLibrary') || '[]');
+      let currentEditingId = null;
+      let cropper;
 
-  const placeholder = 'data:image/svg+xml;base64,' + btoa(`
-    <svg width="400" height="200" xmlns="http://www.w3.org/2000/svg">
-      <rect width="400" height="200" fill="#ddd"/>
-      <text x="50%" y="50%" font-size="20" dominant-baseline="middle" text-anchor="middle" fill="#555">No Thumbnail</text>
-    </svg>
-  `);
+      // --- Render Library (exclude templates) ---
+      function renderLibrary() {
+        libraryGrid.innerHTML = '';
 
-  function renderLibrary() {
-    libraryGrid.innerHTML = '';
-    const categories = { page: [], template: [], block: [], theme: [], subscription: [], asset: [] };
-
-    library.forEach((item,index)=>{
-      if(!categories[item.type]) categories[item.type]=[];
-      categories[item.type].push({...item,index});
-    });
-
-    Object.keys(categories).forEach(type=>{
-      if(categories[type].length===0) return;
-
-      const title = document.createElement('h3');
-      title.textContent = type.charAt(0).toUpperCase()+type.slice(1)+'s';
-      title.className = "text-xl font-bold mt-6 mb-4 col-span-full";
-      libraryGrid.appendChild(title);
-
-      categories[type].forEach(obj=>{
-        const {index, ...item} = obj;
-        const card = document.createElement('div');
-        card.className = "border p-4 rounded shadow flex flex-col items-center";
-
-        // Thumbnail
-        const img = document.createElement('img');
-        img.src = item.thumbnail || placeholder;
-        img.className = "card-img mb-2";
-        card.appendChild(img);
-
-        // Name
-        const name = document.createElement('p');
-        name.textContent = item.name;
-        name.className = "font-semibold mb-2 text-center";
-        card.appendChild(name);
-
-        // Upload/Change Thumbnail button for ALL items
-        const editBtn = document.createElement('button');
-        editBtn.textContent = item.thumbnail ? 'Change Thumbnail' : 'Upload Thumbnail';
-        editBtn.className = 'btn mb-2';
-        editBtn.onclick = () => openThumbnailEditor(index, img);
-        card.appendChild(editBtn);
-
-        // Delete button
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'Delete';
-        deleteBtn.className = 'btn bg-red-600 hover:bg-red-700';
-        deleteBtn.onclick = ()=>{
-          if(confirm(`Are you sure you want to delete "${item.name}"?`)){
-            library.splice(index,1);
-            localStorage.setItem('sitegenLibrary', JSON.stringify(library));
-            renderLibrary();
-          }
+        const categories = {
+          block: [],
+          page: [],
+          theme: [],
+          subscription: [],
+          asset: []
         };
-        card.appendChild(deleteBtn);
 
-        libraryGrid.appendChild(card);
-      });
-    });
-  }
+        library.forEach((item, index) => {
+          if (item.type === 'template') return; // skip templates
+          if (!categories[item.type]) categories[item.type] = [];
+          categories[item.type].push({ ...item, index });
+        });
 
-  // Thumbnail Editor for ALL items
-  function openThumbnailEditor(index, cardImg){
-    currentEditingId = index;
-    currentCardImg = cardImg;
+        Object.keys(categories).forEach(type => {
+          if (categories[type].length === 0) return;
 
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = e => {
-      const file = e.target.files[0];
-      if(!file) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        cropperImage.src = ev.target.result;
+          const title = document.createElement('h3');
+          title.textContent = type.charAt(0).toUpperCase() + type.slice(1) + "s";
+          title.className = "text-xl font-bold mt-6 mb-4 col-span-full";
+          libraryGrid.appendChild(title);
+
+          categories[type].forEach(obj => {
+            const { index, ...item } = obj;
+            const card = document.createElement('div');
+            card.className = "border p-4 rounded shadow flex flex-col items-center";
+
+            const img = document.createElement('img');
+            img.src = item.thumbnail || 'https://via.placeholder.com/400x200?text=No+Thumbnail';
+            img.className = "card-img mb-2";
+            card.appendChild(img);
+
+            const name = document.createElement('p');
+            name.textContent = item.name;
+            name.className = "font-semibold mb-2 text-center";
+            card.appendChild(name);
+
+            // --- Upload / Edit Thumbnail ---
+            const thumbInput = document.createElement('input');
+            thumbInput.type = 'file';
+            thumbInput.accept = 'image/*';
+            thumbInput.className = 'hidden';
+            thumbInput.onchange = (e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = ev => {
+                library[index].thumbnail = ev.target.result;
+                localStorage.setItem('sitegenLibrary', JSON.stringify(library));
+                renderLibrary();
+              };
+              reader.readAsDataURL(file);
+            };
+
+            const uploadBtn = document.createElement('button');
+            uploadBtn.textContent = item.thumbnail ? 'Change Thumbnail' : 'Upload Thumbnail';
+            uploadBtn.className = 'btn mb-2';
+            uploadBtn.onclick = () => thumbInput.click();
+            card.appendChild(thumbInput);
+            card.appendChild(uploadBtn);
+
+            // --- Cropper Edit ---
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edit via Cropper';
+            editBtn.className = 'btn mb-2';
+            editBtn.onclick = () => openThumbnailEditor(index);
+            card.appendChild(editBtn);
+
+            // --- Delete button ---
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.className = 'btn bg-red-600 hover:bg-red-700';
+            deleteBtn.onclick = () => {
+              if(confirm(`Are you sure you want to delete "${item.name}"?`)){
+                library.splice(index,1);
+                localStorage.setItem('sitegenLibrary', JSON.stringify(library));
+                renderLibrary();
+              }
+            };
+            card.appendChild(deleteBtn);
+
+            libraryGrid.appendChild(card);
+          });
+        });
+      }
+
+      // --- Cropper Editor ---
+      function openThumbnailEditor(index){
+        currentEditingId = index;
+        const item = library[index];
+        cropperImage.src = item.thumbnail || 'https://via.placeholder.com/800x400?text=Upload+Thumbnail';
         thumbModal.classList.remove('hidden');
 
         if(cropper) cropper.destroy();
-        cropper = new Cropper(cropperImage,{
-          aspectRatio:16/9,
-          viewMode:1,
-          dragMode:'move',
-          autoCropArea:1,
+        cropper = new Cropper(cropperImage, {
+          aspectRatio: 16 / 9,
+          viewMode: 1,
+          dragMode: 'move',
+          autoCropArea: 1,
         });
-      };
-      reader.readAsDataURL(file);
-    };
-    input.click();
-  }
+      }
 
-  saveThumb.onclick = ()=>{
-    if(cropper && currentEditingId !== null && currentCardImg){
-      const canvas = cropper.getCroppedCanvas({width:400,height:200});
-      const dataUrl = canvas.toDataURL();
-      library[currentEditingId].thumbnail = dataUrl;
-      currentCardImg.src = dataUrl; // update card immediately
-      localStorage.setItem('sitegenLibrary', JSON.stringify(library));
-      currentEditingId = null;
-      currentCardImg = null;
-    }
-    thumbModal.classList.add('hidden');
-    if(cropper) cropper.destroy();
-  };
-
-  cancelThumb.onclick = ()=>{
-    thumbModal.classList.add('hidden');
-    if(cropper) cropper.destroy();
-  };
-
-  // File Upload
-  uploadBtn.onclick = async ()=>{
-    const files = Array.from(fileInput.files);
-    if(!files.length) return;
-
-    let uploaded = 0;
-    for(const file of files){
-      const reader = new FileReader();
-      reader.onload = async e=>{
-        let type='asset';
-        if(file.name.endsWith('.html')) type='page';
-        else if(file.name.endsWith('.zip')) type='template';
-        else if(file.name.endsWith('.block')) type='block';
-        else if(file.name.endsWith('.theme')) type='theme';
-        else if(file.name.endsWith('.sub')) type='subscription';
-
-        library.push({name:file.name, type, content:e.target.result, thumbnail:null});
-        uploaded++;
-        uploadProgress.value = (uploaded/files.length)*100;
-
-        if(uploaded === files.length){
+      saveThumb.onclick = () => {
+        if(cropper && currentEditingId !== null){
+          const canvas = cropper.getCroppedCanvas({ width: 400, height: 200 });
+          library[currentEditingId].thumbnail = canvas.toDataURL();
           localStorage.setItem('sitegenLibrary', JSON.stringify(library));
           renderLibrary();
         }
+        thumbModal.classList.add('hidden');
       };
-      reader.readAsDataURL(file);
-    }
-  };
 
-  renderLibrary();
-});
-</script>
+      cancelThumb.onclick = () => {
+        thumbModal.classList.add('hidden');
+        if(cropper) cropper.destroy();
+      };
+
+      // --- File Upload + Auto Inject Templates ---
+      uploadBtn.onclick = () => {
+        const files = Array.from(fileInput.files);
+        if (!files.length) return;
+
+        let uploaded = 0;
+        files.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = e => {
+            let type = 'asset';
+            if(file.name.endsWith('.zip')) type='template';
+            else if(file.name.endsWith('.block')) type='block';
+            else if(file.name.endsWith('.theme')) type='theme';
+            else if(file.name.endsWith('.sub')) type='subscription';
+            else if(file.name.endsWith('.html')) type='page';
+
+            const item = {
+              name: file.name,
+              type,
+              content: e.target.result,
+              thumbnail: null
+            };
+
+            if(type==='template' || type==='page'){
+              // --- inject templates/pages to index only ---
+              try {
+                let indexLibrary = JSON.parse(localStorage.getItem('sitegenIndexTemplates') || '[]');
+                indexLibrary.push(item);
+                localStorage.setItem('sitegenIndexTemplates', JSON.stringify(indexLibrary));
+              } catch(err){
+                console.error('Failed to inject template to index:', err);
+              }
+            } else {
+              // --- save others to library sidebar ---
+              library.push(item);
+            }
+
+            uploaded++;
+            uploadProgress.value = (uploaded / files.length)*100;
+
+            if(uploaded === files.length){
+              localStorage.setItem('sitegenLibrary', JSON.stringify(library));
+              renderLibrary();
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+      };
+
+      renderLibrary();
+    });
+  </script>
 </body>
 </html>
