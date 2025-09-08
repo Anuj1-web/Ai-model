@@ -32,20 +32,6 @@
   <!-- Library Grid -->
   <div id="libraryGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6"></div>
 
-  <!-- Thumbnail Editor Modal -->
-  <div id="thumbModal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center">
-    <div class="bg-white p-4 rounded shadow-lg w-3/4 h-3/4">
-      <h2 class="text-xl font-bold mb-4">Edit Thumbnail</h2>
-      <div class="h-4/5">
-        <img id="cropperImage" style="max-width:100%; max-height:100%; display:block; margin:auto;"/>
-      </div>
-      <div class="mt-4 flex justify-end gap-4">
-        <button id="saveThumb" class="btn">Save Thumbnail</button>
-        <button id="cancelThumb" class="btn bg-gray-500 text-white">Cancel</button>
-      </div>
-    </div>
-  </div>
-
   <script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script>
@@ -55,58 +41,7 @@
       const uploadProgress = document.getElementById('uploadProgress');
       const libraryGrid = document.getElementById('libraryGrid');
 
-      const thumbModal = document.getElementById('thumbModal');
-      const cropperImage = document.getElementById('cropperImage');
-      const saveThumb = document.getElementById('saveThumb');
-      const cancelThumb = document.getElementById('cancelThumb');
-
       let library = JSON.parse(localStorage.getItem('sitegenLibrary') || '[]');
-      let currentEditingId = null;
-      let cropper;
-
-      // --- Generate thumbnail from HTML page ---
-      async function generateThumbnail(htmlContent){
-  return new Promise(resolve=>{
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.left = '-10000px';
-    iframe.style.top = '-10000px';
-    iframe.style.width = '800px';  // Set desired width
-    iframe.style.height = '450px'; // 16:9 ratio
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    doc.open();
-    doc.write(htmlContent);
-    doc.close();
-
-    iframe.onload = async () => {
-      try {
-        // Capture at 2x resolution for sharpness
-        const canvas = await html2canvas(doc.body, {
-          backgroundColor: null,
-          width: 800,
-          height: 450,
-          scale: 2
-        });
-
-        // Resize canvas to card size (400x200) while keeping aspect ratio
-        const cardCanvas = document.createElement('canvas');
-        cardCanvas.width = 400;
-        cardCanvas.height = 200;
-        const ctx = cardCanvas.getContext('2d');
-        ctx.drawImage(canvas, 0, 0, 400, 200);
-
-        const dataUrl = cardCanvas.toDataURL('image/png');
-        resolve(dataUrl);
-      } catch(e) {
-        console.error("Thumbnail generation failed:", e);
-        resolve(null);
-      }
-      document.body.removeChild(iframe);
-    };
-  });
-}
 
       // --- Render Library Grid ---
       function renderLibrary() {
@@ -152,14 +87,31 @@
             name.className = "font-semibold mb-2 text-center";
             card.appendChild(name);
 
-            // Template-specific actions
-            if(item.type==='template' || item.type==='page'){
-              const editBtn = document.createElement('button');
-              editBtn.textContent='Edit Thumbnail';
-              editBtn.className='btn mb-2';
-              editBtn.onclick = ()=>openThumbnailEditor(index);
-              card.appendChild(editBtn);
-            }
+            // Upload Thumbnail
+            const uploadThumbInput = document.createElement('input');
+            uploadThumbInput.type = "file";
+            uploadThumbInput.accept = "image/*";
+            uploadThumbInput.className = "hidden";
+            uploadThumbInput.onchange = e => {
+              const file = e.target.files[0];
+              if(file){
+                const reader = new FileReader();
+                reader.onload = ev => {
+                  library[index].thumbnail = ev.target.result;
+                  localStorage.setItem('sitegenLibrary',JSON.stringify(library));
+                  renderLibrary();
+                };
+                reader.readAsDataURL(file);
+              }
+            };
+
+            const uploadBtn = document.createElement('button');
+            uploadBtn.textContent = "Upload Thumbnail";
+            uploadBtn.className = "btn mb-2";
+            uploadBtn.onclick = () => uploadThumbInput.click();
+
+            card.appendChild(uploadBtn);
+            card.appendChild(uploadThumbInput);
 
             // Delete button
             const deleteBtn = document.createElement('button');
@@ -179,37 +131,6 @@
         });
       }
 
-      // --- Open Thumbnail Editor ---
-      function openThumbnailEditor(index){
-        currentEditingId = index;
-        const item = library[index];
-        cropperImage.src = item.thumbnail || 'https://via.placeholder.com/800x400?text=Upload+Thumbnail';
-        thumbModal.classList.remove('hidden');
-
-        if(cropper) cropper.destroy();
-        cropper = new Cropper(cropperImage,{
-          aspectRatio:16/9,
-          viewMode:1,
-          dragMode:'move',
-          autoCropArea:1,
-        });
-      }
-
-      saveThumb.onclick = ()=>{
-        if(cropper && currentEditingId!==null){
-          const canvas = cropper.getCroppedCanvas({width:400,height:200});
-          library[currentEditingId].thumbnail = canvas.toDataURL();
-          localStorage.setItem('sitegenLibrary',JSON.stringify(library));
-          renderLibrary();
-        }
-        thumbModal.classList.add('hidden');
-      };
-
-      cancelThumb.onclick = ()=>{
-        thumbModal.classList.add('hidden');
-        if(cropper) cropper.destroy();
-      };
-
       // --- Unified Upload Handler ---
       uploadBtn.onclick = async ()=>{
         const files = Array.from(fileInput.files);
@@ -218,7 +139,7 @@
         let uploaded=0;
         for(const file of files){
           const reader = new FileReader();
-          reader.onload = async e=>{
+          reader.onload = e=>{
             let type='asset';
             if(file.name.endsWith('.html')) type='page';
             else if(file.name.endsWith('.zip')) type='template';
@@ -226,15 +147,7 @@
             else if(file.name.endsWith('.theme')) type='theme';
             else if(file.name.endsWith('.sub')) type='subscription';
 
-            let content = e.target.result;
-            let thumbnail = null;
-
-            if(type==='page'){
-              content = atob(content.split(',')[1]||"");
-              thumbnail = await generateThumbnail(content);
-            }
-
-            library.push({name:file.name, type, content:e.target.result, thumbnail});
+            library.push({name:file.name, type, content:e.target.result, thumbnail:null});
             uploaded++;
             uploadProgress.value = (uploaded/files.length)*100;
 
