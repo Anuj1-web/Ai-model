@@ -612,7 +612,7 @@ doc.querySelectorAll("link[href], script[src], img[src]").forEach(el => {
 
 <!-- Sidebar -->
 <div id="librarySidebar" style="display:none;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; cursor: grab;">
     <h3 style="margin:0;color:#fff;">Library Assets</h3>
     <button id="closeLibraryBtn" style="background:none;color:#fff;font-size:1.2rem;border:none;cursor:pointer;">✖</button>
   </div>
@@ -622,7 +622,7 @@ doc.querySelectorAll("link[href], script[src], img[src]").forEach(el => {
          style="width:100%;padding:0.3rem;margin-bottom:0.5rem;border-radius:0.25rem;border:none;background:#333;color:#fff;">
 
   <!-- Container -->
-  <div id="libraryContainer" style="overflow-y:auto; flex:1;"></div>
+  <div id="libraryContainer" style="overflow-y:auto; flex:1; display:grid; grid-gap:8px; grid-template-columns: repeat(auto-fit, minmax(140px,1fr));"></div>
 
   <hr style="border-color:#444;margin:0.5rem 0;">
 
@@ -630,6 +630,12 @@ doc.querySelectorAll("link[href], script[src], img[src]").forEach(el => {
           style="padding:0.4rem;background:#222;color:#fff;border:none;border-radius:0.25rem;cursor:pointer;">
     + Add Blank Page
   </button>
+</div>
+
+<!-- Fullscreen overlay -->
+<div id="fullscreenPreview" class="flex" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.95);justify-content:center;align-items:center;z-index:3000;">
+  <span class="close-btn" style="position:absolute;top:20px;right:20px;font-size:2rem;color:#fff;cursor:pointer;background:rgba(0,0,0,0.6);border-radius:50%;padding:0 8px;">✖</span>
+  <img src="" alt="Full Preview" style="max-width:90%; max-height:90%; object-fit:contain; border-radius:4px;">
 </div>
 
 <style>
@@ -643,130 +649,173 @@ doc.querySelectorAll("link[href], script[src], img[src]").forEach(el => {
   color: #fff;
   display: flex;
   flex-direction: column;
+  user-select: none;
 }
-.library-category {
-  font-weight: bold;
-  margin-top: 1rem;
-  color: #fff;
+.library-category { font-weight:bold; margin-top:1rem; color:#fff; }
+.library-subcategory { font-style:italic; font-size:0.85rem; margin-bottom:0.2rem; color:#ccc; }
+.library-item { background:#222; border-radius:4px; overflow:hidden; cursor:pointer; position:relative; display:flex; flex-direction:column; }
+.library-thumb {
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 aspect ratio */
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
 }
-.library-subcategory {
-  font-style: italic;
+.library-thumb img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.library-title {
+  position: absolute;
+  bottom: 0; 
+  left: 0;
+  width: 100%;
+  padding: 4px 6px;
   font-size: 0.85rem;
-  margin-bottom: 0.2rem;
-  color: #ccc;
-}
-.library-item {
-  padding: 0.5rem;
-  margin-bottom: 0.6rem;
-  border-radius: 0.3rem;
-  background: #222;
-  cursor: pointer;
   color: #fff;
   text-align: center;
+  background: rgba(0,0,0,0.6);
+  box-sizing: border-box;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
 }
-.library-item:hover { background: #333; }
-.library-thumb { max-height: 80px; overflow:hidden; margin-bottom:0.3rem; }
-.library-thumb img { max-width: 100%; border-radius:4px; }
-.library-title { font-size:0.8rem; color:#ddd; }
+.removePageBtn { position:absolute; top:4px; right:4px; background:#900; color:#fff; border:none; border-radius:50%; width:22px; height:22px; font-size:14px; line-height:18px; cursor:pointer; z-index:10; }
+.fullscreen-btn { position:absolute; top:4px; left:4px; font-size:1.2rem; color:#fff; background: rgba(0,0,0,0.6); border-radius:4px; padding:2px 4px; cursor:pointer; z-index:10; }
 </style>
 
 <script>
-// ===== Fetch assets from localStorage.sitegenLibrary =====
-function getLibraryData(){
-  try {
-    return JSON.parse(localStorage.getItem("sitegenLibrary") || "[]");
-  } catch { return []; }
-}
+function getLibraryData(){ try { return JSON.parse(localStorage.getItem("sitegenLibrary")||"[]"); } catch{return [];} }
+function decodeContent(content){ if(!content) return ""; if(content.startsWith("data:")) return atob(content.split(',')[1]||""); return content; }
 
 let allAssets = getLibraryData();
-// Filter out templates
-allAssets = allAssets.filter(item => item.type !== "template");
+allAssets = allAssets.map(item => { if(item.name.endsWith('.html')||item.type==='template') item.type='page'; return item; });
 
-// Render Sidebar
 function renderLibraryAssets(filter=""){
-  const container=document.getElementById('libraryContainer');
+  const container = document.getElementById('libraryContainer');
   container.innerHTML='';
 
-  // Group by type + subcategory
-  const categories={};
+  const categories = {};
   allAssets.forEach(item=>{
-    const cat=item.type; // asset/page/theme/subscription
-    const sub=item.subcategory || "General";
+    const cat=item.type; const sub=item.subcategory||"General";
     if(!categories[cat]) categories[cat]={};
     if(!categories[cat][sub]) categories[cat][sub]=[];
     categories[cat][sub].push(item);
   });
 
   Object.keys(categories).forEach(cat=>{
-    const catDiv=document.createElement('div');
-    catDiv.className='library-category';
+    const catDiv=document.createElement('div'); catDiv.className='library-category';
     catDiv.textContent=cat.charAt(0).toUpperCase()+cat.slice(1);
     container.appendChild(catDiv);
 
     Object.keys(categories[cat]).forEach(sub=>{
-      const subDiv=document.createElement('div');
-      subDiv.className='library-subcategory';
+      const subDiv=document.createElement('div'); subDiv.className='library-subcategory';
       subDiv.textContent=sub.charAt(0).toUpperCase()+sub.slice(1);
       container.appendChild(subDiv);
 
       categories[cat][sub].forEach(item=>{
         if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
 
-        const div=document.createElement('div');
-        div.className='library-item';
+        const div=document.createElement('div'); div.className='library-item';
+        const thumb=document.createElement('div'); thumb.className='library-thumb';
+        const img=document.createElement('img');
 
-        const thumb=document.createElement('div');
-        thumb.className='library-thumb';
-        if(item.thumbnail){
-          const img=document.createElement('img');
-          img.src=item.thumbnail;
-          thumb.appendChild(img);
-        } else {
-          const preview=document.createElement('div');
-          preview.innerHTML=item.content || "";
-          preview.style.transform="scale(0.4)";
-          preview.style.transformOrigin="top left";
-          preview.style.height="80px";
-          preview.style.overflow="hidden";
-          thumb.appendChild(preview);
-        }
+        if(item.thumbnail){ img.src=item.thumbnail; }
+        else if(item.type==="page" && item.content){
+          const tmpIframe=document.createElement('iframe');
+          tmpIframe.style.width="1920px"; tmpIframe.style.height="1080px";
+          tmpIframe.style.position="absolute"; tmpIframe.style.left="-9999px";
+          document.body.appendChild(tmpIframe);
+          tmpIframe.srcdoc = decodeContent(item.content);
+          tmpIframe.onload = ()=>{
+            try{
+              const canvas=document.createElement('canvas');
+              canvas.width=1920; canvas.height=1080;
+              const ctx = canvas.getContext('2d');
+              ctx.fillStyle="#fff"; ctx.fillRect(0,0,1920,1080);
+              ctx.drawImage(tmpIframe.contentWindow.document.body,0,0,1920,1080);
+              img.src = canvas.toDataURL();
+              document.body.removeChild(tmpIframe);
+            }catch(e){ img.src='https://via.placeholder.com/320x180?text=Preview'; document.body.removeChild(tmpIframe); }
+          }
+        } else { img.src='https://via.placeholder.com/320x180?text=No+Thumbnail'; }
 
-        const title=document.createElement('div');
-        title.className='library-title';
+        thumb.appendChild(img); div.appendChild(thumb);
+
+        const title=document.createElement('div'); title.className='library-title';
         title.innerText=item.name.replace(/[_-]/g," ");
-
-        div.appendChild(thumb);
         div.appendChild(title);
 
-        if(item.type==="page"){
-          // full page
-          div.addEventListener("click",()=>{
-            const filename=item.name.toLowerCase().replace(/\s+/g,'_')+".html";
-            pages.push(filename);
-            pageContents[filename]=item.content;
-            editedContents[filename]=item.content;
-            activePage=filename;
-            renderTabs();
-            renderIframes();
-          });
-        } else {
-          // insert element
-          div.addEventListener("click",()=>{
-            const iframe=iframeRefs[activePage];
-            if(!iframe) return;
+        // Delete page button
+if(item.type==="page"){
+  const removeBtn = document.createElement('button');
+  removeBtn.className = 'removePageBtn';
+  removeBtn.innerText = '🗑️';
+
+  removeBtn.onclick = e => {
+    e.stopPropagation();
+    const filename = item.name.endsWith('.html') ? item.name : item.name + '.html';
+    if(confirm(`Remove page "${filename}" from live preview?`)){
+      if(typeof pages !== 'undefined' && Array.isArray(pages)){
+        const index = pages.indexOf(filename);
+        if(index !== -1){
+          pages.splice(index, 1);           // remove page in-place
+          delete pageContents[filename];    // delete content
+          delete editedContents[filename];  // delete edited content
+          if(activePage === filename) activePage = pages[0] || '';
+          renderTabs();
+          renderIframes();
+        }
+      }
+    }
+  };
+
+  div.appendChild(removeBtn);
+}
+
+
+        // Fullscreen button
+        const fsBtn=document.createElement('div'); fsBtn.className='fullscreen-btn'; fsBtn.innerHTML='&#8644;';
+        fsBtn.onclick=e=>{
+          e.stopPropagation();
+          const overlay=document.getElementById('fullscreenPreview');
+          const overlayImg=overlay.querySelector('img');
+          overlayImg.src=img.src;
+          overlay.style.display='flex';
+        }
+        div.appendChild(fsBtn);
+
+        // Click behavior
+        div.addEventListener('click', ()=>{
+          if(item.type==="page"){
+            const name = prompt("Enter page name:", item.name.replace(/\.html$/,''));
+            if(!name) return;
+            const filename = name.replace(/\s+/g,'_').toLowerCase()+".html";
+            if(!pages.includes(filename)){
+              pages.push(filename);
+              pageContents[filename] = decodeContent(item.content||'');
+              editedContents[filename] = pageContents[filename];
+              activePage = filename;
+              renderTabs(); renderIframes();
+            } else { alert("Page already exists!"); }
+          } else {
+            const iframe=iframeRefs[activePage]; if(!iframe) return;
             const doc=iframe.contentDocument||iframe.contentWindow.document;
-            let insertTarget = doc.activeElement && doc.body.contains(doc.activeElement) ? doc.activeElement : doc.body;
-            const temp=document.createElement('div');
-            temp.innerHTML=item.content;
-            insertTarget.appendChild(temp.firstChild);
+            const target = doc.activeElement && doc.body.contains(doc.activeElement) ? doc.activeElement : doc.body;
+            const temp=document.createElement('div'); temp.innerHTML=item.content;
+            target.appendChild(temp.firstChild);
             editedContents[activePage]="<!DOCTYPE html>"+doc.documentElement.outerHTML;
-          });
-          // Drag/drop
+          }
+        });
+
+        // Drag/drop
+        if(item.type!=="page"){
           div.draggable=true;
-          div.addEventListener('dragstart', e=>{
-            e.dataTransfer.setData('text/html', item.content);
-            div.classList.add('dragging');
-          });
+          div.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/html', item.content); div.classList.add('dragging'); });
           div.addEventListener('dragend', ()=>div.classList.remove('dragging'));
         }
 
@@ -777,50 +826,89 @@ function renderLibraryAssets(filter=""){
 }
 
 // Search
-document.getElementById("librarySearch").addEventListener("input",e=>{
-  renderLibraryAssets(e.target.value);
-});
+document.getElementById("librarySearch").addEventListener("input", e=>{ renderLibraryAssets(e.target.value); });
 
 // Open/close
 document.getElementById('openLibraryBtn').onclick=()=>{document.getElementById('librarySidebar').style.display='flex';};
 document.getElementById('closeLibraryBtn').onclick=()=>{document.getElementById('librarySidebar').style.display='none';};
 
+// Sidebar drag anywhere
+let isDraggingSidebar=false;
+const sidebar = document.getElementById('librarySidebar');
+sidebar.addEventListener('mousedown', e=>{
+  isDraggingSidebar=true;
+  e.preventDefault();
+});
+document.addEventListener('mousemove', e=>{
+  if(!isDraggingSidebar) return;
+  let newWidth = window.innerWidth - e.clientX;
+  newWidth=Math.max(200, Math.min(800, newWidth));
+  sidebar.style.width = newWidth+'px';
+});
+document.addEventListener('mouseup', ()=>{ isDraggingSidebar=false; });
+
+// Fullscreen close
+const fsOverlay=document.getElementById('fullscreenPreview');
+fsOverlay.querySelector('.close-btn').onclick = ()=>{ 
+  fsOverlay.style.display='none'; 
+  const img = fsOverlay.querySelector('img');
+  img.style.left='0px'; img.style.top='0px'; img.style.position='relative';
+};
+
+// Fullscreen drag & zoom
+let isFsDragging=false, offsetX=0, offsetY=0;
+const fsImg=fsOverlay.querySelector('img');
+fsImg.addEventListener('mousedown', e=>{
+  isFsDragging=true;
+  offsetX=e.clientX - fsImg.offsetLeft;
+  offsetY=e.clientY - fsImg.offsetTop;
+  fsImg.style.position='absolute';
+});
+document.addEventListener('mousemove', e=>{
+  if(!isFsDragging) return;
+  fsImg.style.left = (e.clientX - offsetX)+'px';
+  fsImg.style.top = (e.clientY - offsetY)+'px';
+});
+document.addEventListener('mouseup', ()=>{ isFsDragging=false; });
+fsOverlay.addEventListener('wheel', e=>{
+  e.preventDefault();
+  let scale = e.deltaY<0 ? 1.1 : 0.9;
+  fsImg.style.width = (fsImg.offsetWidth*scale)+'px';
+  fsImg.style.height = (fsImg.offsetHeight*scale)+'px';
+});
+
 // Enable drop inside iframe
 function enableDrop(){
-  const iframe=iframeRefs[activePage];
-  if(!iframe) return;
+  const iframe=iframeRefs[activePage]; if(!iframe) return;
   const doc=iframe.contentDocument||iframe.contentWindow.document;
   doc.body.addEventListener("dragover", e=>e.preventDefault());
   doc.body.addEventListener("drop", e=>{
     e.preventDefault();
     const html=e.dataTransfer.getData("text/html");
-    if(html){
-      const temp=document.createElement("div");
-      temp.innerHTML=html;      doc.body.appendChild(temp.firstChild);
-      editedContents[activePage]="<!DOCTYPE html>"+doc.documentElement.outerHTML;
-    }
+    if(html){ const temp=document.createElement("div"); temp.innerHTML=html; doc.body.appendChild(temp.firstChild); editedContents[activePage]="<!DOCTYPE html>"+doc.documentElement.outerHTML; }
   });
 }
 const originalRenderIframes=renderIframes;
 renderIframes=function(){ originalRenderIframes(); enableDrop(); };
 
-// Blank page
+// Add blank page
 document.getElementById('addPageBtnSidebar').onclick=()=>{
-  const name=prompt('Enter new page name:');
-  if(!name) return;
+  const name=prompt('Enter new page name:'); if(!name) return;
   const filename=name.replace(/\s+/g,'_').toLowerCase()+'.html';
   const html=`<!DOCTYPE html><html><head><title>${name}</title></head><body><h1>${name}</h1></body></html>`;
-  pages.push(filename);
-  pageContents[filename]=html;
-  editedContents[filename]=html;
-  activePage=filename;
-  renderTabs();
-  renderIframes();
+  pages.push(filename); pageContents[filename]=html; editedContents[filename]=html; activePage=filename;
+  renderTabs(); renderIframes();
 };
 
 // Initial render
 renderLibraryAssets();
 </script>
+
+
+
+
+
+
 <!-- ========== Merged Universal WCAG Theme Module with Export ========== -->
 <style>
 #themePanel {
@@ -1054,7 +1142,6 @@ renderLibraryAssets();
 })();
 </script>
 <!-- ========== /Merged Module ========== -->
-
 
 </body>
 </html> 
